@@ -1,0 +1,170 @@
+/* eslint-disable prettier/prettier */
+// User Types
+export interface User {
+  userId: string;
+  email: string;
+  name: string;
+  role: 'student' | 'admin';
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Admin Types
+export interface Admin {
+  adminId: string;
+  userId: string;
+  username: string;
+  passwordHash: string;
+  permissions?: string;
+  lastLogin?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Notice Types
+export interface Notice {
+  noticeId: string;
+  title: string;
+  content: string;
+  author: string;
+  authorId: string;
+  status: 'draft' | 'published';
+  coverImage?: string;
+  tags?: string[];
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Activity Types
+export interface Activity {
+  activityId: string;
+  title: string;
+  description: string;
+  category:
+    | '编程'
+    | 'AI'
+    | '网页'
+    | '比赛'
+    | '工作坊'
+    | '讲座'
+    | '其他';
+  organizer: string;
+  organizerId: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  signupDeadline: string;
+  maxParticipants?: number;
+  currentParticipants: number;
+  signupFormFields: SignupFormField[];
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  coverImage?: string;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Signup Form Field Type
+export interface SignupFormField {
+  id: string;
+  name: string;
+  type: 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'date';
+  label: string;
+  required: boolean;
+  options?: string[];
+  placeholder?: string;
+}
+
+// Signup Types
+export interface Signup {
+  signupId: string;
+  activityId: string;
+  formData: Record<string, any>;
+  email: string;
+  phone?: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'attended';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Comment Types
+export interface Comment {
+  commentId: string;
+  contentType: 'notice' | 'activity';
+  contentId: string;
+  nickname: string;
+  email?: string;
+  content: string;
+  status: 'pending' | 'approved' | 'rejected';
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Club Info Types
+export interface ClubInfo {
+  infoId: string;
+  clubName: string;
+  mission: string;
+  vision: string;
+  description: string;
+  categories: string[];
+  contactEmail: string;
+  contactPhone?: string;
+  logo?: string;
+  bannerImage?: string;
+  updatedAt: string;
+}
+
+// AI Chat Types
+export interface AIChat {
+  chatId: string;
+  sessionId: string;
+  userMessage: string;
+  aiResponse: string;
+  contextUsed?: string[];
+  userType: 'student' | 'admin';
+  createdAt: string;
+}
+
+// API Response Types
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Form Submission Types
+export interface FormState {
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error?: string;
+}
+
+// Authentication Types
+export interface AuthState {
+  isAuthenticated: boolean;
+  admin: Admin | null;
+  token?: string;
+  isLoading: boolean;
+  error?: string;
+}
+
+// Pagination Types
+export interface PaginationParams {
+  limit: number;
+  offset: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}

@@ -1,0 +1,584 @@
+{
+  "database": {
+    "id": "kccompt_db",
+    "name": "学校电脑社官网数据库"
+  },
+  "collections": [
+    {
+      "id": "users",
+      "name": "用户表",
+      "description": "用户基本信息",
+      "attributes": [
+        {
+          "key": "email",
+          "type": "email",
+          "required": true,
+          "unique": true
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "role",
+          "type": "string",
+          "required": true,
+          "enum": ["student", "admin"],
+          "default": "student"
+        },
+        {
+          "key": "avatar",
+          "type": "string",
+          "required": false
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "email",
+          "type": "unique"
+        },
+        {
+          "key": "role",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "admins",
+      "name": "管理员表",
+      "description": "管理员账户信息",
+      "attributes": [
+        {
+          "key": "userId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "username",
+          "type": "string",
+          "required": true,
+          "unique": true,
+          "size": 256
+        },
+        {
+          "key": "passwordHash",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "permissions",
+          "type": "string",
+          "required": false,
+          "size": 1024
+        },
+        {
+          "key": "lastLogin",
+          "type": "datetime",
+          "required": false
+        },
+        {
+          "key": "isActive",
+          "type": "boolean",
+          "required": true,
+          "default": true
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "username",
+          "type": "unique"
+        },
+        {
+          "key": "userId",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "notices",
+      "name": "公告表",
+      "description": "公告与新闻",
+      "attributes": [
+        {
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "content",
+          "type": "string",
+          "required": true,
+          "size": 65536
+        },
+        {
+          "key": "author",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "authorId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["draft", "published"],
+          "default": "draft"
+        },
+        {
+          "key": "coverImage",
+          "type": "string",
+          "required": false
+        },
+        {
+          "key": "tags",
+          "type": "string",
+          "required": false,
+          "size": 1024
+        },
+        {
+          "key": "publishedAt",
+          "type": "datetime",
+          "required": false
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "status",
+          "type": "key"
+        },
+        {
+          "key": "authorId",
+          "type": "key"
+        },
+        {
+          "key": "createdAt",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "activities",
+      "name": "活动表",
+      "description": "社团活动信息",
+      "attributes": [
+        {
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "required": true,
+          "size": 65536
+        },
+        {
+          "key": "category",
+          "type": "string",
+          "required": true,
+          "enum": ["编程", "AI", "网页", "比赛", "工作坊", "讲座", "其他"]
+        },
+        {
+          "key": "organizer",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "organizerId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "startTime",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "endTime",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "signupDeadline",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "maxParticipants",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "key": "currentParticipants",
+          "type": "integer",
+          "required": true,
+          "default": 0
+        },
+        {
+          "key": "signupFormFields",
+          "type": "string",
+          "required": true,
+          "size": 8192
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["draft", "published", "ongoing", "completed", "cancelled"],
+          "default": "draft"
+        },
+        {
+          "key": "coverImage",
+          "type": "string",
+          "required": false
+        },
+        {
+          "key": "publishedAt",
+          "type": "datetime",
+          "required": false
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "status",
+          "type": "key"
+        },
+        {
+          "key": "category",
+          "type": "key"
+        },
+        {
+          "key": "organizerId",
+          "type": "key"
+        },
+        {
+          "key": "startTime",
+          "type": "key"
+        },
+        {
+          "key": "signupDeadline",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "signups",
+      "name": "报名表",
+      "description": "活动报名记录",
+      "attributes": [
+        {
+          "key": "activityId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "formData",
+          "type": "string",
+          "required": true,
+          "size": 8192
+        },
+        {
+          "key": "email",
+          "type": "email",
+          "required": true
+        },
+        {
+          "key": "phone",
+          "type": "string",
+          "required": false,
+          "size": 20
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["pending", "confirmed", "cancelled", "attended"],
+          "default": "pending"
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "required": false,
+          "size": 1024
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "activityId",
+          "type": "key"
+        },
+        {
+          "key": "email",
+          "type": "key"
+        },
+        {
+          "key": "status",
+          "type": "key"
+        },
+        {
+          "key": "createdAt",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "comments",
+      "name": "评论表",
+      "description": "公告和活动评论",
+      "attributes": [
+        {
+          "key": "contentType",
+          "type": "string",
+          "required": true,
+          "enum": ["notice", "activity"]
+        },
+        {
+          "key": "contentId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "nickname",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "email",
+          "type": "email",
+          "required": false
+        },
+        {
+          "key": "content",
+          "type": "string",
+          "required": true,
+          "size": 2048
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["pending", "approved", "rejected"],
+          "default": "pending"
+        },
+        {
+          "key": "isDeleted",
+          "type": "boolean",
+          "required": true,
+          "default": false
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "contentType",
+          "type": "key"
+        },
+        {
+          "key": "contentId",
+          "type": "key"
+        },
+        {
+          "key": "status",
+          "type": "key"
+        },
+        {
+          "key": "isDeleted",
+          "type": "key"
+        },
+        {
+          "key": "createdAt",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "ai_chats",
+      "name": "AI 聊天表",
+      "description": "AI 聊天记录",
+      "attributes": [
+        {
+          "key": "sessionId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "key": "userMessage",
+          "type": "string",
+          "required": true,
+          "size": 2048
+        },
+        {
+          "key": "aiResponse",
+          "type": "string",
+          "required": true,
+          "size": 4096
+        },
+        {
+          "key": "contextUsed",
+          "type": "string",
+          "required": false,
+          "size": 1024
+        },
+        {
+          "key": "userType",
+          "type": "string",
+          "required": true,
+          "enum": ["student", "admin"]
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "sessionId",
+          "type": "key"
+        },
+        {
+          "key": "userType",
+          "type": "key"
+        },
+        {
+          "key": "createdAt",
+          "type": "key"
+        }
+      ]
+    },
+    {
+      "id": "club_info",
+      "name": "社团信息表",
+      "description": "电脑社基本信息",
+      "attributes": [
+        {
+          "key": "clubName",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "mission",
+          "type": "string",
+          "required": true,
+          "size": 1024
+        },
+        {
+          "key": "vision",
+          "type": "string",
+          "required": true,
+          "size": 1024
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "required": true,
+          "size": 8192
+        },
+        {
+          "key": "categories",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "contactEmail",
+          "type": "email",
+          "required": true
+        },
+        {
+          "key": "contactPhone",
+          "type": "string",
+          "required": false,
+          "size": 20
+        },
+        {
+          "key": "logo",
+          "type": "string",
+          "required": false
+        },
+        {
+          "key": "bannerImage",
+          "type": "string",
+          "required": false
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,65 +1,162 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { HeroSection } from '@/components/sections/HeroSection';
+import { NoticesSection, EventsSection } from '@/components/sections/NoticesSection';
+import { ProjectsSection } from '@/components/sections/ProjectsSection';
+
+// 模拟数据
+const mockNotices = [
+  {
+    id: '1',
+    title: '服务器维护通知',
+    summary: '本周五晚 10:00 进行系统维护，届时服务将暂停。',
+    category: '系统',
+    icon: 'warning',
+    iconColor: 'orange',
+    publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2小时前
+  },
+  {
+    id: '2',
+    title: '编程马拉松获奖名单',
+    summary: '恭喜 NullPointer 队荣获第一名！',
+    category: '新闻',
+    icon: 'emoji_events',
+    iconColor: 'green',
+    publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1天前
+  },
+  {
+    id: '3',
+    title: '新设备入驻机房',
+    summary: 'VR 设备现已开放借用，请到 304 室办理。',
+    category: '更新',
+    icon: 'science',
+    iconColor: 'blue',
+    publishedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2天前
+  },
+];
+
+const mockActivities = [
+  {
+    id: '1',
+    title: 'React 入门工作坊',
+    category: '工作坊',
+    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7天后
+    time: '17:00',
+    location: '402 室',
+  },
+  {
+    id: '2',
+    title: 'LAN Party 游戏之夜',
+    category: '社交',
+    date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14天后
+    time: '20:00',
+    location: '大礼堂',
+  },
+];
+
+const mockProjects = [
+  {
+    id: '1',
+    title: '神经网络可视化工具',
+    description: '一个基于 Web 的工具，实时可视化神经网络的学习过程。',
+    contributors: 3,
+    repoUrl: 'https://github.com',
+  },
+  {
+    id: '2',
+    title: '复古游戏引擎',
+    description: '使用 C++ 构建的轻量级 2D 平台游戏引擎。',
+    contributors: 2,
+    repoUrl: 'https://github.com',
+  },
+  {
+    id: '3',
+    title: 'UniSchedule 课表应用',
+    description: '开源的学生课程表管理移动应用。',
+    contributors: 5,
+    repoUrl: 'https://github.com',
+  },
+];
+
+export default function HomePage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to login if user is not authenticated
+    if (!isLoading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#102219] flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#13ec80]/10 mb-4">
+            <span className="material-symbols-outlined text-[#13ec80] text-2xl animate-spin">
+              hourglass_bottom
+            </span>
+          </div>
+          <p>加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen bg-[#102219] text-white">
+      {/* 导航栏 */}
+      <Header
+        navItems={[
+          { label: '首页', href: '/', active: true },
+          { label: '关于', href: '/about' },
+          { label: '公告', href: '/notices' },
+          { label: '活动', href: '/activities' },
+        ]}
+      />
+
+      {/* 主内容 */}
+      <main className="flex-1 w-full max-w-300 mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-12">
+        {/* Hero 区域 */}
+        <HeroSection
+          clubName="电脑社"
+          statusText="正在招收新成员"
+          activeUsers={24}
+          capacityPercent={45}
+          featuredProjectTitle="Campus AI Bot"
+          featuredProjectContributors={5}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* 公告与活动 Bento Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 公告区域 - 占 2 列 */}
+          <NoticesSection notices={mockNotices} />
+
+          {/* 活动区域 - 占 1 列 */}
+          <EventsSection activities={mockActivities} />
+        </section>
+
+        {/* 项目展示 */}
+        <ProjectsSection projects={mockProjects} />
       </main>
+
+      {/* 页脚 */}
+      <Footer
+        clubName="电脑社"
+        description="培养学生编程能力和创新思维，推动校园信息技术教育。加入我们，一起探索技术的无限可能。"
+        email="club@school.edu"
+        address="304 室，科技楼"
+      />
     </div>
   );
 }
