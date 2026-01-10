@@ -19,13 +19,14 @@ export default function StudentSignupPage() {
   const [error, setError] = useState('');
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [showVerificationNotice, setShowVerificationNotice] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   // Redirect to home if user already has a session
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && user && !showVerificationNotice) {
       router.push('/');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, showVerificationNotice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +60,7 @@ export default function StudentSignupPage() {
 
     try {
       await signup(name, email, password);
+      setVerificationEmail(email);
       setShowVerificationNotice(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败');
@@ -97,7 +99,7 @@ export default function StudentSignupPage() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-4">注册成功！</h1>
             <p className="text-[#9db9ab] mb-6">
-              我们已向 <span className="text-[#13ec80] font-medium">{email}</span> 发送了验证邮件。
+              我们已向 <span className="text-[#13ec80] font-medium">{verificationEmail}</span> 发送了验证邮件。
               <br />
               请检查您的邮箱并点击验证链接以激活账号。
             </p>

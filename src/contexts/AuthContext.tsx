@@ -107,10 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (name: string, email: string, password: string) => {
     setError(null);
     try {
-      const studentUser = await studentSignup(name, email, password);
-      setUser(studentUser);
-      // 保存到 localStorage 作为备份
-      localStorage.setItem('studentSession', JSON.stringify(studentUser));
+      await studentSignup(name, email, password);
+      // Do NOT set user state here - user must verify email first
+      // Do NOT save to localStorage - session is deleted after signup
+      // Signup just creates account, doesn't create a session
     } catch (err: unknown) {
       const error = err as Error & { message?: string };
       const errorMsg = error.message || '注册失败';

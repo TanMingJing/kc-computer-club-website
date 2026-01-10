@@ -16,6 +16,8 @@ export interface Notice {
   content: string;
   author: string;
   authorId: string;
+  lastEditorId?: string;
+  lastEditorName?: string;
   category: string;
   status: 'draft' | 'published';
   images?: string[];
@@ -44,6 +46,8 @@ export interface UpdateNoticeInput {
   images?: string[];
   tags?: string[];
   publishedAt?: string;
+  lastEditorId?: string;
+  lastEditorName?: string;
 }
 
 /**
@@ -196,6 +200,10 @@ export async function updateNotice(
         updateData.publishedAt = now;
       }
     }
+
+    // 记录最后编辑者信息
+    if (input.lastEditorId) updateData.lastEditorId = input.lastEditorId;
+    if (input.lastEditorName) updateData.lastEditorName = input.lastEditorName;
     
     // 处理图片：使用 coverImage 字段存储所有图片的 JSON 数组
     if (input.images !== undefined) {

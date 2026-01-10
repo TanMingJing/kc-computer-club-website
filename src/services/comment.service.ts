@@ -41,11 +41,11 @@ export interface UpdateCommentInput {
 const mapToComment = (doc: any): Comment => {
   return {
     $id: doc.$id,
-    targetType: doc.targetType,
-    targetId: doc.targetId,
-    targetTitle: doc.targetTitle,
-    authorName: doc.nickname || doc.authorName, // Support both field names
-    authorEmail: doc.authorEmail || '',
+    targetType: doc.contentType, // Map contentType to targetType
+    targetId: doc.contentId, // Map contentId to targetId
+    targetTitle: doc.targetTitle || '',
+    authorName: doc.nickname || doc.authorName,
+    authorEmail: doc.email || doc.authorEmail || '',
     content: doc.content,
     status: doc.status,
     createdAt: doc.createdAt,
@@ -94,14 +94,12 @@ export const commentService = {
         'comments',
         'unique()',
         {
-          targetType: input.targetType,
-          targetId: input.targetId,
-          targetTitle: input.targetTitle || '',
+          contentType: input.targetType, // "notice" or "activity"
+          contentId: input.targetId, // the target notice/activity ID
           nickname: input.authorName,
-          authorEmail: input.authorEmail || '',
+          email: input.authorEmail || '',
           content: input.content,
-          contentType: 'text',
-          status: input.status || 'pending',
+          status: 'approved', // Auto-approve, no admin review needed
           isDeleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -133,6 +131,16 @@ export const commentService = {
     }
   },
 
+  // Edit comment content
+  async editComment(id: string, content: string): Promise<Comment> {
+    try {
+      return this.updateComment(id, { content });
+    } catch (error) {
+      console.error(`Failed to edit comment ${id}:`, error);
+      throw error;
+    }
+  },
+
   // Delete a comment
   async deleteComment(id: string): Promise<void> {
     try {
@@ -154,7 +162,7 @@ export const commentService = {
     onlyApproved: boolean = true
   ): Promise<Comment[]> {
     try {
-      const queries = [Query.equal('targetType', targetType), Query.equal('targetId', targetId)];
+      const queries = [Query.equal('contentType', targetType), Query.equal('contentId', targetId)];
       if (onlyApproved) {
         queries.push(Query.equal('status', 'approved'));
       }

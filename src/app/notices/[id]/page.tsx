@@ -337,6 +337,16 @@ export default function NoticeDetailPage() {
                     <span>{calculateReadingTime(notice.content)} 分钟阅读</span>
                   </div>
                 </div>
+
+                {/* 最后编辑者信息 */}
+                {notice.lastEditorName && (
+                  <div className="mt-4 pt-4 border-t border-[#283930] text-xs text-[#9db9ab]">
+                    <span>最后编辑：{notice.lastEditorName}</span>
+                    {notice.updatedAt && notice.updatedAt !== notice.createdAt && (
+                      <span> • {new Date(notice.updatedAt).toLocaleDateString('zh-CN')}</span>
+                    )}
+                  </div>
+                )}
               </header>
 
               {/* 图片轮播 */}
