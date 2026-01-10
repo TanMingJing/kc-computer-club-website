@@ -280,197 +280,197 @@ export default function NoticeDetailPage() {
     <div className="min-h-screen flex flex-col bg-[#102219]">
       <Header />
 
-      <main className="flex-1 w-full max-w-300 mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* 左侧：文章内容 */}
-          <article className="flex-1 max-w-200 mx-auto lg:mx-0">
-          {/* 面包屑导航 */}
-          <nav className="flex items-center text-sm text-[#9db9ab] mb-6 font-medium">
-            <Link href="/" className="hover:text-[#13ec80] transition-colors">
-              首页
-            </Link>
-            <span className="mx-2">/</span>
-            <Link href="/notices" className="hover:text-[#13ec80] transition-colors">
-              公告
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-white truncate max-w-50">{notice.title}</span>
-          </nav>
-
-          {/* 文章头部 */}
-          <header className="mb-8">
-            {/* 标签 */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {Array.isArray(notice.tags) && notice.tags.map((tag: string) => {
-                const style = TAG_STYLES[tag] || { bg: 'bg-gray-500/10', text: 'text-gray-400' };
-                return (
-                  <span
-                    key={tag}
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${style.bg} ${style.text} border border-current/20`}
-                  >
-                    {tag}
-                  </span>
-                );
-              })}
-            </div>
-
-            {/* 标题 */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4 tracking-[-0.02em]">
-              {notice.title}
-            </h1>
-
-            {/* 元信息 */}
-            <div className="flex items-center gap-4 text-sm text-[#9db9ab] flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                <span>{new Date(notice.createdAt).toLocaleDateString('zh-CN')}</span>
-              </div>
-              <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">person</span>
-                <span>{notice.author}</span>
-              </div>
-              <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">schedule</span>
-                <span>{calculateReadingTime(notice.content)} 分钟阅读</span>
-              </div>
-            </div>
-          </header>
-
-          {/* 图片轮播 */}
-          {notice.images && notice.images.length > 0 && (
-            <div className="my-10">
-              <ImageCarousel images={notice.images} title={notice.title} showThumbnails={true} />
-            </div>
-          )}
-
-          {/* 文章内容 */}
-          <div
-            className="prose prose-lg prose-invert max-w-none text-[#E0E0E0] [&_a]:text-primary [&_a]:no-underline hover:[&_a]:underline [&_strong]:text-white [&_code]:bg-[#1E2E25] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:text-primary"
-            dangerouslySetInnerHTML={{ __html: notice.content }}
-          />
-
-
-
-          {/* 底部互动区域 */}
-          <div className="flex items-center justify-between pt-8 border-t border-[#283930] flex-wrap gap-4">
-            <Link
-              href="/notices"
-              className="inline-flex items-center gap-2 text-sm font-medium text-[#9db9ab] hover:text-[#13ec80] transition-colors"
-            >
-              <span className="material-symbols-outlined text-lg">arrow_back</span>
-              返回公告列表
-            </Link>
-            <div className="flex gap-2 flex-wrap">
-              {/* 复制链接 */}
-              <button
-                title="复制链接"
-                className={`p-2 rounded-full transition-colors ${
-                  copySuccess
-                    ? 'text-[#13ec80] bg-[#13ec80]/10'
-                    : 'text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10'
-                }`}
-                onClick={handleCopyLink}
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  {copySuccess ? 'check_circle' : 'link'}
-                </span>
-              </button>
-              
-              {/* 打印 */}
-              <button
-                title="打印公告"
-                className="p-2 rounded-full text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10 transition-colors"
-                onClick={handlePrint}
-              >
-                <span className="material-symbols-outlined text-[20px]">print</span>
-              </button>
-              
-              {/* 分享到微信 */}
-              <button
-                title="分享"
-                className="p-2 rounded-full text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10 transition-colors"
-                onClick={() => {
-                  // 可集成QR代码或分享弹窗
-                  alert('分享链接：' + window.location.href);
-                }}
-              >
-                <span className="material-symbols-outlined text-[20px]">share</span>
-              </button>
-            </div>
-          </div>
-        </article>
-
-        {/* 右侧：侧边栏 */}
-        <aside className="hidden lg:block w-80 shrink-0">
-          <div className="sticky top-24 space-y-8">
-            {/* 相关公告 */}
-            <div className="bg-[#1A2C23] rounded-xl border border-[#283930] p-5 shadow-sm">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#9db9ab] mb-4">
-                相关公告
-              </h3>
-              <div className="space-y-4">
-                {relatedNotices.length > 0 ? (
-                  relatedNotices.map((relatedNotice, index) => (
-                    <div key={relatedNotice.$id}>
-                      {index > 0 && <hr className="border-[#283930] mb-4" />}
-                      <Link href={`/notices/${relatedNotice.$id}`} className="block group">
-                        <span className="text-xs text-[#13ec80] mb-1 block">
-                          {new Date(relatedNotice.createdAt).toLocaleDateString('zh-CN')}
-                        </span>
-                        <h4 className="text-sm font-bold text-white group-hover:text-[#13ec80] transition-colors line-clamp-2">
-                          {relatedNotice.title}
-                        </h4>
-                      </Link>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-[#9db9ab]">暂无相关公告</p>
-                )}
-              </div>
-              <Link
-                href="/notices"
-                className="inline-block mt-4 text-xs font-bold text-[#13ec80] hover:text-white transition-colors"
-              >
-                查看所有公告 →
-              </Link>
-            </div>
-
-            {/* 下一个活动 */}
-            <div className="bg-linear-to-br from-[#1A2C23] to-[#102219] rounded-xl border border-[#283930] p-5 relative overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#13ec80]/20 blur-2xl rounded-full"></div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4 relative z-10">
-                近期活动
-              </h3>
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-[#13ec80]/20 p-2 rounded-lg text-[#13ec80]">
-                    <span className="material-symbols-outlined">code</span>
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">代码之夜</p>
-                    <p className="text-[#9db9ab] text-xs">每周例会</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-300 mb-4">
-                  <span className="material-symbols-outlined text-[16px]">event</span>
-                  <span>周五 • 下午 6:00</span>
-                </div>
-                <Link href="/activities">
-                  <Button variant="secondary" size="sm" className="w-full">
-                    查看活动详情
-                  </Button>
+      <main className="flex-1 w-full mx-auto py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* 左侧：文章内容 */}
+            <article className="flex-1 min-w-0">
+              {/* 面包屑导航 */}
+              <nav className="flex items-center text-sm text-[#9db9ab] mb-6 font-medium">
+                <Link href="/" className="hover:text-[#13ec80] transition-colors">
+                  首页
                 </Link>
-              </div>
-            </div>
-          </div>
-        </aside>
-        </div>
+                <span className="mx-2">/</span>
+                <Link href="/notices" className="hover:text-[#13ec80] transition-colors">
+                  公告
+                </Link>
+                <span className="mx-2">/</span>
+                <span className="text-white truncate max-w-50">{notice.title}</span>
+              </nav>
 
-        {/* 评论区 - 跨越全宽，显示在底部 */}
-        <div className="w-full max-w-200 mx-auto lg:mx-0">
-          <CommentSection targetType="notice" targetId={notice.$id} targetTitle={notice.title} />
+              {/* 文章头部 */}
+              <header className="mb-8">
+                {/* 标签 */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Array.isArray(notice.tags) && notice.tags.map((tag: string) => {
+                    const style = TAG_STYLES[tag] || { bg: 'bg-gray-500/10', text: 'text-gray-400' };
+                    return (
+                      <span
+                        key={tag}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${style.bg} ${style.text} border border-current/20`}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+
+                {/* 标题 */}
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4 tracking-[-0.02em]">
+                  {notice.title}
+                </h1>
+
+                {/* 元信息 */}
+                <div className="flex items-center gap-4 text-sm text-[#9db9ab] flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                    <span>{new Date(notice.createdAt).toLocaleDateString('zh-CN')}</span>
+                  </div>
+                  <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    <span>{notice.author}</span>
+                  </div>
+                  <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px]">schedule</span>
+                    <span>{calculateReadingTime(notice.content)} 分钟阅读</span>
+                  </div>
+                </div>
+              </header>
+
+              {/* 图片轮播 */}
+              {notice.images && notice.images.length > 0 && (
+                <div className="my-10">
+                  <ImageCarousel images={notice.images} title={notice.title} showThumbnails={true} />
+                </div>
+              )}
+
+              {/* 文章内容 */}
+              <div
+                className="prose prose-lg prose-invert max-w-none text-[#E0E0E0] break-words whitespace-normal [&_a]:text-primary [&_a]:no-underline hover:[&_a]:underline [&_strong]:text-white [&_code]:bg-[#1E2E25] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:text-primary [&_p]:mb-4 [&_p]:break-words [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:break-words [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-white [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:break-words [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_li]:text-[#E0E0E0] [&_li]:break-words [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:bg-[#1A2C23] [&_blockquote]:p-4 [&_blockquote]:rounded-r-lg [&_blockquote]:my-8 [&_blockquote]:break-words"
+                dangerouslySetInnerHTML={{ __html: notice.content }}
+              />
+
+              {/* 底部互动区域 */}
+              <div className="flex items-center justify-between pt-8 border-t border-[#283930] flex-wrap gap-4">
+                <Link
+                  href="/notices"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-[#9db9ab] hover:text-[#13ec80] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">arrow_back</span>
+                  返回公告列表
+                </Link>
+                <div className="flex gap-2 flex-wrap">
+                  {/* 复制链接 */}
+                  <button
+                    title="复制链接"
+                    className={`p-2 rounded-full transition-colors ${
+                      copySuccess
+                        ? 'text-[#13ec80] bg-[#13ec80]/10'
+                        : 'text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10'
+                    }`}
+                    onClick={handleCopyLink}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {copySuccess ? 'check_circle' : 'link'}
+                    </span>
+                  </button>
+                  
+                  {/* 打印 */}
+                  <button
+                    title="打印公告"
+                    className="p-2 rounded-full text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10 transition-colors"
+                    onClick={handlePrint}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">print</span>
+                  </button>
+                  
+                  {/* 分享到微信 */}
+                  <button
+                    title="分享"
+                    className="p-2 rounded-full text-[#9db9ab] hover:text-[#13ec80] hover:bg-[#13ec80]/10 transition-colors"
+                    onClick={() => {
+                      // 可集成QR代码或分享弹窗
+                      alert('分享链接：' + window.location.href);
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">share</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            {/* 右侧：侧边栏 */}
+            <aside className="hidden lg:block w-80 shrink-0">
+              <div className="sticky top-24 space-y-8">
+                {/* 相关公告 */}
+                <div className="bg-[#1A2C23] rounded-xl border border-[#283930] p-5 shadow-sm">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-[#9db9ab] mb-4">
+                    相关公告
+                  </h3>
+                  <div className="space-y-4">
+                    {relatedNotices.length > 0 ? (
+                      relatedNotices.map((relatedNotice, index) => (
+                        <div key={relatedNotice.$id}>
+                          {index > 0 && <hr className="border-[#283930] mb-4" />}
+                          <Link href={`/notices/${relatedNotice.$id}`} className="block group">
+                            <span className="text-xs text-[#13ec80] mb-1 block">
+                              {new Date(relatedNotice.createdAt).toLocaleDateString('zh-CN')}
+                            </span>
+                            <h4 className="text-sm font-bold text-white group-hover:text-[#13ec80] transition-colors line-clamp-2">
+                              {relatedNotice.title}
+                            </h4>
+                          </Link>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-[#9db9ab]">暂无相关公告</p>
+                    )}
+                  </div>
+                  <Link
+                    href="/notices"
+                    className="inline-block mt-4 text-xs font-bold text-[#13ec80] hover:text-white transition-colors"
+                  >
+                    查看所有公告 →
+                  </Link>
+                </div>
+
+                {/* 下一个活动 */}
+                <div className="bg-linear-to-br from-[#1A2C23] to-[#102219] rounded-xl border border-[#283930] p-5 relative overflow-hidden">
+                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#13ec80]/20 blur-2xl rounded-full"></div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4 relative z-10">
+                    近期活动
+                  </h3>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="bg-[#13ec80]/20 p-2 rounded-lg text-[#13ec80]">
+                        <span className="material-symbols-outlined">code</span>
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-sm">代码之夜</p>
+                        <p className="text-[#9db9ab] text-xs">每周例会</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-300 mb-4">
+                      <span className="material-symbols-outlined text-[16px]">event</span>
+                      <span>周五 • 下午 6:00</span>
+                    </div>
+                    <Link href="/activities">
+                      <Button variant="secondary" size="sm" className="w-full">
+                        查看活动详情
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          {/* 评论区 */}
+          <div className="mt-12 pt-8 border-t border-[#283930]">
+            <CommentSection targetType="notice" targetId={notice.$id} targetTitle={notice.title} />
+          </div>
         </div>
       </main>
 

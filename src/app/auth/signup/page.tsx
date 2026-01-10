@@ -1,13 +1,15 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateChineseName } from '@/services/auth.service';
 
 export default function StudentSignupPage() {
-  const { signup } = useAuth();
+  const router = useRouter();
+  const { signup, user, isLoading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,8 +17,15 @@ export default function StudentSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
   const [showVerificationNotice, setShowVerificationNotice] = useState(false);
+
+  // Redirect to home if user already has a session
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push('/');
+    }
+  }, [user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +55,7 @@ export default function StudentSignupPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
 
     try {
       await signup(name, email, password);
@@ -54,9 +63,20 @@ export default function StudentSignupPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败');
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
+
+  // Show loading state while checking session
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#102219]">
+        <div className="animate-spin material-symbols-outlined text-[#13ec80] text-4xl">
+          hourglass_bottom
+        </div>
+      </div>
+    );
+  }
 
   // Show verification notice after successful signup
   if (showVerificationNotice) {
@@ -241,10 +261,10 @@ export default function StudentSignupPage() {
             {/* 注册按钮 */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isFormLoading}
               className="w-full py-3 bg-[#13ec80] text-[#102219] font-bold rounded-lg hover:bg-[#0fd673] disabled:opacity-50 transition-colors mt-6 flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isFormLoading ? (
                 <>
                   <span className="animate-spin material-symbols-outlined">
                     hourglass_bottom

@@ -1,19 +1,26 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function StudentLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
+
+  // Redirect to home if user already has a session
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push('/');
+    }
+  }, [user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +33,7 @@ export default function StudentLoginPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
 
     try {
       await login(email, password);
@@ -34,9 +41,20 @@ export default function StudentLoginPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
+
+  // Show loading state while checking session
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#102219]">
+        <div className="animate-spin material-symbols-outlined text-[#13ec80] text-4xl">
+          hourglass_bottom
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#102219] px-4 py-12 relative overflow-hidden">
@@ -128,10 +146,10 @@ export default function StudentLoginPage() {
             {/* 登录按钮 */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isFormLoading}
               className="w-full py-3 bg-[#13ec80] text-[#102219] font-bold rounded-lg hover:bg-[#0fd673] disabled:opacity-50 transition-colors mt-6 flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isFormLoading ? (
                 <>
                   <span className="animate-spin material-symbols-outlined">
                     hourglass_bottom
