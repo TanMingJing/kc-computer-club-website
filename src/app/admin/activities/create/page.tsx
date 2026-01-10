@@ -565,7 +565,7 @@ export default function CreateActivity() {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full !bg-[#137fec] !hover:bg-[#0f5fcc]"
+                  className="w-full bg-[#137fec]! hover:bg-[#0f5fcc]"
                   leftIcon={isSaving ? 'sync' : 'check'}
                   disabled={isSaving || !formData.title || !formData.location || !formData.date || !formData.endDate || !formData.registrationDeadline || !formData.description}
                 >

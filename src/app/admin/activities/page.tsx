@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/Input';
 import { Loading } from '@/components/ui/Loading';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Activity {
   $id: string;
@@ -45,10 +47,21 @@ const mockActivities: Activity[] = [
 ];
 
 export default function AdminActivities() {
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('全部');
   const [activities, setActivities] = useState<Activity[]>(mockActivities);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // 权限检查
+  useEffect(() => {
+    if (!authLoading && (!user || !('role' in user) || user.role !== 'admin')) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     const loadActivities = async () => {
@@ -74,8 +87,31 @@ export default function AdminActivities() {
       }
     };
 
-    loadActivities();
-  }, []);
+    if (user && 'role' in user && user.role === 'admin') {
+      loadActivities();
+    }
+  }, [user]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/activities/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setActivities(activities.filter((a) => a.$id !== id));
+        setDeleteId(null);
+      } else {
+        alert(data.error || '删除失败');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '删除失败');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // 过滤活动
   const filteredActivities = activities.filter((activity) => {
@@ -108,7 +144,7 @@ export default function AdminActivities() {
           <Button 
             variant="primary" 
             leftIcon="add"
-            className="!bg-[#137fec] !hover:bg-[#0f5fcc]"
+            className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
           >
             创建活动
           </Button>
@@ -231,16 +267,20 @@ export default function AdminActivities() {
                   {/* 操作按钮 */}
                   <div className="ml-4 flex gap-2 shrink-0">
                     <Link href={`/admin/activities/${activity.id}/edit`}>
-                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors">
+                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors" title="编辑">
                         <span className="material-symbols-outlined">edit</span>
                       </button>
                     </Link>
                     <Link href={`/admin/activities/${activity.id}/signups`}>
-                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors">
+                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors" title="查看报名">
                         <span className="material-symbols-outlined">group</span>
                       </button>
                     </Link>
-                    <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-red-400 transition-colors">
+                    <button 
+                      onClick={() => setDeleteId(activity.$id)}
+                      className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-red-400 transition-colors" 
+                      title="删除"
+                    >
                       <span className="material-symbols-outlined">delete</span>
                     </button>
                   </div>
@@ -257,7 +297,7 @@ export default function AdminActivities() {
             <Link href="/admin/activities/create">
               <Button 
                 variant="primary"
-                className="!bg-[#137fec] !hover:bg-[#0f5fcc]"
+                className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
               >
                 创建第一个活动
               </Button>
@@ -265,6 +305,39 @@ export default function AdminActivities() {
           </div>
         )}
       </div>
+
+      {/* 删除确认对话框 */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-white font-bold text-lg mb-2">确定删除此活动？</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              删除后将无法恢复，该活动的所有报名数据也将被清除。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-[#283946] text-white rounded-lg hover:bg-[#2f3d47] transition-colors disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => handleDelete(deleteId)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting && (
+                  <span className="material-symbols-outlined animate-spin text-sm">
+                    hourglass_bottom
+                  </span>
+                )}
+                {isDeleting ? '删除中...' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

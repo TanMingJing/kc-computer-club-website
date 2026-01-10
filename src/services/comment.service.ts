@@ -40,21 +40,21 @@ export interface ReplyCommentInput {
 }
 
 // Comment Service
-const mapToComment = (doc: any): Comment => {
+const mapToComment = (doc: Record<string, unknown>): Comment => {
   return {
-    $id: doc.$id,
-    contentType: doc.contentType,
-    contentId: doc.contentId,
-    nickname: doc.nickname,
-    email: doc.email || '',
-    content: doc.content,
-    status: doc.status,
-    reply: doc.reply || undefined,
-    replyAuthor: doc.replyAuthor || undefined,
-    replyAt: doc.replyAt || undefined,
-    isDeleted: doc.isDeleted || false,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
+    $id: doc.$id as string,
+    contentType: doc.contentType as 'notice' | 'activity',
+    contentId: doc.contentId as string,
+    nickname: doc.nickname as string,
+    email: (doc.email as string) || '',
+    content: doc.content as string,
+    status: doc.status as 'pending' | 'approved' | 'rejected',
+    reply: (doc.reply as string) || undefined,
+    replyAuthor: (doc.replyAuthor as string) || undefined,
+    replyAt: (doc.replyAt as string) || undefined,
+    isDeleted: (doc.isDeleted as boolean) || false,
+    createdAt: doc.createdAt as string,
+    updatedAt: doc.updatedAt as string,
   };
 };
 

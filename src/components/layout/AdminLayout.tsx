@@ -33,6 +33,8 @@ const navItems: NavItem[] = [
   { label: '活动管理', href: '/admin/activities', icon: 'event' },
   { label: '报名管理', href: '/admin/signups', icon: 'how_to_reg' },
   { label: '评论管理', href: '/admin/comments', icon: 'chat' },
+  { label: '考勤管理', href: '/admin/attendance', icon: 'event_available' },
+  { label: '项目审核', href: '/admin/projects', icon: 'folder_check' },
   { label: '管理员管理', href: '/admin/manage', icon: 'admin_panel_settings' },
   { label: '社团信息', href: '/admin/settings', icon: 'settings' },
 ];

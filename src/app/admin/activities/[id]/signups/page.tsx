@@ -3,15 +3,24 @@
 
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Signup {
+  $id?: string;
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   signedUpAt: string;
-  status: 'attended' | 'registered' | 'cancelled';
+  status: 'attended' | 'registered' | 'cancelled' | 'pending' | 'confirmed';
+}
+
+interface Activity {
+  $id: string;
+  title: string;
+  description?: string;
 }
 
 // 模拟报名数据
@@ -54,17 +63,87 @@ const statusLabels: Record<string, string> = {
   attended: '已参加',
   registered: '已注册',
   cancelled: '已取消',
+  pending: '待确认',
+  confirmed: '已确认',
 };
 
 const statusBgColors: Record<string, string> = {
   attended: 'bg-green-500/10 text-green-400',
   registered: 'bg-blue-500/10 text-blue-400',
   cancelled: 'bg-red-500/10 text-red-400',
+  pending: 'bg-amber-500/10 text-amber-400',
+  confirmed: 'bg-blue-500/10 text-blue-400',
 };
 
 export default function ActivitySignups() {
-  const [signups] = useState(mockSignups);
+  const params = useParams();
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  
+  const activityId = params.id as string;
+  const [activity, setActivity] = useState<Activity | null>(null);
+  const [signups, setSignups] = useState<Signup[]>(mockSignups);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedSignups, setSelectedSignups] = useState<Set<string>>(new Set());
+
+  // 权限检查
+  useEffect(() => {
+    if (!authLoading && (!user || !('role' in user) || user.role !== 'admin')) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
+
+  // 加载活动和报名数据
+  useEffect(() => {
+    if (user && 'role' in user && user.role === 'admin' && activityId) {
+      loadActivityAndSignups();
+    }
+  }, [user, activityId]);
+
+  const loadActivityAndSignups = async () => {
+    try {
+      setIsLoading(true);
+
+      // 获取活动信息
+      const activityRes = await fetch(`/api/activities/${activityId}`);
+      const activityData = await activityRes.json();
+
+      if (activityData.success && activityData.activity) {
+        setActivity({
+          $id: activityData.activity.$id,
+          title: activityData.activity.title,
+          description: activityData.activity.description,
+        });
+      }
+
+      // 获取该活动的报名信息
+      const signupsRes = await fetch(`/api/signups?activityId=${activityId}`);
+      const signupsData = await signupsRes.json();
+
+      if (signupsData.success && signupsData.signups) {
+        const formatted = (signupsData.signups as unknown[]).map((s: unknown) => {
+          const signup = s as Record<string, unknown>;
+          return {
+            $id: (signup.$id as string) || '',
+            id: (signup.$id as string) || '',
+            name: (signup.studentName as string) || '',
+            email: (signup.email as string) || '',
+            phone: (signup.phone as string) || '',
+            signedUpAt: new Date(signup.createdAt as string).toLocaleDateString('zh-CN'),
+            status: (signup.status as 'attended' | 'registered' | 'cancelled' | 'pending' | 'confirmed') || 'pending',
+          };
+        });
+        setSignups(formatted);
+      } else {
+        setSignups(mockSignups);
+      }
+    } catch (err) {
+      console.error('加载数据失败:', err);
+      setSignups(mockSignups);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleSelectSignup = (id: string) => {
     const newSelected = new Set(selectedSignups);
@@ -84,13 +163,35 @@ export default function ActivitySignups() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('确定要删除此报名吗？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/signups/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setSignups(signups.filter((s) => s.$id !== id));
+      } else {
+        alert(data.error || '删除失败');
+      }
+    } catch (err) {
+      console.error('删除报名失败:', err);
+      alert(err instanceof Error ? err.message : '删除失败');
+    }
+  };
+
   return (
     <AdminLayout adminName="管理员">
       {/* 页面头部 */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-white mb-2">
-            报名管理 - Python 数据科学工作坊
+            报名管理 - {activity?.title || '加载中...'}
           </h1>
           <p className="text-gray-400">管理参与者的报名信息。</p>
         </div>
@@ -108,9 +209,9 @@ export default function ActivitySignups() {
           <p className="text-2xl font-bold text-white">{signups.length}</p>
         </div>
         <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">已注册</p>
+          <p className="text-gray-400 text-sm mb-1">已确认</p>
           <p className="text-2xl font-bold text-blue-400">
-            {signups.filter((s) => s.status === 'registered').length}
+            {signups.filter((s) => s.status === 'registered' || s.status === 'confirmed').length}
           </p>
         </div>
         <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
@@ -145,7 +246,14 @@ export default function ActivitySignups() {
 
       {/* 报名列表 */}
       <div className="bg-[#1a2632] border border-[#283946] rounded-2xl overflow-hidden">
-        {signups.length > 0 ? (
+        {isLoading ? (
+          <div className="px-6 py-12 text-center">
+            <span className="material-symbols-outlined text-4xl text-gray-600 block mb-3 animate-spin">
+              hourglass_bottom
+            </span>
+            <p className="text-gray-400">加载报名信息中...</p>
+          </div>
+        ) : signups.length > 0 ? (
           <>
             {/* 表头 */}
             <div className="px-6 py-4 border-b border-[#283946] flex items-center justify-between bg-[#1f2d39]">
@@ -185,12 +293,14 @@ export default function ActivitySignups() {
                           </span>
                           {signup.email}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">
-                            phone
+                        {signup.phone && (
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">
+                              phone
+                            </span>
+                            {signup.phone}
                           </span>
-                          {signup.phone}
-                        </span>
+                        )}
                         <span className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-sm">
                             calendar_today
@@ -210,7 +320,11 @@ export default function ActivitySignups() {
                     >
                       {statusLabels[signup.status]}
                     </span>
-                    <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-red-400 transition-colors">
+                    <button 
+                      onClick={() => handleDelete(signup.$id || signup.id)}
+                      className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-red-400 transition-colors"
+                      title="删除"
+                    >
                       <span className="material-symbols-outlined">delete</span>
                     </button>
                   </div>

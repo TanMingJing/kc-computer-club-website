@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 'use client';
 
 import { useEffect } from 'react';
@@ -84,7 +85,7 @@ const mockProjects = [
 ];
 
 export default function HomePage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading /* , isStudent, isAdmin */ } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function HomePage() {
       />
 
       {/* 主内容 */}
-      <main className="flex-1 w-full max-w-300 mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-12">
+      <main className="flex-1 w-full max-w-300 mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-12">
         {/* Hero 区域 */}
         <HeroSection
           clubName="电脑社"

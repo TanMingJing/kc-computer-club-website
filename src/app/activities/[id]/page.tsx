@@ -230,6 +230,19 @@ export default function ActivityDetailPage() {
     setIsSubmitting(true);
 
     try {
+      // 先检查是否已经报名过这个活动
+      const activityId = Array.isArray(params.id) ? params.id[0] : String(params.id);
+      const checkRes = await fetch(`/api/signups?activityId=${activityId}&email=${encodeURIComponent(formData.email)}`);
+      const checkData = await checkRes.json();
+
+      if (checkData.success && checkData.signups && checkData.signups.length > 0) {
+        setToastType('error');
+        setToastMessage('你已经报名过这个活动了！');
+        setShowToast(true);
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await fetch('/api/signups', {
         method: 'POST',
         headers: {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -32,7 +33,9 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} font-sans antialiased bg-[#102219] text-white`}
       >
         <AuthProvider>
-          {children}
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

@@ -2,192 +2,223 @@
 'use client';
 
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { useState } from 'react';
+import { Input } from '@/components/ui/Input';
+import { Loading } from '@/components/ui/Loading';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Comment {
-  id: string;
-  author: string;
+  $id: string;
+  nickname: string;
+  email: string;
   content: string;
-  targetTitle: string;
-  targetType: 'notice' | 'activity';
+  contentType: 'activity' | 'notice';
+  contentId: string;
   createdAt: string;
-  status: 'approved' | 'pending' | 'rejected';
+  targetTitle: string;
 }
 
-// 模拟评论数据
-const mockComments: Comment[] = [
-  {
-    id: '1',
-    author: '张三',
-    content: '感谢分享，学到了很多东西！',
-    targetTitle: '2025年第一季度活动计划发布',
-    targetType: 'notice',
-    createdAt: '2025-01-18 14:30',
-    status: 'approved',
-  },
-  {
-    id: '2',
-    author: '李四',
-    content: '请问这次活动有没有其他时间段？',
-    targetTitle: 'Python 数据科学工作坊',
-    targetType: 'activity',
-    createdAt: '2025-01-19 10:15',
-    status: 'pending',
-  },
-  {
-    id: '3',
-    author: '王五',
-    content: '垃圾内容111',
-    targetTitle: 'Web 开发训练营',
-    targetType: 'activity',
-    createdAt: '2025-01-18 09:00',
-    status: 'rejected',
-  },
-  {
-    id: '4',
-    author: '赵六',
-    content: '非常期待下次的活动！',
-    targetTitle: 'GIS 讲座',
-    targetType: 'activity',
-    createdAt: '2025-01-15 16:45',
-    status: 'approved',
-  },
-];
-
-const statusLabels: Record<string, string> = {
-  approved: '已批准',
-  pending: '待审核',
-  rejected: '已拒绝',
-};
-
-const statusBgColors: Record<string, string> = {
-  approved: 'bg-green-500/10 text-green-400',
-  pending: 'bg-amber-500/10 text-amber-400',
-  rejected: 'bg-red-500/10 text-red-400',
-};
-
 export default function AdminComments() {
-  const [comments] = useState(mockComments);
-  const [filter, setFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filteredComments =
-    filter === 'all' ? comments : comments.filter((c) => c.status === filter);
+  // 权限检查
+  useEffect(() => {
+    if (!authLoading && (!user || !('role' in user) || user.role !== 'admin')) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
+
+  // 加载评论
+  useEffect(() => {
+    if (user && 'role' in user && user.role === 'admin') {
+      loadComments();
+    }
+  }, [user]);
+
+  const loadComments = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/comments');
+      const data = await response.json();
+
+      if (data.success && data.comments) {
+        // 获取所有活动和通知标题用于映射
+        const [activitiesRes, noticesRes] = await Promise.all([
+          fetch('/api/activities'),
+          fetch('/api/notices'),
+        ]);
+        
+        const activitiesData = await activitiesRes.json();
+        const noticesData = await noticesRes.json();
+        
+        const activitiesMap = new Map(
+          (activitiesData.activities || []).map((a: Record<string, unknown>) => [
+            (a.$id as string), 
+            (a.title as string)
+          ])
+        );
+        const noticesMap = new Map(
+          (noticesData.notices || []).map((n: Record<string, unknown>) => [
+            (n.$id as string), 
+            (n.title as string)
+          ])
+        );
+
+        const formatted = (data.comments as unknown[]).map((c: unknown) => {
+          const comment = c as Record<string, unknown>;
+          const contentType = (comment.contentType as string) || 'activity';
+          const contentId = (comment.contentId as string) || '';
+          const titleMap = contentType === 'notice' ? noticesMap : activitiesMap;
+          const targetTitle = (titleMap.get(contentId) || '内容') as string;
+
+          return {
+            $id: (comment.$id as string) || '',
+            nickname: (comment.nickname as string) || '',
+            email: (comment.email as string) || '',
+            content: (comment.content as string) || '',
+            contentType: (contentType as 'activity' | 'notice') || 'activity',
+            contentId,
+            createdAt: (comment.createdAt as string) || new Date().toISOString(),
+            targetTitle,
+          };
+        });
+        setComments(formatted);
+      } else {
+        setComments([]);
+      }
+    } catch (err) {
+      console.error('加载评论失败:', err);
+      setComments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/comments/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setComments(comments.filter((c) => c.$id !== id));
+        setDeleteId(null);
+      } else {
+        alert(data.error || '删除失败');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '删除失败');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // 过滤评论
+  const filteredComments = comments.filter((comment) => {
+    const matchSearch =
+      comment.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comment.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comment.targetTitle.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchSearch;
+  });
 
   return (
     <AdminLayout adminName="管理员">
       {/* 页面头部 */}
       <div className="mb-8">
         <h1 className="text-3xl font-black text-white mb-2">评论管理</h1>
-        <p className="text-gray-400">审核和管理用户评论，维护社区环境。</p>
+        <p className="text-gray-400">管理用户评论，维护社区环境。</p>
       </div>
 
-      {/* 过滤选项 */}
-      <div className="mb-6 flex gap-2 flex-wrap">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            filter === 'all'
-              ? 'bg-[#137fec] text-white'
-              : 'bg-[#1a2632] text-gray-400 hover:text-white border border-[#283946]'
-          }`}
-        >
-          全部 ({comments.length})
-        </button>
-        <button
-          onClick={() => setFilter('pending')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            filter === 'pending'
-              ? 'bg-[#137fec] text-white'
-              : 'bg-[#1a2632] text-gray-400 hover:text-white border border-[#283946]'
-          }`}
-        >
-          待审核 ({comments.filter((c) => c.status === 'pending').length})
-        </button>
-        <button
-          onClick={() => setFilter('approved')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            filter === 'approved'
-              ? 'bg-[#137fec] text-white'
-              : 'bg-[#1a2632] text-gray-400 hover:text-white border border-[#283946]'
-          }`}
-        >
-          已批准 ({comments.filter((c) => c.status === 'approved').length})
-        </button>
-        <button
-          onClick={() => setFilter('rejected')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            filter === 'rejected'
-              ? 'bg-[#137fec] text-white'
-              : 'bg-[#1a2632] text-gray-400 hover:text-white border border-[#283946]'
-          }`}
-        >
-          已拒绝 ({comments.filter((c) => c.status === 'rejected').length})
-        </button>
+      {/* 搜索栏 */}
+      <div className="mb-6">
+        <Input
+          placeholder="搜索评论内容、评论者或评论对象..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          leftIcon="search"
+        />
+      </div>
+
+      {/* 统计信息 */}
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">评论总数</p>
+          <p className="text-2xl font-bold text-white">{comments.length}</p>
+        </div>
+        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">活动评论</p>
+          <p className="text-2xl font-bold text-blue-400">
+            {comments.filter((c) => c.contentType === 'activity').length}
+          </p>
+        </div>
+        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">通知评论</p>
+          <p className="text-2xl font-bold text-green-400">
+            {comments.filter((c) => c.contentType === 'notice').length}
+          </p>
+        </div>
       </div>
 
       {/* 评论列表 */}
       <div className="bg-[#1a2632] border border-[#283946] rounded-2xl overflow-hidden">
-        {filteredComments.length > 0 ? (
+        {isLoading ? (
+          <div className="px-6 py-12 flex justify-center">
+            <Loading size="sm" text="加载评论中..." />
+          </div>
+        ) : filteredComments.length > 0 ? (
           <div className="divide-y divide-[#283946]">
             {filteredComments.map((comment) => (
               <div
-                key={comment.id}
+                key={comment.$id}
                 className="px-6 py-4 hover:bg-[#1f2d39] transition-colors"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-white font-semibold">{comment.author}</h3>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold">{comment.nickname}</h3>
                     <p className="text-gray-400 text-sm">
                       评论于{' '}
                       <span className="text-gray-500">{comment.targetTitle}</span>
                     </p>
                   </div>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium shrink-0 ${
-                      statusBgColors[comment.status]
-                    }`}
-                  >
-                    {statusLabels[comment.status]}
+                  <span className="text-xs text-gray-500 shrink-0 ml-4">
+                    {new Date(comment.createdAt).toLocaleString('zh-CN')}
                   </span>
                 </div>
 
                 {/* 评论内容 */}
-                <div className="bg-[#1f2d39] rounded-lg p-4 mb-3 text-white text-sm">
+                <div className="bg-[#1f2d39] rounded-lg p-4 mb-3 text-white text-sm wrap-break-word">
                   {comment.content}
                 </div>
 
-                {/* 元信息 */}
+                {/* 邮箱和类型 */}
                 <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                   <div className="flex items-center gap-4">
+                    <span>{comment.email}</span>
                     <span className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm">
-                        {comment.targetType === 'notice' ? 'article' : 'event'}
+                        {comment.contentType === 'notice' ? 'article' : 'event'}
                       </span>
-                      {comment.targetType === 'notice' ? '公告' : '活动'}评论
+                      {comment.contentType === 'notice' ? '通知' : '活动'}
                     </span>
-                    <span>{comment.createdAt}</span>
                   </div>
                 </div>
 
                 {/* 操作按钮 */}
                 <div className="flex gap-2">
-                  {comment.status !== 'approved' && (
-                    <button className="flex items-center gap-1 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-lg text-xs font-medium transition-colors">
-                      <span className="material-symbols-outlined text-sm">
-                        check_circle
-                      </span>
-                      批准
-                    </button>
-                  )}
-                  {comment.status !== 'rejected' && (
-                    <button className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-colors">
-                      <span className="material-symbols-outlined text-sm">
-                        block
-                      </span>
-                      拒绝
-                    </button>
-                  )}
-                  <button className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-colors">
+                  <button 
+                    onClick={() => setDeleteId(comment.$id)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-colors"
+                  >
                     <span className="material-symbols-outlined text-sm">delete</span>
                     删除
                   </button>
@@ -200,10 +231,43 @@ export default function AdminComments() {
             <span className="material-symbols-outlined text-6xl text-gray-600 block mb-3">
               chat
             </span>
-            <p className="text-gray-400">没有评论</p>
+            <p className="text-gray-400 mb-4">{comments.length === 0 ? '没有评论' : '没有找到匹配的评论'}</p>
           </div>
         )}
       </div>
+
+      {/* 删除确认对话框 */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-white font-bold text-lg mb-2">确定删除此评论？</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              删除后将无法恢复。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-[#283946] text-white rounded-lg hover:bg-[#2f3d47] transition-colors disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => handleDelete(deleteId)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting && (
+                  <span className="material-symbols-outlined animate-spin text-sm">
+                    hourglass_bottom
+                  </span>
+                )}
+                {isDeleting ? '删除中...' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

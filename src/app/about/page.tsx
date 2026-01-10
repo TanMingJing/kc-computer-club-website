@@ -1,14 +1,15 @@
+/* eslint-disable prettier/prettier */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 
-// 模拟社团信息
-const clubInfo = {
+// 默认社团信息
+const DEFAULT_CLUB_INFO = {
   name: '康中电脑社',
   description:
     '我们是一群热爱科技的学生，致力于探索编程、人工智能、网络安全等领域。无论你是编程新手还是技术大神，都欢迎加入我们！',
@@ -62,6 +63,8 @@ const subjectOptions = [
 ];
 
 export default function AboutPage() {
+  const [clubInfo, setClubInfo] = useState(DEFAULT_CLUB_INFO);
+  const [stats, setStats] = useState({ activeMembers: 50, yearlyActivities: 20, awardProjects: 10, partners: 5 });
   const [formData, setFormData] = useState({
     name: '',
     studentId: '',
@@ -71,6 +74,32 @@ export default function AboutPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // 从 localStorage 加载社团设置
+  useEffect(() => {
+    const stored = localStorage.getItem('clubSettings');
+    if (stored) {
+      try {
+        const settings = JSON.parse(stored);
+        setClubInfo({
+          name: settings.aboutTitle || DEFAULT_CLUB_INFO.name,
+          description: settings.aboutDescription || DEFAULT_CLUB_INFO.description,
+          email: settings.aboutEmail || DEFAULT_CLUB_INFO.email,
+          location: settings.aboutLocation || DEFAULT_CLUB_INFO.location,
+          meetingTime: settings.aboutMeetingTime || DEFAULT_CLUB_INFO.meetingTime,
+          socialLinks: DEFAULT_CLUB_INFO.socialLinks,
+        });
+        setStats({
+          activeMembers: settings.activeMembers || 50,
+          yearlyActivities: settings.yearlyActivities || 20,
+          awardProjects: settings.awardProjects || 10,
+          partners: settings.partners || 5,
+        });
+      } catch (error) {
+        console.error('Failed to parse club settings:', error);
+      }
+    }
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -373,19 +402,19 @@ export default function AboutPage() {
               <div className="bg-linear-to-br from-primary/20 via-[#1A2C23] to-[#102219] rounded-3xl p-8 border border-white/10">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
-                    <div className="text-4xl font-black text-primary mb-2">50+</div>
+                    <div className="text-4xl font-black text-primary mb-2">{stats.activeMembers}+</div>
                     <div className="text-gray-400 text-sm">活跃社员</div>
                   </div>
                   <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
-                    <div className="text-4xl font-black text-primary mb-2">20+</div>
+                    <div className="text-4xl font-black text-primary mb-2">{stats.yearlyActivities}+</div>
                     <div className="text-gray-400 text-sm">年度活动</div>
                   </div>
                   <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
-                    <div className="text-4xl font-black text-primary mb-2">10+</div>
+                    <div className="text-4xl font-black text-primary mb-2">{stats.awardProjects}+</div>
                     <div className="text-gray-400 text-sm">获奖项目</div>
                   </div>
                   <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
-                    <div className="text-4xl font-black text-primary mb-2">5+</div>
+                    <div className="text-4xl font-black text-primary mb-2">{stats.partners}+</div>
                     <div className="text-gray-400 text-sm">合作伙伴</div>
                   </div>
                 </div>

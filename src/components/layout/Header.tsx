@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -16,6 +17,7 @@ interface NavItem {
   label: string;
   href: string;
   active?: boolean;
+  icon?: string;
 }
 
 interface HeaderProps {
@@ -82,6 +84,67 @@ export function Header({
               {item.label}
             </Link>
           ))}
+          
+          {/* 更多菜单 */}
+          <div className="relative group">
+            <button className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+              <span>更多</span>
+              <span className="material-symbols-outlined text-lg">expand_more</span>
+            </button>
+            
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 mt-0 w-56 bg-white dark:bg-[#1a2c24] border border-gray-200 dark:border-[#283930] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="py-2">
+                {/* 学生菜单项 */}
+                <Link
+                  href="/attendance"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-[#13ec80]/10 dark:hover:bg-[#13ec80]/10 hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">event_available</span>
+                  <div>
+                    <div className="font-medium">签到</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">标记考勤</div>
+                  </div>
+                </Link>
+                
+                <Link
+                  href="/chat"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">chat</span>
+                  <div>
+                    <div className="font-medium">群聊</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">加入讨论</div>
+                  </div>
+                </Link>
+                
+                <Link
+                  href="/projects/submit"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">lightbulb</span>
+                  <div>
+                    <div className="font-medium">项目提交</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">提案新项目</div>
+                  </div>
+                </Link>
+
+                <div className="border-t border-gray-200 dark:border-[#283930] my-2" />
+
+                {/* 项目列表菜单项 */}
+                <Link
+                  href="/projects"
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">folder</span>
+                  <div>
+                    <div className="font-medium">所有项目</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">浏览项目列表</div>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
         </nav>
 
         {/* Right Actions */}
@@ -94,6 +157,7 @@ export function Header({
           ) : isStudent && user ? (
             // Student logged in
             <div className="hidden md:flex items-center gap-3">
+              <NotificationBell />
               <Link
                 href="/profile"
                 className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors cursor-pointer flex items-center gap-1"

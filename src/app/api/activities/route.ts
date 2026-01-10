@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { NextRequest, NextResponse } from 'next/server';
 import { activityService, CreateActivityInput } from '@/services/activity.service';
+import { Client, Databases, Query } from 'appwrite';
 
 /**
  * GET /api/activities - 获取所有活动
@@ -13,10 +14,40 @@ export async function GET(request: NextRequest) {
 
     const activities = await activityService.getAllActivities(onlyPublished);
 
+    // 实时统计每个活动的报名数
+    const client = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+    const databases = new Databases(client);
+
+    const activitiesWithCount = await Promise.all(
+      activities.map(async (activity) => {
+        try {
+          const signupsResponse = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'signups',
+            [
+              Query.equal('activityId', activity.$id),
+              Query.notEqual('status', 'cancelled'),
+            ]
+          );
+          const actualCount = signupsResponse.total || 0;
+          return {
+            ...activity,
+            currentParticipants: actualCount,
+          };
+        } catch (err) {
+          console.warn(`Failed to count signups for activity ${activity.$id}:`, err);
+          // 如果查询失败，返回数据库中存储的计数
+          return activity;
+        }
+      })
+    );
+
     return NextResponse.json({
       success: true,
-      total: activities.length,
-      activities,
+      total: activitiesWithCount.length,
+      activities: activitiesWithCount,
     });
   } catch (error: unknown) {
     const err = error as Error & { message?: string };
@@ -86,6 +117,32 @@ export async function POST(request: NextRequest) {
     };
 
     const activity = await activityService.createActivity(input);
+
+    // 如果活动发布（status='published'），向所有用户发送通知
+    if (status === 'published') {
+      try {
+        // 获取所有用户列表（这里需要实现）
+        // 为了演示，我们先向一个默认用户列表发送通知
+        const userIds = ['user1', 'user2', 'user3']; // 应该从数据库获取所有用户
+
+        for (const userId of userIds) {
+          await fetch(`${request.nextUrl.origin}/api/notifications`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              title: `新活动：${title}`,
+              message: `${date} 在 ${location} 举行的 "${description.substring(0, 50)}..." 活动`,
+              type: 'activity',
+              relatedId: activity.$id,
+            }),
+          }).catch((err) => console.error('发送通知失败:', err));
+        }
+      } catch (err) {
+        console.error('发送通知时出错:', err);
+        // 不要因为通知失败而阻止活动创建
+      }
+    }
 
     return NextResponse.json({
       success: true,

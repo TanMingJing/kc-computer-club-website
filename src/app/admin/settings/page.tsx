@@ -15,6 +15,15 @@ interface ClubSettings {
   foundedYear: number;
   memberCount: number;
   website: string;
+  aboutTitle?: string;
+  aboutDescription?: string;
+  aboutEmail?: string;
+  aboutLocation?: string;
+  aboutMeetingTime?: string;
+  activeMembers?: number;
+  yearlyActivities?: number;
+  awardProjects?: number;
+  partners?: number;
 }
 
 // 模拟社团设置数据
@@ -27,12 +36,30 @@ const MOCK_SETTINGS: ClubSettings = {
   foundedYear: 2020,
   memberCount: 156,
   website: 'https://computerclub.example.com',
+  aboutTitle: '康中电脑社',
+  aboutDescription: '我们是一群热爱科技的学生，致力于探索编程、人工智能、网络安全等领域。无论你是编程新手还是技术大神，都欢迎加入我们！',
+  aboutEmail: 'computerclub@school.edu.my',
+  aboutLocation: '电脑室 A304，科学楼三楼',
+  aboutMeetingTime: '每周五 下午 4:00 - 6:00',
+  activeMembers: 50,
+  yearlyActivities: 20,
+  awardProjects: 10,
+  partners: 5,
 };
+
+// 存储到 localStorage 和全局状态
+if (typeof window !== 'undefined') {
+  const stored = localStorage.getItem('clubSettings');
+  if (!stored) {
+    localStorage.setItem('clubSettings', JSON.stringify(MOCK_SETTINGS));
+  }
+}
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<ClubSettings>(MOCK_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'security' | 'api'>('basic');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'about' | 'security' | 'api'>('basic');
 
   const handleSettingChange = (field: keyof ClubSettings, value: string | number) => {
     setSettings((prev) => ({
@@ -43,9 +70,21 @@ export default function AdminSettings() {
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    // TODO: 保存到 Appwrite
+    try {
+      // 保存到 localStorage
+      localStorage.setItem('clubSettings', JSON.stringify(settings));
+      
+      // 模拟保存到 Appwrite
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // 显示成功提示
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error('保存失败:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -67,6 +106,16 @@ export default function AdminSettings() {
           }`}
         >
           基本信息
+        </button>
+        <button
+          onClick={() => setActiveTab('about')}
+          className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+            activeTab === 'about'
+              ? 'border-[#137fec] text-[#137fec]'
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          关于我们
         </button>
         <button
           onClick={() => setActiveTab('security')}
@@ -197,7 +246,145 @@ export default function AdminSettings() {
             <Button
               onClick={handleSaveSettings}
               variant="primary"
-              className="!bg-[#137fec] !hover:bg-[#0f5fcc]"
+              className="bg-[#137fec]! hover:bg-[#0f5fcc]"
+              disabled={isSaving}
+            >
+              {isSaving ? '保存中...' : '保存更改'}
+            </Button>
+            <Button variant="secondary">取消</Button>
+          </div>
+        </div>
+      )}
+
+      {/* 关于我们标签 */}
+      {activeTab === 'about' && (
+        <div className="space-y-6 max-w-3xl">
+          {/* 社团标题 */}
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6">
+            <label htmlFor="aboutTitle" className="block text-white font-semibold mb-3">
+              社团标题
+            </label>
+            <Input
+              id="aboutTitle"
+              value={settings.aboutTitle || ''}
+              onChange={(e) => handleSettingChange('aboutTitle', e.target.value)}
+              placeholder="例如: 康中电脑社"
+            />
+          </div>
+
+          {/* 社团介绍 */}
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6">
+            <label htmlFor="aboutDescription" className="block text-white font-semibold mb-3">
+              社团介绍
+            </label>
+            <textarea
+              id="aboutDescription"
+              value={settings.aboutDescription || ''}
+              onChange={(e) => handleSettingChange('aboutDescription', e.target.value)}
+              placeholder="介绍社团的内容、使命和愿景..."
+              rows={4}
+              className="w-full bg-[#1f2d39] border border-[#283946] rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#137fec] transition-colors resize-none"
+            />
+          </div>
+
+          {/* 联系信息 */}
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6">
+            <h3 className="text-white font-semibold mb-4">联系信息</h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="aboutEmail" className="block text-gray-400 text-sm font-medium mb-2">
+                  邮箱
+                </label>
+                <Input
+                  id="aboutEmail"
+                  type="email"
+                  value={settings.aboutEmail || ''}
+                  onChange={(e) => handleSettingChange('aboutEmail', e.target.value)}
+                  placeholder="例如: computerclub@school.edu.my"
+                />
+              </div>
+              <div>
+                <label htmlFor="aboutLocation" className="block text-gray-400 text-sm font-medium mb-2">
+                  活动地点
+                </label>
+                <Input
+                  id="aboutLocation"
+                  value={settings.aboutLocation || ''}
+                  onChange={(e) => handleSettingChange('aboutLocation', e.target.value)}
+                  placeholder="例如: 电脑室 A304，科学楼三楼"
+                />
+              </div>
+              <div>
+                <label htmlFor="aboutMeetingTime" className="block text-gray-400 text-sm font-medium mb-2">
+                  活动时间
+                </label>
+                <Input
+                  id="aboutMeetingTime"
+                  value={settings.aboutMeetingTime || ''}
+                  onChange={(e) => handleSettingChange('aboutMeetingTime', e.target.value)}
+                  placeholder="例如: 每周五 下午 4:00 - 6:00"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 统计数据 */}
+          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6">
+            <h3 className="text-white font-semibold mb-4">社团统计数据</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="activeMembers" className="block text-gray-400 text-sm font-medium mb-2">
+                  活跃社员数
+                </label>
+                <Input
+                  id="activeMembers"
+                  type="number"
+                  value={settings.activeMembers || 0}
+                  onChange={(e) => handleSettingChange('activeMembers', parseInt(e.target.value))}
+                />
+              </div>
+              <div>
+                <label htmlFor="yearlyActivities" className="block text-gray-400 text-sm font-medium mb-2">
+                  年度活动数
+                </label>
+                <Input
+                  id="yearlyActivities"
+                  type="number"
+                  value={settings.yearlyActivities || 0}
+                  onChange={(e) => handleSettingChange('yearlyActivities', parseInt(e.target.value))}
+                />
+              </div>
+              <div>
+                <label htmlFor="awardProjects" className="block text-gray-400 text-sm font-medium mb-2">
+                  获奖项目数
+                </label>
+                <Input
+                  id="awardProjects"
+                  type="number"
+                  value={settings.awardProjects || 0}
+                  onChange={(e) => handleSettingChange('awardProjects', parseInt(e.target.value))}
+                />
+              </div>
+              <div>
+                <label htmlFor="partners" className="block text-gray-400 text-sm font-medium mb-2">
+                  合作伙伴数
+                </label>
+                <Input
+                  id="partners"
+                  type="number"
+                  value={settings.partners || 0}
+                  onChange={(e) => handleSettingChange('partners', parseInt(e.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 保存按钮 */}
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSaveSettings}
+              variant="primary"
+              className="bg-[#137fec]! hover:bg-[#0f5fcc]"
               disabled={isSaving}
             >
               {isSaving ? '保存中...' : '保存更改'}
@@ -246,7 +433,7 @@ export default function AdminSettings() {
               </div>
             </div>
             <Button 
-              className="mt-4 !bg-[#137fec] !hover:bg-[#0f5fcc]" 
+              className="mt-4 bg-[#137fec]! hover:bg-[#0f5fcc]" 
               variant="primary"
             >
               更新密码
@@ -324,7 +511,7 @@ export default function AdminSettings() {
             {/* 生成新密钥 */}
             <Button 
               variant="primary"
-              className="!bg-[#137fec] !hover:bg-[#0f5fcc]"
+              className="bg-[#137fec]! hover:bg-[#0f5fcc]"
             >
               生成新密钥
             </Button>
@@ -356,11 +543,27 @@ export default function AdminSettings() {
               </div>
             </div>
             <Button 
-              className="mt-4 !bg-[#137fec] !hover:bg-[#0f5fcc]" 
+              className="mt-4 bg-[#137fec]! hover:bg-[#0f5fcc]" 
               variant="primary"
             >
               保存 Webhook
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 成功提示 */}
+      {showSuccess && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
+          <div className="flex items-center gap-3 p-4 rounded-xl border shadow-lg backdrop-blur-xl bg-green-500/20 border-green-500/30">
+            <span className="material-symbols-outlined text-green-500">check_circle</span>
+            <p className="text-sm text-white">设置保存成功！</p>
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">close</span>
+            </button>
           </div>
         </div>
       )}

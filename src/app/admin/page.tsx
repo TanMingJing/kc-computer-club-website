@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
@@ -42,103 +42,156 @@ interface RecentActivityItem {
   icon: string;
 }
 
-// 统计数据（模拟）
-const stats: StatCard[] = [
+// 统计数据（默认值）
+const defaultStats: StatCard[] = [
   {
     label: '公告总数',
-    value: 24,
-    trend: 8,
-    trendLabel: '+8 本月',
+    value: 0,
+    trend: 0,
+    trendLabel: '+0 本月',
     icon: 'campaign',
     color: 'from-blue-500 to-blue-600',
   },
   {
     label: '活动总数',
-    value: 12,
-    trend: 3,
-    trendLabel: '+3 本月',
+    value: 0,
+    trend: 0,
+    trendLabel: '+0 本月',
     icon: 'event',
     color: 'from-green-500 to-green-600',
   },
   {
     label: '参与成员',
-    value: 156,
-    trend: 12,
-    trendLabel: '+12 本月',
+    value: 0,
+    trend: 0,
+    trendLabel: '+0 本月',
     icon: 'people',
     color: 'from-purple-500 to-purple-600',
-  },
-];
-
-// 近期活动数据（模拟）
-const upcomingActivities: Activity[] = [
-  {
-    id: '1',
-    title: 'Python 数据科学工作坊',
-    date: '2025-01-20',
-    attendees: 24,
-    status: 'published',
-  },
-  {
-    id: '2',
-    title: 'Web 开发训练营',
-    date: '2025-01-22',
-    attendees: 32,
-    status: 'published',
-  },
-  {
-    id: '3',
-    title: 'AI 应用论坛',
-    date: '2025-02-01',
-    attendees: 0,
-    status: 'draft',
-  },
-  {
-    id: '4',
-    title: '黑客马拉松 2025',
-    date: '2025-02-15',
-    attendees: 0,
-    status: 'planned',
-  },
-];
-
-// 最近活动数据（模拟）
-const recentActivities: RecentActivityItem[] = [
-  {
-    id: '1',
-    type: 'notice_published',
-    title: '发布了新公告',
-    description: '《2025年第一季度活动计划》',
-    timestamp: '2小时前',
-    icon: 'campaign',
-  },
-  {
-    id: '2',
-    type: 'event_created',
-    title: '创建了新活动',
-    description: 'Python 数据科学工作坊',
-    timestamp: '5小时前',
-    icon: 'event',
-  },
-  {
-    id: '3',
-    type: 'member_join',
-    title: '有新成员加入',
-    description: '李明成功报名了 Web 开发训练营',
-    timestamp: '1天前',
-    icon: 'person_add',
   },
 ];
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [stats, setStats] = useState<StatCard[]>(defaultStats);
+  const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivityItem[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/admin/login');
     }
   }, [user, isLoading, router]);
+
+  // 加载统计数据
+  useEffect(() => {
+    if (user && 'role' in user && user.role === 'admin') {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoadingData(true);
+      
+      // 加载公告和活动数据
+      const [noticesRes, activitiesRes] = await Promise.all([
+        fetch('/api/notices'),
+        fetch('/api/activities'),
+      ]);
+
+      const noticesData = await noticesRes.json();
+      const activitiesData = await activitiesRes.json();
+
+      const notices = noticesData.success ? (noticesData.notices || []) : [];
+      const activities = activitiesData.success ? (activitiesData.activities || []) : [];
+
+      // 计算统计数据
+      const noticeCount = notices.length;
+      const activityCount = activities.length;
+      const totalParticipants = activities.reduce(
+        (sum: number, a: Record<string, unknown>) => sum + (Number(a.currentParticipants) || 0),
+        0
+      );
+
+      setStats([
+        {
+          label: '公告总数',
+          value: noticeCount,
+          trend: 0,
+          trendLabel: `${noticeCount} 个`,
+          icon: 'campaign',
+          color: 'from-blue-500 to-blue-600',
+        },
+        {
+          label: '活动总数',
+          value: activityCount,
+          trend: 0,
+          trendLabel: `${activityCount} 个`,
+          icon: 'event',
+          color: 'from-green-500 to-green-600',
+        },
+        {
+          label: '参与成员',
+          value: totalParticipants,
+          trend: 0,
+          trendLabel: `${totalParticipants} 人`,
+          icon: 'people',
+          color: 'from-purple-500 to-purple-600',
+        },
+      ]);
+
+      // 获取最近4个已发布活动
+      const recent = activities
+        .filter((a: Record<string, unknown>) => a.status === 'published' || a.status === 'draft')
+        .slice(0, 4)
+        .map((a: Record<string, unknown>) => ({
+          id: a.$id,
+          title: a.title,
+          date: new Date(a.startTime as string).toLocaleDateString('zh-CN'),
+          attendees: a.currentParticipants || 0,
+          status: a.status,
+        }));
+
+      setUpcomingActivities(recent);
+
+      // 构建最近活动列表（仅用于展示）
+      setRecentActivities([
+        {
+          id: '1',
+          type: 'notice_published',
+          title: '发布了新公告',
+          description: `共有 ${noticeCount} 个公告`,
+          timestamp: '最近',
+          icon: 'campaign',
+        },
+        {
+          id: '2',
+          type: 'event_created',
+          title: '创建了新活动',
+          description: `共有 ${activityCount} 个活动`,
+          timestamp: '最近',
+          icon: 'event',
+        },
+        {
+          id: '3',
+          type: 'member_join',
+          title: '成员参与',
+          description: `共有 ${totalParticipants} 名参与者`,
+          timestamp: '最近',
+          icon: 'person_add',
+        },
+      ]);
+    } catch (err) {
+      console.error('加载仪表板数据失败:', err);
+      setStats(defaultStats);
+      setUpcomingActivities([]);
+      setRecentActivities([]);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -212,7 +265,7 @@ export default function AdminDashboard() {
                 <Button 
                   variant="primary" 
                   size="sm"
-                  className="!bg-[#137fec] !hover:bg-[#0f5fcc]"
+                  className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
                 >
                   查看全部
                 </Button>

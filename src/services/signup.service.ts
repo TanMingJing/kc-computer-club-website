@@ -13,7 +13,9 @@ export interface Signup {
   $id: string;
   activityId: string;
   email: string;
-  formData: Record<string, string>;
+  studentName?: string;
+  activityTitle?: string;
+  formData: Record<string, string> | string;
   phone?: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'attended';
   notes?: string;

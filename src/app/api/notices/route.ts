@@ -61,6 +61,32 @@ export async function POST(request: NextRequest) {
 
     const notice = await createNotice(input);
 
+    // 如果公告发布（status='published'），向所有用户发送通知
+    if (status === 'published') {
+      try {
+        // 获取所有用户列表（这里需要实现）
+        // 为了演示，我们先向一个默认用户列表发送通知
+        const userIds = ['user1', 'user2', 'user3']; // 应该从数据库获取所有用户
+
+        for (const userId of userIds) {
+          await fetch(`${request.nextUrl.origin}/api/notifications`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              title: `新公告：${title}`,
+              message: content.substring(0, 100) + '...',
+              type: 'notice',
+              relatedId: notice.$id,
+            }),
+          }).catch((err) => console.error('发送通知失败:', err));
+        }
+      } catch (err) {
+        console.error('发送通知时出错:', err);
+        // 不要因为通知失败而阻止公告创建
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: '公告创建成功',

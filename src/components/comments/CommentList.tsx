@@ -4,7 +4,9 @@
 import { useState } from 'react';
 import { Comment } from '@/services/comment.service';
 import { useAuth } from '@/contexts/AuthContext';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { Button } from '@/components/ui/Button';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { Input } from '@/components/ui/Input';
 
 interface CommentListProps {
@@ -17,8 +19,8 @@ interface CommentListProps {
 
 export function CommentList({
   comments,
-  contentType,
-  contentId,
+  /* contentType, */
+  /* contentId, */
   onCommentDeleted,
   onReplySubmitted,
 }: CommentListProps) {
@@ -131,7 +133,7 @@ function CommentItem({ comment, isAdmin, onCommentDeleted, onReplySubmitted }: C
           )}
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {/* 时间显示 */}
           <p className="text-[#9db9ab] text-xs whitespace-nowrap">
             {new Date(comment.createdAt).toLocaleString('zh-CN', { 
