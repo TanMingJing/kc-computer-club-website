@@ -1,31 +1,39 @@
 /* eslint-disable prettier/prettier */
-import { Client, Databases, Query } from 'appwrite';
+import { databases } from '@/services/appwrite';
+import { ID, Query } from 'appwrite';
 
-// Initialize Appwrite client
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
+const NOTICES_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_NOTICES_COLLECTION || '';
 
-const databases = new Databases(client);
+/**
+ * 公告服务
+ * 管理所有公告的数据库操作
+ */
 
-// Type definitions
 export interface Notice {
   $id: string;
   title: string;
   content: string;
-  category: 'announcement' | 'course' | 'meeting' | 'other';
+  author: string;
+  authorId: string;
+  category: string;
   status: 'draft' | 'published';
+  images?: string[];
+  tags?: string;
+  publishedAt?: string;
   createdAt: string;
   updatedAt: string;
-  author?: string;
 }
 
 export interface CreateNoticeInput {
   title: string;
   content: string;
   category: string;
-  status: 'draft' | 'published';
-  author?: string;
+  authorId: string;
+  author: string;
+  status?: 'draft' | 'published';
+  images?: string[];
+  tags?: string[];
 }
 
 export interface UpdateNoticeInput {
@@ -33,125 +41,179 @@ export interface UpdateNoticeInput {
   content?: string;
   category?: string;
   status?: 'draft' | 'published';
+  images?: string[];
+  tags?: string[];
+  publishedAt?: string;
 }
 
-// Notice Service
-export const noticeService = {
-  // Get all notices (optionally filtered by status)
-  async getAllNotices(onlyPublished: boolean = false): Promise<Notice[]> {
-    try {
-      const queries = onlyPublished ? [Query.equal('status', 'published')] : [];
-      const response = await databases.listDocuments(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        queries
-      );
-      return (response.documents as unknown as Notice[]) || [];
-    } catch (error) {
-      console.error('Failed to fetch notices:', error);
-      throw error;
-    }
-  },
+/**
+ * 获取所有公告（可选过滤已发布）
+ */
+export async function getAllNotices(onlyPublished = false): Promise<Notice[]> {
+  try {
+    const queries = onlyPublished ? [Query.equal('status', 'published')] : [];
+    const response = await databases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      queries
+    );
+    return response.documents.map(parseNotice) as unknown as Notice[];
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('获取公告列表失败:', err);
+    throw new Error(err.message || '获取公告列表失败');
+  }
+}
 
-  // Get a single notice by ID
-  async getNoticeById(id: string): Promise<Notice> {
-    try {
-      const response = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        id
-      );
-      return response as unknown as Notice;
-    } catch (error) {
-      console.error(`Failed to fetch notice ${id}:`, error);
-      throw error;
-    }
-  },
+/**
+ * 按 ID 获取单个公告
+ */
+export async function getNoticeById(id: string): Promise<Notice> {
+  try {
+    const notice = await databases.getDocument(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      id
+    );
+    return parseNotice(notice) as unknown as Notice;
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('获取公告失败:', err);
+    throw new Error(err.message || '获取公告失败');
+  }
+}
 
-  // Create a new notice
-  async createNotice(input: CreateNoticeInput): Promise<Notice> {
-    try {
-      const response = await databases.createDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        'unique()',
-        {
-          title: input.title,
-          content: input.content,
-          category: input.category,
-          status: input.status,
-          author: input.author || 'System',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      );
-      return response as unknown as Notice;
-    } catch (error) {
-      console.error('Failed to create notice:', error);
-      throw error;
-    }
-  },
+/**
+ * 解析公告数据，将 JSON 字符串转换为数组
+ */
+function parseNotice(doc: Record<string, unknown>): Notice {
+  return {
+    ...doc,
+    images: doc.images ? (typeof doc.images === 'string' ? JSON.parse(doc.images as string) : doc.images) : [],
+    tags: doc.tags ? (typeof doc.tags === 'string' ? JSON.parse(doc.tags as string) : doc.tags) : [],
+  } as Notice;
+}
 
-  // Update an existing notice
-  async updateNotice(id: string, input: UpdateNoticeInput): Promise<Notice> {
-    try {
-      const response = await databases.updateDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        id,
-        {
-          ...input,
-          updatedAt: new Date().toISOString(),
-        }
-      );
-      return response as unknown as Notice;
-    } catch (error) {
-      console.error(`Failed to update notice ${id}:`, error);
-      throw error;
-    }
-  },
+/**
+ * 创建新公告
+ */
+export async function createNotice(input: CreateNoticeInput): Promise<Notice> {
+  try {
+    const now = new Date().toISOString();
+    const notice = await databases.createDocument(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      ID.unique(),
+      {
+        title: input.title,
+        content: input.content,
+        category: input.category,
+        author: input.author,
+        authorId: input.authorId,
+        status: input.status || 'draft',
+        images: input.images ? JSON.stringify(input.images) : '[]',
+        tags: input.tags ? JSON.stringify(input.tags) : '[]',
+        publishedAt: input.status === 'published' ? now : null,
+        createdAt: now,
+        updatedAt: now,
+      }
+    );
+    return parseNotice(notice) as unknown as Notice;
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('创建公告失败:', err);
+    throw new Error(err.message || '创建公告失败');
+  }
+}
 
-  // Delete a notice
-  async deleteNotice(id: string): Promise<void> {
-    try {
-      await databases.deleteDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        id
-      );
-    } catch (error) {
-      console.error(`Failed to delete notice ${id}:`, error);
-      throw error;
-    }
-  },
+/**
+ * 更新公告
+ */
+export async function updateNotice(
+  id: string,
+  input: UpdateNoticeInput
+): Promise<Notice> {
+  try {
+    const now = new Date().toISOString();
+    const updateData: Record<string, unknown> = {
+      updatedAt: now,
+    };
 
-  // Search notices by title or content
-  async searchNotices(query: string): Promise<Notice[]> {
-    try {
-      const allNotices = await this.getAllNotices();
-      return allNotices.filter(
-        (notice) =>
-          notice.title.toLowerCase().includes(query.toLowerCase()) ||
-          notice.content.toLowerCase().includes(query.toLowerCase())
-      );
-    } catch (error) {
-      console.error('Failed to search notices:', error);
-      throw error;
+    if (input.title) updateData.title = input.title;
+    if (input.content) updateData.content = input.content;
+    if (input.category) updateData.category = input.category;
+    if (input.status) {
+      updateData.status = input.status;
+      if (input.status === 'published') {
+        updateData.publishedAt = now;
+      }
     }
-  },
+    if (input.images !== undefined) updateData.images = input.images ? JSON.stringify(input.images) : '[]';
+    if (input.tags) updateData.tags = JSON.stringify(input.tags);
 
-  // Get notices by category
-  async getNoticesByCategory(category: string): Promise<Notice[]> {
-    try {
-      const response = await databases.listDocuments(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'notices',
-        [Query.equal('category', category), Query.equal('status', 'published')]
-      );
-      return (response.documents as unknown as Notice[]) || [];
-    } catch (error) {
-      console.error(`Failed to fetch notices for category ${category}:`, error);
-      throw error;
-    }
-  },
-};
+    const notice = await databases.updateDocument(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      id,
+      updateData
+    );
+    return parseNotice(notice) as unknown as Notice;
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('更新公告失败:', err);
+    throw new Error(err.message || '更新公告失败');
+  }
+}
+
+/**
+ * 删除公告
+ */
+export async function deleteNotice(id: string): Promise<void> {
+  try {
+    await databases.deleteDocument(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      id
+    );
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('删除公告失败:', err);
+    throw new Error(err.message || '删除公告失败');
+  }
+}
+
+/**
+ * 按分类获取公告
+ */
+export async function getNoticesByCategory(category: string): Promise<Notice[]> {
+  try {
+    const response = await databases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      [Query.equal('category', category)]
+    );
+    return response.documents.map(parseNotice) as unknown as Notice[];
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('按分类获取公告失败:', err);
+    throw new Error(err.message || '获取公告失败');
+  }
+}
+
+/**
+ * 搜索公告（按标题和内容）
+ */
+export async function searchNotices(query: string): Promise<Notice[]> {
+  try {
+    const response = await databases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      NOTICES_COLLECTION_ID,
+      [Query.search('title', query)]
+    );
+    return response.documents.map(parseNotice) as unknown as Notice[];
+  } catch (error: unknown) {
+    const err = error as Error & { message?: string };
+    console.error('搜索公告失败:', err);
+    throw new Error(err.message || '搜索公告失败');
+  }
+}

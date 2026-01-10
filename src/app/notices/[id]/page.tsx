@@ -8,6 +8,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
+import { ImageCarousel } from '@/components/notices/ImageCarousel';
+import { Notice } from '@/services/notice.service';
 
 // 临时模拟数据
 const MOCK_NOTICES = [
@@ -146,18 +148,34 @@ const TAG_STYLES: Record<string, { bg: string; text: string }> = {
 
 export default function NoticeDetailPage() {
   const params = useParams();
-  const [notice, setNotice] = useState<(typeof MOCK_NOTICES)[0] | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // 模拟加载公告数据
-    const timer = setTimeout(() => {
-      const found = MOCK_NOTICES.find((n) => n.id === params.id);
-      setNotice(found || null);
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    const loadNotice = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        const response = await fetch(`/api/notices/${params.id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setNotice(data.notice);
+        } else {
+          setError(data.error || '加载公告失败');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '加载失败');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params.id) {
+      loadNotice();
+    }
   }, [params.id]);
 
   const handleCopyLink = async () => {
@@ -186,13 +204,13 @@ export default function NoticeDetailPage() {
     );
   }
 
-  if (!notice) {
+  if (!notice || error) {
     return (
       <div className="min-h-screen flex flex-col bg-[#102219]">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center py-20">
           <span className="material-symbols-outlined text-6xl text-[#9db9ab] mb-4">article_shortcut</span>
-          <h1 className="text-2xl font-bold text-white mb-2">公告不存在</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">{error || '公告不存在'}</h1>
           <p className="text-[#9db9ab] mb-6">请检查链接是否正确，或返回公告列表</p>
           <Link href="/notices">
             <Button variant="primary" leftIcon="arrow_back">
@@ -232,7 +250,7 @@ export default function NoticeDetailPage() {
           <header className="mb-8">
             {/* 标签 */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {notice.tags.map((tag) => {
+              {Array.isArray(notice.tags) && notice.tags.map((tag: string) => {
                 const style = TAG_STYLES[tag] || { bg: 'bg-gray-500/10', text: 'text-gray-400' };
                 return (
                   <span
@@ -254,29 +272,22 @@ export default function NoticeDetailPage() {
             <div className="flex items-center gap-4 text-sm text-[#9db9ab]">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                <span>{notice.date}</span>
+                <span>{new Date(notice.createdAt).toLocaleDateString('zh-CN')}</span>
               </div>
               <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">person</span>
                 <span>{notice.author}</span>
               </div>
-              <span className="w-1 h-1 rounded-full bg-[#9db9ab]"></span>
-              <div className="flex items-center gap-1.5 text-[#13ec80]">
-                <span className="material-symbols-outlined text-[18px]">schedule</span>
-                <span>{notice.readTime}</span>
-              </div>
             </div>
           </header>
 
-          {/* 封面图片 */}
-          <div className="w-full aspect-video rounded-xl overflow-hidden mb-10 shadow-lg relative group">
-            <div
-              className="w-full h-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105"
-              style={{ backgroundImage: `url(${notice.imageUrl})` }}
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-60" />
-          </div>
+          {/* 图片轮播 */}
+          {notice.images && notice.images.length > 0 && (
+            <div className="my-10">
+              <ImageCarousel images={notice.images} title={notice.title} showThumbnails={true} />
+            </div>
+          )}
 
           {/* 文章内容 */}
           <div
@@ -284,58 +295,7 @@ export default function NoticeDetailPage() {
             dangerouslySetInnerHTML={{ __html: notice.content }}
           />
 
-          {/* CTA 区块 */}
-          <div className="my-10 p-6 rounded-xl bg-[#1A2C23] border border-[#283930] flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <h4 className="text-lg font-bold text-white mb-1">准备好参与了吗？</h4>
-              <p className="text-sm text-[#9db9ab]">名额有限，先到先得！</p>
-            </div>
-            <Button variant="primary" size="lg" glow rightIcon="arrow_forward">
-              立即报名
-            </Button>
-          </div>
 
-          {/* 附件区域 */}
-          {notice.attachments.length > 0 && (
-            <div className="mb-12">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#13ec80]">attachment</span>
-                附件下载
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {notice.attachments.map((attachment, index) => (
-                  <a
-                    key={index}
-                    href="#"
-                    className="group flex items-center p-4 rounded-lg bg-[#1A2C23] border border-[#283930] hover:border-[#13ec80]/50 transition-colors"
-                  >
-                    <div
-                      className={`h-10 w-10 rounded-lg flex items-center justify-center mr-4 ${
-                        attachment.type === 'pdf'
-                          ? 'bg-red-500/10 text-red-500'
-                          : 'bg-blue-500/10 text-blue-500'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined">
-                        {attachment.type === 'pdf' ? 'picture_as_pdf' : 'image'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate group-hover:text-[#13ec80] transition-colors">
-                        {attachment.name}
-                      </p>
-                      <p className="text-xs text-[#9db9ab]">
-                        {attachment.size} • {attachment.type.toUpperCase()}
-                      </p>
-                    </div>
-                    <span className="material-symbols-outlined text-[#9db9ab] group-hover:text-[#13ec80]">
-                      download
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* 底部互动区域 */}
           <div className="flex items-center justify-between pt-8 border-t border-[#283930]">
@@ -397,7 +357,7 @@ export default function NoticeDetailPage() {
                 相关公告
               </h3>
               <div className="space-y-4">
-                {RELATED_NOTICES.filter((n) => n.id !== notice.id)
+                {RELATED_NOTICES.filter((n) => n.id !== notice.$id)
                   .slice(0, 3)
                   .map((relatedNotice, index) => (
                     <div key={relatedNotice.id}>

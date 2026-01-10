@@ -2,9 +2,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ========================================
 // AdminLayout 组件
@@ -41,6 +42,13 @@ export function AdminLayout({
   className,
 }: AdminLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/admin/login');
+  };
 
   return (
     <div className={cn('flex min-h-screen bg-[#111814]', className)}>
@@ -111,6 +119,7 @@ export function AdminLayout({
 
           {/* 退出按钮 */}
           <Button
+            onClick={handleLogout}
             variant="ghost"
             className="w-full justify-start gap-3 text-gray-400 hover:text-red-400"
             leftIcon="logout"

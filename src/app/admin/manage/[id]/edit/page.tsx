@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 
 interface Admin {
@@ -37,7 +37,7 @@ export default function EditAdminPage() {
   }, [user, isLoading, router]);
 
   // 加载管理员信息
-  const loadAdmin = async () => {
+  const loadAdmin = useCallback(async () => {
     try {
       setIsLoadingAdmin(true);
       const response = await fetch('/api/admin/manage');
@@ -58,13 +58,13 @@ export default function EditAdminPage() {
     } finally {
       setIsLoadingAdmin(false);
     }
-  };
+  }, [adminId]);
 
   useEffect(() => {
     if (adminId && user && 'role' in user && user.role === 'admin') {
       loadAdmin();
     }
-  }, [adminId, user]); // loadAdmin removed - it's defined in this scope
+  }, [adminId, user, loadAdmin]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {

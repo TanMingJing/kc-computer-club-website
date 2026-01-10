@@ -444,14 +444,12 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
 
 /**
  * 管理员登出
+ * 注意: 管理员用户没有 Appwrite Account 会话，只需清空本地存储
  */
 export async function adminLogout(): Promise<void> {
-  try {
-    await account.deleteSession('current');
-  } catch (error: unknown) {
-    const err = error as Error & { message?: string };
-    throw new Error(err.message || '登出失败');
-  }
+  // 管理员登出只需要清空本地存储，不需要调用 Appwrite Account API
+  // 因为管理员认证是通过数据库中的 admins 表实现的，不使用 Appwrite Account
+  return Promise.resolve();
 }
 
 /**

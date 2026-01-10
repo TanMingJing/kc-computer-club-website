@@ -12,7 +12,23 @@ import { Loading } from '@/components/ui/Loading';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 // 临时模拟数据
-const MOCK_NOTICES = [
+interface NormalizedNotice {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  date?: string;
+  status?: string;
+  imageUrl?: string;
+  readTime?: string;
+  isPinned: boolean;
+  $id?: string;
+  content?: string;
+  createdAt?: string;
+}
+
+const MOCK_NOTICES: NormalizedNotice[] = [
   {
     id: '1',
     title: '2024年全球黑客马拉松报名开启',
@@ -101,17 +117,36 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string 
 };
 
 export default function NoticesPage() {
-  const [notices] = useState(MOCK_NOTICES);
+  const [notices, setNotices] = useState<NormalizedNotice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    // 模拟加载
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const loadNotices = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/notices?onlyPublished=true');
+        const data = await response.json();
+        if (data.success) {
+          // 规范化数据：将 $id 映射到 id，并添加 excerpt（来自 content 的前 150 字）
+          const normalizedNotices = data.notices.map((notice: NormalizedNotice) => ({
+            ...notice,
+            id: notice.$id,
+            excerpt: notice.content?.substring(0, 150) + '...' || '',
+            isPinned: false, // 数据库中没有这个字段，默认为 false
+          }));
+          setNotices(normalizedNotices);
+        }
+      } catch (err) {
+        console.error('加载公告失败:', err);
+        // 如果API失败，使用模拟数据
+        setNotices(MOCK_NOTICES);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadNotices();
   }, []);
 
   // 过滤公告
