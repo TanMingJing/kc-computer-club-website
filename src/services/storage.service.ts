@@ -48,13 +48,7 @@ export async function uploadImage(
     const response = await storage.createFile(
       bucket,
       ID.unique(),
-      file,
-      [],
-      {
-        onProgress: (progress) => {
-          console.log(`上传进度: ${(progress.progress * 100).toFixed(2)}%`);
-        },
-      }
+      file
     );
 
     return response.$id;
@@ -106,10 +100,18 @@ export async function deleteImage(
  * @param fileId 文件 ID
  * @param bucket 桶 ID（默认使用环境变量中的 ID）
  */
+interface FileInfo {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  createdAt: string;
+}
+
 export async function getFileInfo(
   fileId: string,
   bucket: string = APPWRITE_STORAGE_BUCKET_ID
-): Promise<any> {
+): Promise<FileInfo> {
   try {
     if (!bucket) {
       throw new Error('存储桶 ID 未配置');
@@ -132,27 +134,26 @@ export async function getFileInfo(
 /**
  * 列出桶中的所有文件
  * @param bucket 桶 ID（默认使用环境变量中的 ID）
- * @param limit 限制数量
- * @param offset 偏移量
  */
 export async function listFiles(
-  bucket: string = APPWRITE_STORAGE_BUCKET_ID,
-  limit: number = 25,
-  offset: number = 0
-): Promise<any[]> {
+  bucket: string = APPWRITE_STORAGE_BUCKET_ID
+): Promise<FileInfo[]> {
   try {
     if (!bucket) {
       throw new Error('存储桶 ID 未配置');
     }
 
-    const response = await storage.listFiles(bucket, [], limit, offset);
-    return response.files.map((file: any) => ({
-      id: file.$id,
-      name: file.name,
-      size: file.sizeOriginal,
-      mimeType: file.mimeType,
-      createdAt: file.$createdAt,
-    }));
+    const response = await storage.listFiles(bucket);
+    return response.files.map((file: Record<string, unknown>) => {
+      const typedFile = file as Record<string, unknown>;
+      return {
+        id: String(typedFile.$id),
+        name: String(typedFile.name),
+        size: Number(typedFile.sizeOriginal),
+        mimeType: String(typedFile.mimeType),
+        createdAt: String(typedFile.$createdAt),
+      };
+    });
   } catch (error: unknown) {
     const err = error as Error & { message?: string };
     throw new Error(err.message || '获取文件列表失败');

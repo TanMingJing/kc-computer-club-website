@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         username: 'admin',
         passwordHash,
         isActive: true,
+        userId: '', // 占位符，管理员可以稍后关联用户
         createdAt: now,
         permissions: JSON.stringify(['manage_notices', 'manage_activities', 'manage_comments', 'view_analytics']),
       }

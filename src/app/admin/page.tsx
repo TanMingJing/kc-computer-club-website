@@ -361,6 +361,22 @@ export default function AdminDashboard() {
             </button>
           </Link>
 
+          <Link href="/admin/manage">
+            <button className="w-full p-4 rounded-xl bg-[#1f2d39] hover:bg-[#283946] transition-colors text-left group">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-lg bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
+                  <span className="material-symbols-outlined text-indigo-400">
+                    admin_panel_settings
+                  </span>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">管理员管理</p>
+                  <p className="text-gray-500 text-xs">添加/删除管理员</p>
+                </div>
+              </div>
+            </button>
+          </Link>
+
           <Link href="/admin/settings">
             <button className="w-full p-4 rounded-xl bg-[#1f2d39] hover:bg-[#283946] transition-colors text-left group">
               <div className="flex items-center gap-3">

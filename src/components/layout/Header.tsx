@@ -89,9 +89,14 @@ export function Header({
           {isStudent && user ? (
             // Student logged in
             <div className="hidden md:flex items-center gap-3">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <Link
+                href="/profile"
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
+                title="查看个人资料"
+              >
+                <span className="material-symbols-outlined text-[18px]">person</span>
                 {user.name}
-              </span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className={cn(
@@ -160,18 +165,30 @@ export function Header({
             ))}
             <div className="border-t border-gray-200 dark:border-[#283930] my-2 pt-2">
               {isStudent && user ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-3 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    logout
-                  </span>
-                  退出
-                </button>
+                <div className="space-y-2">
+                  <Link
+                    href="/profile"
+                    className="w-full px-4 py-3 rounded-lg text-sm font-medium bg-primary/10 text-primary flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      person
+                    </span>
+                    个人资料
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      logout
+                    </span>
+                    退出
+                  </button>
+                </div>
               ) : (
                 <Link
                   href="/auth/login"

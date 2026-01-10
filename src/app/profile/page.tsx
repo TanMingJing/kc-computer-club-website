@@ -98,35 +98,35 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1220] py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-[#111814] py-12 px-4">
       <div className="max-w-2xl mx-auto">
         {/* 头部 */}
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-[#7a8fa5] hover:text-white transition-colors mb-6"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors mb-6"
           >
             <span className="material-symbols-outlined">arrow_back</span>
             返回首页
           </Link>
           
-          <div className="bg-[#1a2838] rounded-2xl border border-[#283a4f] p-8">
+          <div className="bg-white dark:bg-[#1a2220] rounded-2xl border border-gray-200 dark:border-[#283930] p-8 shadow-sm">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-full bg-[#137fec]/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#137fec] text-3xl">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-3xl">
                   person
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white mb-1">{user.name}</h1>
-                <p className="text-[#7a8fa5] text-sm">{user.email}</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{user.name}</h1>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{user.email}</p>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-[#283a4f] flex gap-4">
+            <div className="pt-6 border-t border-gray-200 dark:border-[#283930] flex gap-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
               >
                 <span className="material-symbols-outlined">logout</span>
                 登出
@@ -136,15 +136,15 @@ export default function ProfilePage() {
         </div>
 
         {/* 标签页 */}
-        <div className="bg-[#1a2838] rounded-2xl border border-[#283a4f] overflow-hidden">
+        <div className="bg-white dark:bg-[#1a2220] rounded-2xl border border-gray-200 dark:border-[#283930] overflow-hidden shadow-sm">
           {/* 标签页导航 */}
-          <div className="flex border-b border-[#283a4f]">
+          <div className="flex border-b border-gray-200 dark:border-[#283930]">
             <button
               onClick={() => setActiveTab('info')}
               className={`flex-1 py-4 px-6 font-medium transition-colors ${
                 activeTab === 'info'
-                  ? 'text-[#137fec] border-b-2 border-[#137fec] -mb-[2px]'
-                  : 'text-[#7a8fa5] hover:text-white'
+                  ? 'text-primary border-b-2 border-primary -mb-[2px]'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
               }`}
             >
               <span className="flex items-center justify-center gap-2">
@@ -156,8 +156,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('password')}
               className={`flex-1 py-4 px-6 font-medium transition-colors ${
                 activeTab === 'password'
-                  ? 'text-[#137fec] border-b-2 border-[#137fec] -mb-[2px]'
-                  : 'text-[#7a8fa5] hover:text-white'
+                  ? 'text-primary border-b-2 border-primary -mb-[2px]'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
               }`}
             >
               <span className="flex items-center justify-center gap-2">
@@ -173,57 +173,58 @@ export default function ProfilePage() {
             {activeTab === 'info' && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     姓名
                   </label>
                   <input
                     type="text"
                     value={user.name}
                     disabled
-                    className="w-full px-4 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] cursor-not-allowed opacity-60"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 cursor-not-allowed opacity-60"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     邮箱
                   </label>
                   <input
                     type="email"
                     value={user.email}
                     disabled
-                    className="w-full px-4 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] cursor-not-allowed opacity-60"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 cursor-not-allowed opacity-60"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     用户类型
                   </label>
                   <input
                     type="text"
                     value="学生"
                     disabled
-                    className="w-full px-4 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] cursor-not-allowed opacity-60"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 cursor-not-allowed opacity-60"
                   />
                 </div>
 
-                {user.createdAt && (
+                {/* 注册时间（仅学生显示） */}
+                {'createdAt' in user && user.createdAt && (
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                       注册时间
                     </label>
                     <input
                       type="text"
                       value={new Date(user.createdAt).toLocaleString('zh-CN')}
                       disabled
-                      className="w-full px-4 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] cursor-not-allowed opacity-60"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 cursor-not-allowed opacity-60"
                     />
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-[#283a4f]">
-                  <p className="text-[#7a8fa5] text-sm">
+                <div className="pt-4 border-t border-gray-200 dark:border-[#283930]">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
                     💡 提示：基本信息无法修改。如需更改邮箱或姓名，请联系管理员。
                   </p>
                 </div>
@@ -234,24 +235,24 @@ export default function ProfilePage() {
             {activeTab === 'password' && (
               <form onSubmit={handlePasswordSubmit} className="space-y-6">
                 {error && (
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">
                     {error}
                   </div>
                 )}
 
                 {success && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm">
                     ✓ {success}
                   </div>
                 )}
 
                 {/* 当前密码 */}
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     当前密码
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] material-symbols-outlined">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 material-symbols-outlined">
                       lock
                     </span>
                     <input
@@ -261,12 +262,12 @@ export default function ProfilePage() {
                       placeholder="输入当前密码"
                       required
                       disabled={isSubmitting}
-                      className="w-full pl-10 pr-12 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] focus:outline-none focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] transition-colors disabled:opacity-50"
+                      className="w-full pl-10 pr-12 py-3 bg-white dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowOldPassword(!showOldPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <span className="material-symbols-outlined">
                         {showOldPassword ? 'visibility_off' : 'visibility'}
@@ -277,11 +278,11 @@ export default function ProfilePage() {
 
                 {/* 新密码 */}
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     新密码
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] material-symbols-outlined">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 material-symbols-outlined">
                       lock_open
                     </span>
                     <input
@@ -291,30 +292,30 @@ export default function ProfilePage() {
                       placeholder="输入新密码（至少 8 个字符）"
                       required
                       disabled={isSubmitting}
-                      className="w-full pl-10 pr-12 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] focus:outline-none focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] transition-colors disabled:opacity-50"
+                      className="w-full pl-10 pr-12 py-3 bg-white dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <span className="material-symbols-outlined">
                         {showNewPassword ? 'visibility_off' : 'visibility'}
                       </span>
                     </button>
                   </div>
-                  <p className="text-xs text-[#7a8fa5] mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     至少需要 8 个字符，包括字母和数字
                   </p>
                 </div>
 
                 {/* 确认新密码 */}
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     确认新密码
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] material-symbols-outlined">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 material-symbols-outlined">
                       check_circle
                     </span>
                     <input
@@ -324,12 +325,12 @@ export default function ProfilePage() {
                       placeholder="重新输入新密码"
                       required
                       disabled={isSubmitting}
-                      className="w-full pl-10 pr-12 py-3 bg-[#141f2e] border border-[#283a4f] rounded-lg text-white placeholder-[#5a6b7f] focus:outline-none focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] transition-colors disabled:opacity-50"
+                      className="w-full pl-10 pr-12 py-3 bg-white dark:bg-[#141f1c] border border-gray-200 dark:border-[#283930] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a8fa5] hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <span className="material-symbols-outlined">
                         {showConfirmPassword ? 'visibility_off' : 'visibility'}
@@ -342,7 +343,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 bg-[#137fec] text-white font-bold rounded-lg hover:bg-[#0f6ecf] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
