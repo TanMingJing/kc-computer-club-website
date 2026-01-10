@@ -398,7 +398,7 @@
     {
       "id": "comments",
       "name": "评论表",
-      "description": "公告和活动评论",
+      "description": "公告和活动评论，支持老师回复",
       "attributes": [
         {
           "key": "contentType",
@@ -434,6 +434,26 @@
           "required": true,
           "enum": ["pending", "approved", "rejected"],
           "default": "pending"
+        },
+        {
+          "key": "reply",
+          "type": "string",
+          "required": false,
+          "size": 2048,
+          "description": "老师的回复内容"
+        },
+        {
+          "key": "replyAuthor",
+          "type": "string",
+          "required": false,
+          "size": 256,
+          "description": "回复者（老师）的名字"
+        },
+        {
+          "key": "replyAt",
+          "type": "datetime",
+          "required": false,
+          "description": "回复时间"
         },
         {
           "key": "isDeleted",

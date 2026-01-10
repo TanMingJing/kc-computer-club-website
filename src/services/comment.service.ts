@@ -11,43 +11,48 @@ const databases = new Databases(client);
 // Type definitions
 export interface Comment {
   $id: string;
-  targetType: 'notice' | 'activity';
-  targetId: string;
-  targetTitle?: string;
-  authorName: string;
-  authorEmail?: string;
+  contentType: 'notice' | 'activity';
+  contentId: string;
+  nickname: string;
+  email?: string;
   content: string;
   status: 'pending' | 'approved' | 'rejected';
+  reply?: string; // 老师的回复
+  replyAuthor?: string; // 回复者（老师）的名字
+  replyAt?: string; // 回复时间
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateCommentInput {
-  targetType: 'notice' | 'activity';
-  targetId: string;
-  targetTitle?: string;
-  authorName: string;
-  authorEmail?: string;
+  contentType: 'notice' | 'activity';
+  contentId: string;
+  nickname: string;
+  email?: string;
   content: string;
   status?: 'pending' | 'approved';
 }
 
-export interface UpdateCommentInput {
-  content?: string;
-  status?: 'pending' | 'approved' | 'rejected';
+export interface ReplyCommentInput {
+  reply: string;
+  replyAuthor: string; // 老师名字
 }
 
 // Comment Service
 const mapToComment = (doc: any): Comment => {
   return {
     $id: doc.$id,
-    targetType: doc.contentType, // Map contentType to targetType
-    targetId: doc.contentId, // Map contentId to targetId
-    targetTitle: doc.targetTitle || '',
-    authorName: doc.nickname || doc.authorName,
-    authorEmail: doc.email || doc.authorEmail || '',
+    contentType: doc.contentType,
+    contentId: doc.contentId,
+    nickname: doc.nickname,
+    email: doc.email || '',
     content: doc.content,
     status: doc.status,
+    reply: doc.reply || undefined,
+    replyAuthor: doc.replyAuthor || undefined,
+    replyAt: doc.replyAt || undefined,
+    isDeleted: doc.isDeleted || false,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -96,12 +101,12 @@ export const commentService = {
         'comments',
         'unique()',
         {
-          contentType: input.targetType, // "notice" or "activity"
-          contentId: input.targetId, // the target notice/activity ID
-          nickname: input.authorName,
-          email: input.authorEmail || '',
+          contentType: input.contentType,
+          contentId: input.contentId,
+          nickname: input.nickname,
+          email: input.email || '',
           content: input.content,
-          status: 'approved', // Auto-approve, no admin review needed
+          status: input.status || 'approved', // Auto-approve by default
           isDeleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -115,7 +120,7 @@ export const commentService = {
   },
 
   // Update an existing comment
-  async updateComment(id: string, input: UpdateCommentInput): Promise<Comment> {
+  async updateComment(id: string, input: Partial<Comment>): Promise<Comment> {
     try {
       const response = await databases.updateDocument(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
@@ -129,6 +134,27 @@ export const commentService = {
       return mapToComment(response);
     } catch (error) {
       console.error(`Failed to update comment ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Reply to a comment (teacher only)
+  async replyToComment(id: string, input: ReplyCommentInput): Promise<Comment> {
+    try {
+      const response = await databases.updateDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'comments',
+        id,
+        {
+          reply: input.reply,
+          replyAuthor: input.replyAuthor,
+          replyAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      );
+      return mapToComment(response);
+    } catch (error) {
+      console.error(`Failed to reply to comment ${id}:`, error);
       throw error;
     }
   },
@@ -159,12 +185,12 @@ export const commentService = {
 
   // Get comments for a specific target (notice or activity)
   async getCommentsByTarget(
-    targetType: 'notice' | 'activity',
-    targetId: string,
+    contentType: 'notice' | 'activity',
+    contentId: string,
     onlyApproved: boolean = true
   ): Promise<Comment[]> {
     try {
-      const queries = [Query.equal('contentType', targetType), Query.equal('contentId', targetId)];
+      const queries = [Query.equal('contentType', contentType), Query.equal('contentId', contentId)];
       if (onlyApproved) {
         queries.push(Query.equal('status', 'approved'));
       }
@@ -178,7 +204,7 @@ export const commentService = {
       return comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
       console.error(
-        `Failed to fetch comments for ${targetType} ${targetId}:`,
+        `Failed to fetch comments for ${contentType} ${contentId}:`,
         error
       );
       throw error;
@@ -239,8 +265,7 @@ export const commentService = {
       return allComments.filter(
         (comment) =>
           comment.content.toLowerCase().includes(query.toLowerCase()) ||
-          comment.authorName.toLowerCase().includes(query.toLowerCase()) ||
-          comment.targetTitle?.toLowerCase().includes(query.toLowerCase())
+          comment.nickname.toLowerCase().includes(query.toLowerCase())
       );
     } catch (error) {
       console.error('Failed to search comments:', error);
@@ -249,12 +274,12 @@ export const commentService = {
   },
 
   // Get comment count for target
-  async getCommentCount(targetId: string): Promise<number> {
+  async getCommentCount(contentId: string): Promise<number> {
     try {
       const allComments = await this.getAllComments(true);
-      return allComments.filter((c) => c.targetId === targetId).length;
+      return allComments.filter((c) => c.contentId === contentId).length;
     } catch (error) {
-      console.error(`Failed to get comment count for target ${targetId}:`, error);
+      console.error(`Failed to get comment count for target ${contentId}:`, error);
       throw error;
     }
   },

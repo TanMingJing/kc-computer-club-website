@@ -6,18 +6,18 @@ import { commentService, CreateCommentInput } from '@/services/comment.service';
  * GET /api/comments - 获取所有评论
  * 查询参数: 
  * - onlyApproved=true (仅获取已审批)
- * - targetType=notice&targetId=xxx (按目标过滤)
+ * - contentType=notice&contentId=xxx (按目标过滤)
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const onlyApproved = searchParams.get('onlyApproved') === 'true';
-    const targetType = searchParams.get('targetType') as 'notice' | 'activity' | null;
-    const targetId = searchParams.get('targetId');
+    const contentType = searchParams.get('contentType') as 'notice' | 'activity' | null;
+    const contentId = searchParams.get('contentId');
 
     let comments;
-    if (targetType && targetId) {
-      comments = await commentService.getCommentsByTarget(targetType, targetId, onlyApproved);
+    if (contentType && contentId) {
+      comments = await commentService.getCommentsByTarget(contentType, contentId, onlyApproved);
     } else {
       comments = await commentService.getAllComments(onlyApproved);
     }
@@ -43,31 +43,30 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { targetType, targetId, targetTitle, authorName, authorEmail, content } = body;
+    const { contentType, contentId, nickname, email, content } = body;
 
     // 验证必填字段
-    if (!targetType || !targetId || !authorName || !content) {
+    if (!contentType || !contentId || !nickname || !content) {
       return NextResponse.json(
-        { error: '缺少必填字段: targetType, targetId, authorName, content' },
+        { error: '缺少必填字段: contentType, contentId, nickname, content' },
         { status: 400 }
       );
     }
 
     const input: CreateCommentInput = {
-      targetType,
-      targetId,
-      targetTitle,
-      authorName,
-      authorEmail,
+      contentType,
+      contentId,
+      nickname,
+      email,
       content,
-      status: 'pending', // 新评论默认待审批
+      status: 'approved', // 直接批准
     };
 
     const comment = await commentService.createComment(input);
 
     return NextResponse.json({
       success: true,
-      message: '评论发布成功，等待管理员审批',
+      message: '评论发布成功',
       comment,
     });
   } catch (error: unknown) {

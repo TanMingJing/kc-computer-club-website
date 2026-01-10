@@ -10,7 +10,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Loading } from '@/components/ui/Loading';
+import { CommentForm } from '@/components/comments/CommentForm';
+import { CommentList } from '@/components/comments/CommentList';
 import { useAuth } from '@/contexts/AuthContext';
+import { Comment } from '@/services/comment.service';
 
 interface Activity {
   id?: string;
@@ -106,6 +109,11 @@ export default function ActivityDetailPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
+  // 评论状态
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [showComments, setShowComments] = useState(true);
+
   // 表单状态
   const [formData, setFormData] = useState({
     name: '',
@@ -134,7 +142,8 @@ export default function ActivityDetailPage() {
     const loadActivity = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/activities/${params.id}`);
+        const activityId = Array.isArray(params.id) ? params.id[0] : String(params.id);
+        const response = await fetch(`/api/activities/${activityId}`);
         const data = await response.json();
         
         if (data.success && data.activity) {
@@ -160,13 +169,17 @@ export default function ActivityDetailPage() {
             coverImage: activity.coverImage || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=450&fit=crop',
             allowedGrades: activity.allowedGrades,
           });
+          
+          // 加载评论
+          loadComments(activity.$id);
         } else {
-          const found = MOCK_ACTIVITIES.find((a) => a.id === params.id);
+          const found = MOCK_ACTIVITIES.find((a) => a.id === activityId);
           setActivity(found || null);
         }
       } catch (err) {
         console.error('加载活动失败:', err);
-        const found = MOCK_ACTIVITIES.find((a) => a.id === params.id);
+        const activityId = Array.isArray(params.id) ? params.id[0] : String(params.id);
+        const found = MOCK_ACTIVITIES.find((a) => a.id === activityId);
         setActivity(found || null);
       } finally {
         setIsLoading(false);
@@ -175,6 +188,22 @@ export default function ActivityDetailPage() {
 
     loadActivity();
   }, [params.id]);
+
+  // 加载评论
+  const loadComments = async (activityId: string) => {
+    try {
+      setIsLoadingComments(true);
+      const response = await fetch(`/api/comments?contentType=activity&contentId=${activityId}`);
+      const data = await response.json();
+      if (data.success) {
+        setComments(data.comments || []);
+      }
+    } catch (error) {
+      console.error('加载评论失败:', error);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -453,6 +482,63 @@ export default function ActivityDetailPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* 评论部分 */}
+            <div className="mt-8 bg-[#1A2C23] rounded-xl shadow-sm overflow-hidden border border-[#283930] p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="size-10 rounded-full bg-[#13ec80]/10 flex items-center justify-center text-[#13ec80]">
+                  <span className="material-symbols-outlined">comment</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">活动评论</h3>
+                <span className="text-sm text-[#9db9ab] ml-auto">
+                  {comments.length} 条评论
+                </span>
+                <button
+                  onClick={() => setShowComments(!showComments)}
+                  className="p-2 hover:bg-[#283930] rounded-lg transition-colors text-[#13ec80]"
+                  title={showComments ? '隐藏评论' : '显示评论'}
+                >
+                  <span className="material-symbols-outlined">
+                    {showComments ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
+              </div>
+
+              {showComments && (
+                <>
+                  {isLoadingComments ? (
+                    <div className="text-center py-8">
+                      <Loading size="md" text="加载评论..." />
+                    </div>
+                  ) : (
+                    <>
+                      {/* 评论列表 */}
+                      <div className="mb-8">
+                        <CommentList
+                          comments={comments}
+                          contentType="activity"
+                          contentId={Array.isArray(params.id) ? params.id[0] : String(params.id)}
+                          onCommentDeleted={() => loadComments(Array.isArray(params.id) ? params.id[0] : String(params.id))}
+                        />
+                      </div>
+
+                      {/* 评论表单 */}
+                      <div className="border-t border-[#283930] pt-6">
+                        <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-lg">edit_note</span>
+                          发表评论
+                        </h4>
+                        <CommentForm
+                          contentType="activity"
+                          contentId={Array.isArray(params.id) ? params.id[0] : String(params.id)}
+                          onCommentSubmitted={() => loadComments(Array.isArray(params.id) ? params.id[0] : String(params.id))}
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             {/* 返回链接 */}

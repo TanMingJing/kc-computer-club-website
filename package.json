@@ -13,7 +13,8 @@
     "setup:appwrite": "ts-node scripts/setup-appwrite.ts",
     "seed:appwrite": "ts-node scripts/seed-appwrite.ts",
     "fix:attributes": "ts-node scripts/fix-attributes.ts",
-    "fix:grades": "ts-node scripts/add-allowed-grades.ts"
+    "fix:grades": "ts-node scripts/add-allowed-grades.ts",
+    "fix:comments": "ts-node scripts/add-comment-reply.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

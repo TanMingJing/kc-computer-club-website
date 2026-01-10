@@ -9,7 +9,9 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
 import { ImageCarousel } from '@/components/notices/ImageCarousel';
-import { CommentSection } from '@/components/notices/CommentSection';
+import { CommentForm } from '@/components/comments/CommentForm';
+import { CommentList } from '@/components/comments/CommentList';
+import { Comment } from '@/services/comment.service';
 import { Notice } from '@/services/notice.service';
 
 /* 临时模拟数据 - 已禁用，使用数据库中的真实数据
@@ -168,6 +170,11 @@ export default function NoticeDetailPage() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [error, setError] = useState('');
   const [relatedNotices, setRelatedNotices] = useState<Notice[]>([]);
+  
+  // 评论状态
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [showComments, setShowComments] = useState(true);
 
   useEffect(() => {
     const loadNotice = async () => {
@@ -242,7 +249,28 @@ export default function NoticeDetailPage() {
     window.print();
   };
 
-  if (isLoading) {
+  // 加载评论函数
+  const loadComments = async (noticeId: string) => {
+    try {
+      setIsLoadingComments(true);
+      const response = await fetch(`/api/comments?contentType=notice&contentId=${noticeId}`);
+      const data = await response.json();
+      if (data.success) {
+        setComments(data.comments || []);
+      }
+    } catch (error) {
+      console.error('加载评论失败:', error);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  // 当 notice 加载完成后，加载评论
+  useEffect(() => {
+    if (notice?.$id) {
+      loadComments(notice.$id);
+    }
+  }, [notice?.$id]);  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-[#102219]">
         <Header />
@@ -479,7 +507,61 @@ export default function NoticeDetailPage() {
 
           {/* 评论区 */}
           <div className="mt-12 pt-8 border-t border-[#283930]">
-            <CommentSection targetType="notice" targetId={notice.$id} targetTitle={notice.title} />
+            <div className="bg-[#1A2C23] rounded-xl overflow-hidden">
+              <div className="flex items-center gap-3 p-6 md:p-8">
+                <div className="size-10 rounded-full bg-[#13ec80]/10 flex items-center justify-center text-[#13ec80]">
+                  <span className="material-symbols-outlined">comment</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">公告评论</h3>
+                <span className="text-sm text-[#9db9ab] ml-auto">
+                  {comments.length} 条评论
+                </span>
+                <button
+                  onClick={() => setShowComments(!showComments)}
+                  className="p-2 hover:bg-[#283930] rounded-lg transition-colors text-[#13ec80]"
+                  title={showComments ? '隐藏评论' : '显示评论'}
+                >
+                  <span className="material-symbols-outlined">
+                    {showComments ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
+              </div>
+
+              {showComments && (
+                <>
+                  {isLoadingComments ? (
+                    <div className="text-center py-8 px-6 md:px-8">
+                      <Loading size="md" text="加载评论..." />
+                    </div>
+                  ) : (
+                    <div className="px-6 md:px-8 pb-6 md:pb-8">
+                      {/* 评论列表 */}
+                      <div className="mb-8">
+                        <CommentList
+                          comments={comments}
+                          contentType="notice"
+                          contentId={notice?.$id || ''}
+                          onCommentDeleted={() => notice?.$id && loadComments(notice.$id)}
+                        />
+                      </div>
+
+                      {/* 评论表单 */}
+                      <div className="pt-6">
+                        <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-lg">edit_note</span>
+                          发表评论
+                        </h4>
+                        <CommentForm
+                          contentType="notice"
+                          contentId={notice?.$id || ''}
+                          onCommentSubmitted={() => notice?.$id && loadComments(notice.$id)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </main>
