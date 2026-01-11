@@ -149,12 +149,7 @@ export function Header({
 
         {/* Right Actions */}
         <div className="flex items-center gap-4">
-          {isLoading ? (
-            // Loading state
-            <div className="hidden md:flex items-center gap-2">
-              <div className="h-8 w-24 bg-gray-300 dark:bg-[#283930] rounded animate-pulse"></div>
-            </div>
-          ) : isStudent && user ? (
+          {isStudent && user ? (
             // Student logged in
             <div className="hidden md:flex items-center gap-3">
               <NotificationBell />
@@ -233,11 +228,7 @@ export function Header({
               </Link>
             ))}
             <div className="border-t border-gray-200 dark:border-[#283930] my-2 pt-2">
-              {isLoading ? (
-                <div className="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                  加载中...
-                </div>
-              ) : isStudent && user ? (
+              {isStudent && user ? (
                 <div className="space-y-2">
                   <Link
                     href="/profile"

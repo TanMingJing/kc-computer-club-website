@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Notification } from '@/app/api/notifications/route';
 
 interface NotificationContextType {
@@ -16,37 +17,16 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // 获取当前用户 ID
-  useEffect(() => {
-    const getUserId = async () => {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) {
-          console.log('用户未登录');
-          return;
-        }
-        const data = await response.json();
-        if (data.user?.id) {
-          setUserId(data.user.id);
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error);
-      }
-    };
-
-    getUserId();
-  }, []);
 
   // 加载通知
   const loadNotifications = useCallback(async () => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/notifications?userId=${userId}`);
+      const response = await fetch(`/api/notifications?userId=${user.id}`);
       if (!response.ok) {
         console.log('通知 API 不可用');
         return;
@@ -59,7 +39,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('加载通知失败:', error);
     }
-  }, [userId]);
+  }, [user?.id]);
 
   // 初始加载
   useEffect(() => {
@@ -70,14 +50,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, [loadNotifications]);
 
   const addNotification = useCallback(async (title: string, message: string, type: 'approval' | 'notice' | 'activity' | 'announcement', relatedId?: string) => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     try {
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
+          userId: user.id,
           title,
           message,
           type,
@@ -96,7 +76,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('添加通知失败:', error);
     }
-  }, [userId, notifications]);
+  }, [user?.id, notifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -104,7 +84,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
+          userId: user?.id,
           notificationId,
         }),
       });
@@ -122,7 +102,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('标记通知失败:', error);
     }
-  }, [userId, notifications]);
+  }, [user?.id, notifications]);
 
   const markAllAsRead = useCallback(async () => {
     try {
@@ -130,7 +110,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
+          userId: user?.id,
           markAllAsRead: true,
         }),
       });
@@ -146,7 +126,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('标记全部通知失败:', error);
     }
-  }, [userId, notifications]);
+  }, [user?.id, notifications]);
 
   const removeNotification = useCallback((notificationId: string) => {
     setNotifications(notifications.filter((n) => n.id !== notificationId));

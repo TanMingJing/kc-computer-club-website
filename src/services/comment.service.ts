@@ -108,8 +108,6 @@ export const commentService = {
           content: input.content,
           status: input.status || 'approved', // Auto-approve by default
           isDeleted: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         }
       );
       return mapToComment(response);
@@ -128,7 +126,6 @@ export const commentService = {
         id,
         {
           ...input,
-          updatedAt: new Date().toISOString(),
         }
       );
       return mapToComment(response);

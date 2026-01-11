@@ -155,8 +155,6 @@ export async function createNotice(input: CreateNoticeInput): Promise<Notice> {
       status: input.status || 'draft',
       tags: input.tags ? JSON.stringify(input.tags) : '[]',
       publishedAt: input.status === 'published' ? now : null,
-      createdAt: now,
-      updatedAt: now,
     };
 
     // 使用 coverImage 字段存储所有图片的 JSON 数组
@@ -189,9 +187,7 @@ export async function updateNotice(
 ): Promise<Notice> {
   try {
     const now = new Date().toISOString();
-    const updateData: Record<string, unknown> = {
-      updatedAt: now,
-    };
+    const updateData: Record<string, unknown> = {};
 
     if (input.title) updateData.title = input.title;
     if (input.content) updateData.content = input.content;

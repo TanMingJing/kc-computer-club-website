@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { NoticesSection, EventsSection } from '@/components/sections/NoticesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
+import AttendanceWidget from '@/components/attendance/AttendanceWidget';
 
 // 模拟数据
 const mockNotices = [
@@ -85,7 +86,7 @@ const mockProjects = [
 ];
 
 export default function HomePage() {
-  const { user, isLoading /* , isStudent, isAdmin */ } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -137,6 +138,15 @@ export default function HomePage() {
           featuredProjectTitle="Campus AI Bot"
           featuredProjectContributors={5}
         />
+
+        {/* 点名系统 */}
+        {user && !('role' in user) && (
+          <AttendanceWidget
+            studentId={user.id}
+            studentName={user.name}
+            studentEmail={user.email}
+          />
+        )}
 
         {/* 公告与活动 Bento Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

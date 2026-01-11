@@ -103,8 +103,6 @@ export const signupService = {
           status: input.status || 'pending',
           phone: input.phone || '',
           notes: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         }
       );
       return response as unknown as Signup;

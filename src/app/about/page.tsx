@@ -2,11 +2,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { useAuth } from '@/contexts/AuthContext';
 
 // 默认社团信息
 const DEFAULT_CLUB_INFO = {
@@ -63,6 +65,9 @@ const subjectOptions = [
 ];
 
 export default function AboutPage() {
+  const { user, isStudent, isLoading } = useAuth();
+  const router = useRouter();
+
   const [clubInfo, setClubInfo] = useState(DEFAULT_CLUB_INFO);
   const [stats, setStats] = useState({ activeMembers: 50, yearlyActivities: 20, awardProjects: 10, partners: 5 });
   const [formData, setFormData] = useState({
@@ -75,30 +80,93 @@ export default function AboutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 从 localStorage 加载社团设置
+  // 检查学生权限
   useEffect(() => {
-    const stored = localStorage.getItem('clubSettings');
-    if (stored) {
-      try {
-        const settings = JSON.parse(stored);
-        setClubInfo({
-          name: settings.aboutTitle || DEFAULT_CLUB_INFO.name,
-          description: settings.aboutDescription || DEFAULT_CLUB_INFO.description,
-          email: settings.aboutEmail || DEFAULT_CLUB_INFO.email,
-          location: settings.aboutLocation || DEFAULT_CLUB_INFO.location,
-          meetingTime: settings.aboutMeetingTime || DEFAULT_CLUB_INFO.meetingTime,
-          socialLinks: DEFAULT_CLUB_INFO.socialLinks,
-        });
-        setStats({
-          activeMembers: settings.activeMembers || 50,
-          yearlyActivities: settings.yearlyActivities || 20,
-          awardProjects: settings.awardProjects || 10,
-          partners: settings.partners || 5,
-        });
-      } catch (error) {
-        console.error('Failed to parse club settings:', error);
-      }
+    if (!isLoading && !isStudent) {
+      // 重定向到学生登录页面
+      router.push('/auth/login');
     }
+  }, [isStudent, isLoading, router]);
+
+  // 如果正在加载或没有权限，显示加载状态
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#102219] text-white">
+        <Header />
+        <main className="grow flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec]"></div>
+            <p className="mt-4 text-gray-400">正在验证权限...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isStudent) {
+    return null; // 路由器会重定向
+  }
+
+  // 从数据库加载社团设置
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        // 先从API读取
+        const response = await fetch('/api/club-settings');
+        if (response.ok) {
+          const settings = await response.json();
+          setClubInfo({
+            name: settings.aboutTitle || DEFAULT_CLUB_INFO.name,
+            description: settings.aboutDescription || DEFAULT_CLUB_INFO.description,
+            email: settings.aboutEmail || DEFAULT_CLUB_INFO.email,
+            location: settings.aboutLocation || DEFAULT_CLUB_INFO.location,
+            meetingTime: settings.aboutMeetingTime || DEFAULT_CLUB_INFO.meetingTime,
+            socialLinks: {
+              github: settings.githubUrl || DEFAULT_CLUB_INFO.socialLinks.github,
+              discord: settings.discordUrl || DEFAULT_CLUB_INFO.socialLinks.discord,
+              instagram: settings.instagramUrl || DEFAULT_CLUB_INFO.socialLinks.instagram,
+              youtube: settings.youtubeUrl || DEFAULT_CLUB_INFO.socialLinks.youtube,
+            },
+          });
+          setStats({
+            activeMembers: settings.activeMembers || 50,
+            yearlyActivities: settings.yearlyActivities || 20,
+            awardProjects: settings.awardProjects || 10,
+            partners: settings.partners || 5,
+          });
+        } else {
+          // 降级到 localStorage
+          const stored = localStorage.getItem('clubSettings');
+          if (stored) {
+            const settings = JSON.parse(stored);
+            setClubInfo({
+              name: settings.aboutTitle || DEFAULT_CLUB_INFO.name,
+              description: settings.aboutDescription || DEFAULT_CLUB_INFO.description,
+              email: settings.aboutEmail || DEFAULT_CLUB_INFO.email,
+              location: settings.aboutLocation || DEFAULT_CLUB_INFO.location,
+              meetingTime: settings.aboutMeetingTime || DEFAULT_CLUB_INFO.meetingTime,
+              socialLinks: {
+                github: settings.githubUrl || DEFAULT_CLUB_INFO.socialLinks.github,
+                discord: settings.discordUrl || DEFAULT_CLUB_INFO.socialLinks.discord,
+                instagram: settings.instagramUrl || DEFAULT_CLUB_INFO.socialLinks.instagram,
+                youtube: settings.youtubeUrl || DEFAULT_CLUB_INFO.socialLinks.youtube,
+              },
+            });
+            setStats({
+              activeMembers: settings.activeMembers || 50,
+              yearlyActivities: settings.yearlyActivities || 20,
+              awardProjects: settings.awardProjects || 10,
+              partners: settings.partners || 5,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load club settings:', error);
+      }
+    };
+
+    loadSettings();
   }, []);
 
   const handleInputChange = (field: string, value: string) => {

@@ -612,6 +612,83 @@
           "required": true
         }
       ]
+    },
+    {
+      "id": "attendance",
+      "name": "点名表",
+      "description": "学生点名记录",
+      "attributes": [
+        {
+          "key": "studentId",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "studentName",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "studentEmail",
+          "type": "email",
+          "required": true
+        },
+        {
+          "key": "checkInTime",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "sessionTime",
+          "type": "string",
+          "required": true,
+          "size": 256,
+          "description": "时段（如 '15:20-15:25' 或 '16:35-16:40'）"
+        },
+        {
+          "key": "weekNumber",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["present", "absent", "late", "excused"],
+          "default": "present"
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "required": false,
+          "size": 512
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "studentId",
+          "type": "key"
+        },
+        {
+          "key": "weekNumber",
+          "type": "key"
+        },
+        {
+          "key": "checkInTime",
+          "type": "key"
+        },
+        {
+          "key": "sessionTime",
+          "type": "key"
+        }
+      ]
     }
   ]
 }

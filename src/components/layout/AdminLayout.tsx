@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // ========================================
 // AdminLayout 组件
@@ -47,10 +47,42 @@ export function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, user } = useAuth();
+  const { logout, user, isLoading, isAdmin } = useAuth();
+  
+  // 未登录或非管理员时重定向到登录页
+  useEffect(() => {
+    if (!isLoading && (!user || !isAdmin)) {
+      router.push('/admin/login');
+    }
+  }, [user, isLoading, isAdmin, router]);
   
   // Use actual logged-in user name if available
   const displayName = user?.name || adminName;
+  
+  // 正在检查认证状态时显示加载
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec] mx-auto mb-4"></div>
+          <p className="text-gray-400">正在验证身份...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // 未认证时不渲染内容（等待重定向）
+  if (!user || !isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-4xl text-red-500 mb-4">lock</span>
+          <p className="text-gray-400">需要管理员权限</p>
+          <p className="text-gray-500 text-sm mt-2">正在跳转到登录页...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await logout();
@@ -58,7 +90,7 @@ export function AdminLayout({
   };
 
   return (
-    <div className={cn('flex min-h-screen bg-[#111814]', className)}>
+    <div className={cn('flex min-h-screen bg-[#0d1117]', className)}>
       {/* 移动端侧边栏遮罩 */}
       {sidebarOpen && (
         <div
@@ -71,7 +103,7 @@ export function AdminLayout({
       <aside
         className={cn(
           'fixed lg:fixed left-0 top-0 h-screen w-64',
-          'bg-[#162a21] border-r border-[#283930]',
+          'bg-[#0d1117] border-r border-[#30363d]',
           'flex-col',
           'z-40',
           'transition-transform duration-300 ease-in-out',
@@ -79,7 +111,7 @@ export function AdminLayout({
         )}
       >
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center justify-between border-b border-[#283930]">
+        <div className="h-16 px-6 flex items-center justify-between border-b border-[#30363d]">
           <Link href="/admin" className="flex items-center gap-3">
             <div className="size-8 rounded-lg bg-[#137fec]/20 flex items-center justify-center">
               <span className="material-symbols-outlined text-[#137fec] text-lg">
@@ -113,7 +145,7 @@ export function AdminLayout({
                   'text-sm font-medium transition-all duration-200',
                   isActive
                     ? 'bg-[#137fec] text-white'
-                    : 'text-gray-400 hover:bg-[#283930] hover:text-white'
+                    : 'text-gray-400 hover:bg-[#161b22] hover:text-white'
                 )}
               >
                 <span className="material-symbols-outlined text-lg">
@@ -126,9 +158,9 @@ export function AdminLayout({
         </nav>
 
         {/* 底部区域 */}
-        <div className="p-4 border-t border-[#283930]">
+        <div className="p-4 border-t border-[#30363d]">
           {/* 管理员信息 */}
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#1c3128] mb-4">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#161b22] mb-4">
             <div className="size-8 rounded-full bg-[#137fec]/20 flex items-center justify-center">
               <span className="material-symbols-outlined text-[#137fec] text-sm">
                 person
@@ -171,8 +203,8 @@ export function AdminLayout({
         <header
           className={cn(
             'sticky top-0 z-30 h-16',
-            'bg-[#111814]/80 backdrop-blur-md',
-            'border-b border-[#283930]',
+            'bg-[#0d1117]/80 backdrop-blur-md',
+            'border-b border-[#30363d]',
             'flex items-center justify-between px-4 sm:px-6'
           )}
         >
@@ -209,7 +241,7 @@ export function AdminLayout({
             <button
               className={cn(
                 'size-10 rounded-xl',
-                'bg-[#1c3128] hover:bg-[#283930]',
+                'bg-[#161b22] hover:bg-[#30363d]',
                 'flex items-center justify-center',
                 'text-gray-400 hover:text-white',
                 'transition-all relative'
@@ -224,7 +256,7 @@ export function AdminLayout({
             <button
               className={cn(
                 'size-10 rounded-xl',
-                'bg-[#1c3128] hover:bg-[#283930]',
+                'bg-[#161b22] hover:bg-[#30363d]',
                 'flex items-center justify-center',
                 'text-gray-400 hover:text-white',
                 'transition-all'

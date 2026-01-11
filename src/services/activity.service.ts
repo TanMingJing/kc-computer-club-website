@@ -125,8 +125,6 @@ export const activityService = {
           status: input.status,
           coverImage: input.coverImage || undefined,
           allowedGrades: input.allowedGrades || undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         }
       );
       return response as unknown as Activity;
@@ -145,7 +143,6 @@ export const activityService = {
         id,
         {
           ...input,
-          updatedAt: new Date().toISOString(),
         }
       );
       return response as unknown as Activity;

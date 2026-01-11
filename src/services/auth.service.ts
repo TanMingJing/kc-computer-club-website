@@ -422,6 +422,7 @@ export async function adminLogin(
       id: adminRecord.$id,
       email: adminRecord.username + '@admin.local',
       name: adminName,
+      username: adminRecord.username,  // 保存 username 用于后续操作
       role: 'admin',
     };
 
@@ -472,6 +473,106 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
  * 管理员登出
  * 注意: 管理员用户没有 Appwrite Account 会话，只需清空本地存储
  */
+/**
+ * 管理员修改密码
+ * @param identifier 管理员用户名或邮箱
+ * @param currentPassword 当前密码
+ * @param newPassword 新密码
+ */
+export async function changeAdminPassword(
+  identifier: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  try {
+    // 尝试通过 username 查询
+    let adminRecords = await databases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      ADMINS_COLLECTION_ID,
+      [Query.equal('username', identifier)]
+    );
+
+    if (adminRecords.documents.length === 0) {
+      throw new Error('管理员账户不存在');
+    }
+
+    const adminRecord = adminRecords.documents[0];
+
+    // 验证当前密码（优先使用 passwordHash，降级到 password）
+    const passwordHash = adminRecord.passwordHash || adminRecord.password;
+    if (!passwordHash) {
+      throw new Error('密码数据异常，请联系系统管理员');
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(currentPassword, passwordHash);
+
+    if (!isPasswordCorrect) {
+      throw new Error('当前密码不正确');
+    }
+
+    // 对新密码进行加密
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // 更新密码（注意：ADMINS_COLLECTION 只有 username, passwordHash, isActive, userId, lastLogin, createdAt, permissions 字段）
+    await databases.updateDocument(
+      APPWRITE_DATABASE_ID,
+      ADMINS_COLLECTION_ID,
+      adminRecord.$id,
+      {
+        passwordHash: hashedNewPassword,
+      }
+    );
+
+    console.log('管理员密码更新成功');
+  } catch (error) {
+    const err = error as Error & { message?: string };
+    console.error('修改密码失败:', err.message);
+    throw new Error(err.message || '修改密码失败');
+  }
+}
+
+/**
+ * 获取管理员的活跃会话列表
+ * （因为我们用 localStorage，这里返回模拟数据）
+ */
+export async function getAdminSessions(): Promise<
+  Array<{
+    id: string;
+    device: string;
+    browser: string;
+    location: string;
+    ip: string;
+    lastActive: string;
+    isCurrent: boolean;
+  }>
+> {
+  // 实际应用中，这应该从数据库查询
+  // 这里返回模拟数据用于演示
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const now = new Date().toISOString();
+
+  return [
+    {
+      id: 'session-1',
+      device: userAgent.includes('Windows') ? 'Windows PC' : userAgent.includes('Mac') ? 'MacBook' : 'Device',
+      browser: userAgent.includes('Chrome') ? 'Chrome' : userAgent.includes('Firefox') ? 'Firefox' : userAgent.includes('Safari') ? 'Safari' : 'Browser',
+      location: '本地',
+      ip: '127.0.0.1',
+      lastActive: now,
+      isCurrent: true,
+    },
+  ];
+}
+
+/**
+ * 登出其他设备的会话（演示用）
+ */
+export async function logoutOtherSession(sessionId: string): Promise<void> {
+  // 在实际应用中，这应该从数据库删除会话记录
+  // 这里仅作演示
+  console.log(`已登出会话: ${sessionId}`);
+}
+
 export async function adminLogout(): Promise<void> {
   // 管理员登出：清空 localStorage 中的会话
   if (typeof window !== 'undefined') {
@@ -490,7 +591,7 @@ export async function checkSession(): Promise<{
   try {
     console.log('=== checkSession called ===');
     
-    // 首先检查 localStorage 中是否有管理员会话
+    // 步骤 1: 优先检查 localStorage（最快，适合页面刷新）
     try {
       const adminSession = localStorage.getItem('adminSession');
       if (adminSession) {
@@ -503,9 +604,25 @@ export async function checkSession(): Promise<{
       }
     } catch (err) {
       console.warn('Failed to restore admin session from localStorage:', (err as Error).message);
+      localStorage.removeItem('adminSession');
     }
 
-    // 检查 Appwrite 学生会话
+    try {
+      const studentSession = localStorage.getItem('studentSession');
+      if (studentSession) {
+        const studentUser = JSON.parse(studentSession) as StudentUser;
+        console.log('Student session restored from localStorage');
+        return {
+          type: 'student',
+          user: studentUser,
+        };
+      }
+    } catch (err) {
+      console.warn('Failed to restore student session from localStorage:', (err as Error).message);
+      localStorage.removeItem('studentSession');
+    }
+
+    // 步骤 2: 尝试检查 Appwrite 的真实 session（跨标签页的事实来源）
     try {
       const appwriteUser = await account.get();
       console.log('appwriteUser found:', appwriteUser.email);
@@ -521,21 +638,53 @@ export async function checkSession(): Promise<{
         if (studentRecords.documents.length > 0) {
           const studentRecord = studentRecords.documents[0];
           console.log('Student session restored:', studentRecord.name);
+          const studentUser = {
+            id: studentRecord.$id,
+            email: studentRecord.email,
+            name: studentRecord.name,
+            createdAt: studentRecord.createdAt,
+          };
+          // 更新 localStorage 缓存
+          localStorage.setItem('studentSession', JSON.stringify(studentUser));
           return {
             type: 'student',
-            user: {
-              id: studentRecord.$id,
-              email: studentRecord.email,
-              name: studentRecord.name,
-              createdAt: studentRecord.createdAt,
-            },
+            user: studentUser,
           };
         }
       } catch (studentError) {
         console.warn('Student check failed:', (studentError as Error).message);
       }
+
+      // 检查是否是管理员
+      try {
+        const adminRecords = await databases.listDocuments(
+          APPWRITE_DATABASE_ID,
+          ADMINS_COLLECTION_ID,
+          [Query.equal('email', appwriteUser.email)]
+        );
+
+        if (adminRecords.documents.length > 0) {
+          const adminRecord = adminRecords.documents[0];
+          console.log('Admin session restored:', adminRecord.name);
+          const adminUser = {
+            id: adminRecord.$id,
+            email: adminRecord.email,
+            name: adminRecord.name,
+            role: 'admin' as const,
+          };
+          // 更新 localStorage 缓存
+          localStorage.setItem('adminSession', JSON.stringify(adminUser));
+          return {
+            type: 'admin',
+            user: adminUser,
+          };
+        }
+      } catch (adminError) {
+        console.warn('Admin check failed:', (adminError as Error).message);
+      }
     } catch (appwriteError) {
       console.log('No Appwrite session:', (appwriteError as Error).message);
+      // Appwrite 没有活跃 session，这是正常的（localStorage 已在步骤 1 检查）
     }
 
     console.log('No user session found');
