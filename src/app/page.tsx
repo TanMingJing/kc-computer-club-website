@@ -87,33 +87,8 @@ const mockProjects = [
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    // Redirect to login if user is not authenticated
-    if (!isLoading && !user) {
-      router.push('/auth/login');
-    }
-  }, [user, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#102219] flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#13ec80]/10 mb-4">
-            <span className="material-symbols-outlined text-[#13ec80] text-2xl animate-spin">
-              hourglass_bottom
-            </span>
-          </div>
-          <p>加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
+  // Allow viewing as guest - no authentication requirement
 
   return (
     <div className="min-h-screen bg-[#102219] text-white">

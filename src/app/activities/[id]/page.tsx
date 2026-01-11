@@ -569,7 +569,37 @@ export default function ActivityDetailPage() {
           {/* 右侧：报名表单 */}
           <div className="lg:col-span-5">
             <div className="sticky top-24">
-              {activity.status === 'published' ? (
+              {!user ? (
+                // 未登录提示
+                <div className="bg-[#1A2C23] rounded-xl shadow-sm border border-[#283930] p-6 md:p-8 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#13ec80]/10 mb-4">
+                    <span className="material-symbols-outlined text-[#13ec80] text-4xl">lock</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">需要登录才能报名</h3>
+                  <p className="text-[#9db9ab] mb-6 text-sm">
+                    请先登录或注册账号，然后就可以报名这个活动
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <Link
+                      href="/auth/login"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#13ec80] px-4 py-3 text-black font-medium hover:bg-[#0fd673] transition-colors w-full"
+                    >
+                      <span className="material-symbols-outlined">login</span>
+                      登录账号
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#13ec80]/10 px-4 py-3 text-[#13ec80] font-medium hover:bg-[#13ec80]/20 transition-colors w-full"
+                    >
+                      <span className="material-symbols-outlined">person_add</span>
+                      创建新账号
+                    </Link>
+                  </div>
+                  <p className="text-xs text-[#9db9ab] mt-4">
+                    已有账号？<Link href="/auth/login" className="text-[#13ec80] hover:underline">登录</Link>
+                  </p>
+                </div>
+              ) : activity.status === 'published' ? (
                 <div className="bg-[#1A2C23] rounded-xl shadow-sm border border-[#283930] p-6 md:p-8 relative overflow-hidden">
                   {/* 装饰线条 */}
                   <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[#13ec80] to-emerald-600"></div>

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 
@@ -17,6 +18,35 @@ export function CommentForm({ contentType, contentId, onCommentSubmitted }: Comm
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // 未登录提示
+  if (!user) {
+    return (
+      <div className="bg-[#0d1a16] border border-[#283930] rounded-lg p-6 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#13ec80]/10 mb-4">
+          <span className="material-symbols-outlined text-[#13ec80] text-2xl">lock</span>
+        </div>
+        <p className="text-white font-semibold mb-2">需要登录才能评论</p>
+        <p className="text-[#9db9ab] text-sm mb-4">请先登录账号，然后就可以分享您的看法</p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Link
+            href="/auth/login"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#13ec80] px-6 py-2 text-black font-medium hover:bg-[#0fd673] transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">login</span>
+            登录
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#13ec80]/10 px-6 py-2 text-[#13ec80] font-medium hover:bg-[#13ec80]/20 transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            注册
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,8 +105,8 @@ export function CommentForm({ contentType, contentId, onCommentSubmitted }: Comm
           <span className="material-symbols-outlined text-lg">person</span>
         </div>
         <div>
-          <p className="text-white font-semibold text-sm">{user?.name}</p>
-          <p className="text-[#9db9ab] text-xs">{user?.email}</p>
+          <p className="text-white font-semibold text-sm">{user.name}</p>
+          <p className="text-[#9db9ab] text-xs">{user.email}</p>
         </div>
       </div>
 
