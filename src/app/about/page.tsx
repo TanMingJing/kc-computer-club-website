@@ -80,34 +80,6 @@ export default function AboutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 检查学生权限
-  useEffect(() => {
-    if (!isLoading && !isStudent) {
-      // 重定向到学生登录页面
-      router.push('/auth/login');
-    }
-  }, [isStudent, isLoading, router]);
-
-  // 如果正在加载或没有权限，显示加载状态
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#102219] text-white">
-        <Header />
-        <main className="grow flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec]"></div>
-            <p className="mt-4 text-gray-400">正在验证权限...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!isStudent) {
-    return null; // 路由器会重定向
-  }
-
   // 从数据库加载社团设置
   useEffect(() => {
     const loadSettings = async () => {
@@ -168,6 +140,33 @@ export default function AboutPage() {
 
     loadSettings();
   }, []);
+
+  // 检查学生权限 - 重定向逻辑必须在 render 之前执行
+  useEffect(() => {
+    if (!isLoading && !isStudent) {
+      router.push('/auth/login');
+    }
+  }, [isStudent, isLoading, router]);
+
+  // 如果正在加载或没有权限，显示加载状态
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#102219] text-white">
+        <Header />
+        <main className="grow flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec]"></div>
+            <p className="mt-4 text-gray-400">正在验证权限...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isStudent) {
+    return null; // 路由器会重定向
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

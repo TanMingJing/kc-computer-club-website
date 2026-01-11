@@ -129,7 +129,7 @@
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 2fr 2fr 2fr 1fr;
+  grid-template-columns: 0.8fr 1.2fr 2fr 1.5fr 1.5fr;
   gap: 0;
   background: #0d1117;
   border-bottom: 2px solid #30363d;
@@ -157,7 +157,7 @@
 
 .tableRow {
   display: grid;
-  grid-template-columns: 2fr 2fr 2fr 1fr;
+  grid-template-columns: 0.8fr 1.2fr 2fr 1.5fr 1.5fr;
   gap: 0;
   border-bottom: 1px solid #30363d;
   transition: all 0.2s ease;
@@ -171,14 +171,14 @@
   border-bottom: none;
 }
 
-.col1, .col2, .col3, .col4 {
+.col1, .col2, .col3, .col4, .col5 {
   padding: 12px 16px;
   display: flex;
   align-items: center;
   font-size: 13px;
 }
 
-.col4 {
+.col5 {
   justify-content: center;
 }
 
@@ -297,4 +297,228 @@
   background: rgba(255, 123, 114, 0.15);
   border-color: #ff7b72;
   box-shadow: 0 0 8px rgba(255, 123, 114, 0.3);
+}
+
+/* 模态框样式 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: #161b22;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid #30363d;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #8b949e;
+}
+
+.modalLoading p {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #30363d;
+  background: #0d1117;
+  border-radius: 16px 16px 0 0;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  background: #30363d;
+  color: #ffffff;
+}
+
+.studentInfo {
+  padding: 20px 24px;
+  border-bottom: 1px solid #30363d;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-size: 13px;
+  color: #8b949e;
+  min-width: 60px;
+}
+
+.value {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.statCard {
+  background: #0d1117;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.statNumber {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 8px 0 4px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #8b949e;
+  font-weight: 500;
+}
+
+.attendanceRate {
+  padding: 16px 24px;
+  background: #0d1117;
+  margin: 0 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rateValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3fb950;
+}
+
+.rateTotal {
+  font-size: 13px;
+  color: #6e7681;
+}
+
+.recordsHistory {
+  padding: 20px 24px;
+  border-top: 1px solid #30363d;
+  margin-top: 16px;
+}
+
+.recordsHistory h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.historyList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #0d1117;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #30363d;
+}
+
+.historyItem:last-child {
+  margin-bottom: 0;
+}
+
+.historyDate {
+  font-size: 13px;
+  color: #8b949e;
+}
+
+.historyStatus {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

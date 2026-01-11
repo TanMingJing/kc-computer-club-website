@@ -15,6 +15,24 @@ interface AttendanceRecord {
   status: 'present' | 'absent' | 'late';
 }
 
+// 学生统计信息
+interface StudentStats {
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  present: number;
+  late: number;
+  absent: number;
+  total: number;
+  records: AttendanceRecord[];
+}
+
+// 从邮箱提取学号（前5-6个字符）
+const extractStudentId = (email: string): string => {
+  const match = email.match(/^([0-9a-zA-Z]{5,6})/i);
+  return match ? match[1].toUpperCase() : email.split('@')[0].slice(0, 6);
+};
+
 interface AttendanceSummary {
   weekNumber: number;
   session1: {
@@ -33,6 +51,58 @@ export default function AttendanceRecords() {
   const [weekNumber, setWeekNumber] = useState<number>(0);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  
+  // 学生详情模态框
+  const [selectedStudent, setSelectedStudent] = useState<StudentStats | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState(false);
+
+  // 获取学生统计数据
+  const fetchStudentStats = async (studentEmail: string, studentName: string) => {
+    setIsLoadingStudent(true);
+    try {
+      // 获取该学生的所有出席记录
+      const response = await fetch(`/api/attendance/student-stats?email=${encodeURIComponent(studentEmail)}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        const records = data.records as AttendanceRecord[];
+        
+        // 统计出席、迟到、缺席次数
+        let present = 0, late = 0, absent = 0;
+        records.forEach((record) => {
+          if (record.status === 'present') present++;
+          else if (record.status === 'late') late++;
+          else if (record.status === 'absent') absent++;
+        });
+
+        setSelectedStudent({
+          studentId: extractStudentId(studentEmail),
+          studentName,
+          studentEmail,
+          present,
+          late,
+          absent,
+          total: records.length,
+          records,
+        });
+      } else {
+        alert('获取学生记录失败：' + (data.error || '未知错误'));
+      }
+    } catch (err) {
+      const error = err as Error & { message?: string };
+      alert('获取学生记录失败：' + (error.message || '未知错误'));
+    } finally {
+      setIsLoadingStudent(false);
+    }
+  };
+
+  const handleStudentClick = (email: string, name: string) => {
+    fetchStudentStats(email, name);
+  };
+
+  const closeModal = () => {
+    setSelectedStudent(null);
+  };
 
   const fetchRecords = async (week: number) => {
     setIsLoading(true);
@@ -118,6 +188,45 @@ export default function AttendanceRecords() {
     }
   };
 
+  // CSV 导出函数
+  const exportToCSV = (sessionNumber: 1 | 2) => {
+    if (!summary) return;
+
+    const data = sessionNumber === 1 ? summary.session1.students : summary.session2.students;
+    const sessionTime = sessionNumber === 1 ? '下午 3:15-3:30' : '下午 4:30-4:45';
+
+    // 创建 CSV 内容
+    const headers = ['学号', '姓名', '邮箱', '签到时间', '签到日期', '状态'];
+    const rows = data.map((record) => [
+      extractStudentId(record.studentEmail),
+      record.studentName,
+      record.studentEmail,
+      formatTime(record.checkInTime),
+      formatDate(record.checkInTime),
+      record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席',
+    ]);
+
+    // 组合 CSV
+    const csvContent = [
+      [`电脑社点名记录 - 第${summary.weekNumber}周 - ${sessionTime}`],
+      [],
+      [headers.join(',')],
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    // 添加 UTF-8 BOM 让 Excel 正确识别中文
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `attendance_week${summary.weekNumber}_session${sessionNumber}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (isLoading) {
     return <div className={styles.loading}>加载中...</div>;
   }
@@ -180,24 +289,61 @@ export default function AttendanceRecords() {
       </div>
 
       <div className={styles.section}>
-        <h3><span className="material-symbols-outlined" style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'middle', color: '#137fec'}}>location_on</span>下午 3:15-3:30 点名记录</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3><span className="material-symbols-outlined" style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'middle', color: '#137fec'}}>location_on</span>下午 3:15-3:30 点名记录</h3>
+          <button
+            onClick={() => exportToCSV(1)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: '#137fec',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'all 0.3s',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#0d5bc4';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#137fec';
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+            导出 CSV
+          </button>
+        </div>
         <div className={styles.table}>
           <div className={styles.tableHeader}>
-            <div className={styles.col1}>学生姓名</div>
-            <div className={styles.col2}>邮箱</div>
-            <div className={styles.col3}>点名时间</div>
-            <div className={styles.col4}>状态</div>
+            <div className={styles.col1}>学号</div>
+            <div className={styles.col2}>学生姓名</div>
+            <div className={styles.col3}>邮箱</div>
+            <div className={styles.col4}>点名时间</div>
+            <div className={styles.col5}>状态</div>
           </div>
           <div className={styles.tableBody}>
             {summary.session1.students.length > 0 ? (
               summary.session1.students.map((record) => (
                 <div key={record.$id} className={styles.tableRow}>
-                  <div className={styles.col1}>{record.studentName}</div>
-                  <div className={styles.col2}>{record.studentEmail}</div>
-                  <div className={styles.col3}>
+                  <div 
+                    className={styles.col1} 
+                    style={{ fontWeight: '600', color: '#137fec', cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={() => handleStudentClick(record.studentEmail, record.studentName)}
+                    title="点击查看学生出席统计"
+                  >
+                    {extractStudentId(record.studentEmail)}
+                  </div>
+                  <div className={styles.col2}>{record.studentName}</div>
+                  <div className={styles.col3}>{record.studentEmail}</div>
+                  <div className={styles.col4}>
                     {formatDate(record.checkInTime)} {formatTime(record.checkInTime)}
                   </div>
-                  <div className={styles.col4}>
+                  <div className={styles.col5}>
                     {updatingId === record.$id ? (
                       <span className="material-symbols-outlined" style={{ fontSize: '20px', animation: 'spin 1s linear infinite', color: '#6e7681' }}>
                         sync
@@ -241,24 +387,61 @@ export default function AttendanceRecords() {
       </div>
 
       <div className={styles.section}>
-        <h3><span className="material-symbols-outlined" style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'middle', color: '#137fec'}}>location_on</span>下午 4:30-4:45 点名记录</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3><span className="material-symbols-outlined" style={{fontSize: '20px', marginRight: '8px', verticalAlign: 'middle', color: '#137fec'}}>location_on</span>下午 4:30-4:45 点名记录</h3>
+          <button
+            onClick={() => exportToCSV(2)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: '#137fec',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'all 0.3s',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#0d5bc4';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#137fec';
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+            导出 CSV
+          </button>
+        </div>
         <div className={styles.table}>
           <div className={styles.tableHeader}>
-            <div className={styles.col1}>学生姓名</div>
-            <div className={styles.col2}>邮箱</div>
-            <div className={styles.col3}>点名时间</div>
-            <div className={styles.col4}>状态</div>
+            <div className={styles.col1}>学号</div>
+            <div className={styles.col2}>学生姓名</div>
+            <div className={styles.col3}>邮箱</div>
+            <div className={styles.col4}>点名时间</div>
+            <div className={styles.col5}>状态</div>
           </div>
           <div className={styles.tableBody}>
             {summary.session2.students.length > 0 ? (
               summary.session2.students.map((record) => (
                 <div key={record.$id} className={styles.tableRow}>
-                  <div className={styles.col1}>{record.studentName}</div>
-                  <div className={styles.col2}>{record.studentEmail}</div>
-                  <div className={styles.col3}>
+                  <div 
+                    className={styles.col1} 
+                    style={{ fontWeight: '600', color: '#137fec', cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={() => handleStudentClick(record.studentEmail, record.studentName)}
+                    title="点击查看学生出席统计"
+                  >
+                    {extractStudentId(record.studentEmail)}
+                  </div>
+                  <div className={styles.col2}>{record.studentName}</div>
+                  <div className={styles.col3}>{record.studentEmail}</div>
+                  <div className={styles.col4}>
                     {formatDate(record.checkInTime)} {formatTime(record.checkInTime)}
                   </div>
-                  <div className={styles.col4}>
+                  <div className={styles.col5}>
                     {updatingId === record.$id ? (
                       <span className="material-symbols-outlined" style={{ fontSize: '20px', animation: 'spin 1s linear infinite', color: '#6e7681' }}>
                         sync
@@ -300,6 +483,101 @@ export default function AttendanceRecords() {
           </div>
         </div>
       </div>
+
+      {/* 学生统计模态框 */}
+      {(selectedStudent || isLoadingStudent) && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            {isLoadingStudent ? (
+              <div className={styles.modalLoading}>
+                <span className="material-symbols-outlined" style={{ fontSize: '48px', animation: 'spin 1s linear infinite', color: '#137fec' }}>
+                  sync
+                </span>
+                <p>加载中...</p>
+              </div>
+            ) : selectedStudent && (
+              <>
+                <div className={styles.modalHeader}>
+                  <h2>
+                    <span className="material-symbols-outlined" style={{ marginRight: '8px', color: '#137fec' }}>person</span>
+                    学生出席统计
+                  </h2>
+                  <button className={styles.closeBtn} onClick={closeModal}>
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                
+                <div className={styles.studentInfo}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.label}>学号:</span>
+                    <span className={styles.value}>{selectedStudent.studentId}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.label}>姓名:</span>
+                    <span className={styles.value}>{selectedStudent.studentName}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.label}>邮箱:</span>
+                    <span className={styles.value}>{selectedStudent.studentEmail}</span>
+                  </div>
+                </div>
+
+                <div className={styles.statsGrid}>
+                  <div className={styles.statCard} style={{ borderColor: '#3fb950' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#3fb950' }}>check_circle</span>
+                    <div className={styles.statNumber} style={{ color: '#3fb950' }}>{selectedStudent.present}</div>
+                    <div className={styles.statLabel}>出席</div>
+                  </div>
+                  <div className={styles.statCard} style={{ borderColor: '#d29922' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#d29922' }}>schedule</span>
+                    <div className={styles.statNumber} style={{ color: '#d29922' }}>{selectedStudent.late}</div>
+                    <div className={styles.statLabel}>迟到</div>
+                  </div>
+                  <div className={styles.statCard} style={{ borderColor: '#ff7b72' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#ff7b72' }}>cancel</span>
+                    <div className={styles.statNumber} style={{ color: '#ff7b72' }}>{selectedStudent.absent}</div>
+                    <div className={styles.statLabel}>缺席</div>
+                  </div>
+                </div>
+
+                <div className={styles.attendanceRate}>
+                  <span className={styles.label}>出席率:</span>
+                  <span className={styles.rateValue}>
+                    {selectedStudent.total > 0 
+                      ? Math.round((selectedStudent.present / selectedStudent.total) * 100) 
+                      : 0}%
+                  </span>
+                  <span className={styles.rateTotal}>（共 {selectedStudent.total} 次点名）</span>
+                </div>
+
+                {selectedStudent.records.length > 0 && (
+                  <div className={styles.recordsHistory}>
+                    <h3>
+                      <span className="material-symbols-outlined" style={{ marginRight: '8px' }}>history</span>
+                      最近出席记录
+                    </h3>
+                    <div className={styles.historyList}>
+                      {selectedStudent.records.slice(0, 10).map((record) => (
+                        <div key={record.$id} className={styles.historyItem}>
+                          <span className={styles.historyDate}>
+                            第 {record.weekNumber} 周 · {record.sessionTime === '3:15pm' ? '3:15PM' : '4:30PM'}
+                          </span>
+                          <span 
+                            className={styles.historyStatus}
+                            style={{ color: getStatusColor(record.status) }}
+                          >
+                            {record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

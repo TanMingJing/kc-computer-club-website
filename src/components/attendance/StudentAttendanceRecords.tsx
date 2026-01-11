@@ -20,25 +20,49 @@ interface RecordsByWeek {
 }
 
 export default function StudentAttendanceRecords() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [recordsByWeek, setRecordsByWeek] = useState<RecordsByWeek>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user || !('email' in user)) {
+    // 等待认证完成
+    if (authLoading) {
+      return;
+    }
+
+    // 调试日志
+    console.log('StudentAttendanceRecords - authLoading:', authLoading);
+    console.log('StudentAttendanceRecords - user:', user);
+    console.log('StudentAttendanceRecords - user?.email:', user?.email);
+    
+    if (!user) {
       setError('请先登录');
       setIsLoading(false);
       return;
     }
 
+    // 重置错误状态（用户登录后）
+    setError('');
+
+    // 检查 email 字段
+    const email = user.email || (user as any).username;
+    if (!email) {
+      console.error('User object missing email field:', user);
+      setError('用户信息不完整，请重新登录');
+      setIsLoading(false);
+      return;
+    }
+
     const fetchRecords = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch(`/api/attendance/my-records?email=${encodeURIComponent(user.email)}`);
+        const response = await fetch(`/api/attendance/my-records?email=${encodeURIComponent(email)}`);
         const data = await response.json();
 
         if (response.ok) {
           setRecordsByWeek(data.recordsByWeek || {});
+          setError('');
         } else {
           setError(data.error || '获取记录失败');
         }
@@ -51,7 +75,7 @@ export default function StudentAttendanceRecords() {
     };
 
     fetchRecords();
-  }, [user]);
+  }, [user, authLoading]);
 
   const formatTime = (isoTime: string) => {
     const date = new Date(isoTime);
@@ -93,7 +117,8 @@ export default function StudentAttendanceRecords() {
     }
   };
 
-  if (isLoading) {
+  // 等待认证完成或数据加载中
+  if (authLoading || isLoading) {
     return <div className={styles.loading}>加载中...</div>;
   }
 
