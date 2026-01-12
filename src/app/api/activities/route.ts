@@ -124,9 +124,10 @@ export async function POST(request: NextRequest) {
         // 获取所有用户列表（这里需要实现）
         // 为了演示，我们先向一个默认用户列表发送通知
         const userIds = ['user1', 'user2', 'user3']; // 应该从数据库获取所有用户
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
         for (const userId of userIds) {
-          await fetch(`${request.nextUrl.origin}/api/notifications`, {
+          await fetch(`${appUrl}/api/notifications`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
