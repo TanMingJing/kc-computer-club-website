@@ -3,6 +3,8 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ReCaptchaProvider } from "@/contexts/ReCaptchaContext";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -32,11 +34,14 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} font-sans antialiased bg-[#102219] text-white`}
       >
-        <AuthProvider>
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
-        </AuthProvider>
+        <ReCaptchaProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
+          </AuthProvider>
+        </ReCaptchaProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -840,6 +840,116 @@
           "description": "更新时间"
         }
       ]
+    },
+    {
+      "id": "projects",
+      "name": "项目表",
+      "description": "学生项目计划",
+      "attributes": [
+        {
+          "key": "teamName",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "size": 512
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "required": true,
+          "size": 8192
+        },
+        {
+          "key": "category",
+          "type": "string",
+          "required": true,
+          "size": 64
+        },
+        {
+          "key": "objectives",
+          "type": "string",
+          "required": false,
+          "size": 4096
+        },
+        {
+          "key": "timeline",
+          "type": "string",
+          "required": false,
+          "size": 256
+        },
+        {
+          "key": "resources",
+          "type": "string",
+          "required": false,
+          "size": 1024
+        },
+        {
+          "key": "projectLink",
+          "type": "string",
+          "required": false,
+          "size": 512
+        },
+        {
+          "key": "members",
+          "type": "string",
+          "required": true,
+          "size": 16384
+        },
+        {
+          "key": "leaderId",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "leaderEmail",
+          "type": "string",
+          "required": true,
+          "size": 256
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": true,
+          "enum": ["pending", "approved", "rejected", "revision"],
+          "default": "pending"
+        },
+        {
+          "key": "adminFeedback",
+          "type": "string",
+          "required": false,
+          "size": 2048
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "key": "updatedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "key": "status",
+          "type": "key"
+        },
+        {
+          "key": "leaderEmail",
+          "type": "key"
+        },
+        {
+          "key": "createdAt",
+          "type": "key"
+        }
+      ]
     }
   ]
 }

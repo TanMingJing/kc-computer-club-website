@@ -131,6 +131,62 @@ export interface AIChat {
   createdAt: string;
 }
 
+// Project Types
+export interface ProjectMember {
+  userId: string;
+  name: string;
+  email: string;
+  role: 'leader' | 'member' | 'tech_lead' | 'design_lead';
+  joinedAt: string;
+}
+
+export interface Project {
+  projectId: string;
+  teamName: string;
+  title: string;
+  description: string;
+  category: 'web' | 'mobile' | 'ai' | 'game' | 'iot' | 'security' | 'data' | 'other';
+  objectives?: string;
+  timeline?: string;
+  resources?: string;
+  projectLink?: string;
+  members: ProjectMember[];
+  leaderId: string;
+  leaderEmail: string;
+  status: 'pending' | 'approved' | 'rejected' | 'revision';
+  adminFeedback?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectInput {
+  teamName: string;
+  title: string;
+  description: string;
+  category: string;
+  objectives?: string;
+  timeline?: string;
+  resources?: string;
+  projectLink?: string;
+  members: Omit<ProjectMember, 'joinedAt'>[];
+  leaderId: string;
+  leaderEmail: string;
+}
+
+export interface UpdateProjectInput {
+  teamName?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  objectives?: string;
+  timeline?: string;
+  resources?: string;
+  projectLink?: string;
+  members?: Omit<ProjectMember, 'joinedAt'>[];
+  status?: 'pending' | 'approved' | 'rejected' | 'revision';
+  adminFeedback?: string;
+}
+
 // API Response Types
 export interface ApiResponse<T> {
   success: boolean;

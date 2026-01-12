@@ -1,366 +1,599 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
+import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface ProjectForm {
-  title: string;
-  description: string;
-  techStack: string[];
-  repositoryUrl: string;
-  demoUrl: string;
-  visibility: 'public' | 'private' | 'members-only';
+interface TeamMember {
+  userId: string;
+  name: string;
+  email: string;
+  role: 'leader' | 'member' | 'tech_lead' | 'design_lead';
 }
 
-export default function EditProjectPage() {
-  const [form, setForm] = useState<ProjectForm>({
-    title: 'AI Chess Bot - DeepBlue Clone',
-    description:
-      'A Python-based chess engine that uses the minimax algorithm with alpha-beta pruning. Designed to help club members understand basic game theory concepts.',
-    techStack: ['Python', 'PyGame'],
-    repositoryUrl: 'https://github.com/club/chess-bot',
-    demoUrl: 'https://...',
-    visibility: 'public',
-  });
+interface Project {
+  projectId: string;
+  teamName: string;
+  title: string;
+  description: string;
+  category: string;
+  objectives?: string;
+  timeline?: string;
+  resources?: string;
+  projectLink?: string;
+  members: TeamMember[];
+  leaderId: string;
+  leaderEmail: string;
+  status: string;
+  adminFeedback?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
+export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [techInput, setTechInput] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [project, setProject] = useState<Project | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({
+    teamName: '',
+    projectName: '',
+    category: '',
+    description: '',
+    objectives: '',
+    timeline: '',
+    resources: '',
+    projectLink: '',
+  });
+  
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
-  const handleAddTech = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && techInput.trim()) {
-      e.preventDefault();
-      setForm((prev) => ({
-        ...prev,
-        techStack: [...prev.techStack, techInput.trim()],
-      }));
-      setTechInput('');
+  const categories = [
+    { value: 'web', label: '网页应用开发' },
+    { value: 'mobile', label: '移动应用开发' },
+    { value: 'ai', label: '人工智能/机器学习' },
+    { value: 'game', label: '游戏开发' },
+    { value: 'iot', label: '物联网' },
+    { value: 'security', label: '网络安全' },
+    { value: 'data', label: '数据分析' },
+    { value: 'other', label: '其他' },
+  ];
+
+  const roleOptions = [
+    { value: 'leader', label: '组长' },
+    { value: 'member', label: '成员' },
+    { value: 'tech_lead', label: '技术负责' },
+    { value: 'design_lead', label: '设计负责' },
+  ];
+
+  // 加载项目数据
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await fetch(`/api/projects/${id}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || '加载项目失败');
+        }
+
+        const proj = data.project;
+        setProject(proj);
+        setFormData({
+          teamName: proj.teamName || '',
+          projectName: proj.title || '',
+          category: proj.category || '',
+          description: proj.description || '',
+          objectives: proj.objectives || '',
+          timeline: proj.timeline || '',
+          resources: proj.resources || '',
+          projectLink: proj.projectLink || '',
+        });
+        setTeamMembers(proj.members || []);
+      } catch (err) {
+        const error = err as Error;
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProject();
+    }
+  }, [id]);
+
+  // 检查用户权限
+  useEffect(() => {
+    if (!authLoading && !isLoading) {
+      if (!user) {
+        router.push('/auth/login?redirect=' + encodeURIComponent(`/projects/${id}/edit`));
+        return;
+      }
+
+      // 只有组长可以编辑
+      if (project && project.leaderEmail.toLowerCase() !== user.email.toLowerCase()) {
+        router.push(`/projects/${id}`);
+        return;
+      }
+    }
+  }, [user, authLoading, isLoading, project, id, router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setError(null);
+  };
+
+  const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
+    const newMembers = [...teamMembers];
+    newMembers[index] = { ...newMembers[index], [field]: value };
+    setTeamMembers(newMembers);
+    setError(null);
+  };
+
+  const addTeamMember = () => {
+    setTeamMembers([
+      ...teamMembers,
+      { userId: '', name: '', email: '', role: 'member' },
+    ]);
+  };
+
+  const removeTeamMember = (index: number) => {
+    if (index === 0) return; // 不能删除组长
+    setTeamMembers(teamMembers.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      // 验证必填字段
+      if (!formData.teamName.trim()) {
+        throw new Error('请输入组名');
+      }
+      if (!formData.projectName.trim()) {
+        throw new Error('请输入项目名称');
+      }
+      if (!formData.category) {
+        throw new Error('请选择项目类别');
+      }
+      if (!formData.description.trim()) {
+        throw new Error('请输入项目描述');
+      }
+
+      // 验证组员信息
+      for (let i = 0; i < teamMembers.length; i++) {
+        const member = teamMembers[i];
+        if (!member.name.trim()) {
+          throw new Error(`请输入第 ${i + 1} 位组员的姓名`);
+        }
+        if (!member.email.trim()) {
+          throw new Error(`请输入第 ${i + 1} 位组员的邮箱`);
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) {
+          throw new Error(`第 ${i + 1} 位组员的邮箱格式不正确`);
+        }
+      }
+
+      // 检查是否有重复邮箱
+      const emails = teamMembers.map(m => m.email.toLowerCase());
+      const uniqueEmails = new Set(emails);
+      if (emails.length !== uniqueEmails.size) {
+        throw new Error('组员邮箱不能重复');
+      }
+
+      const response = await fetch(`/api/projects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamName: formData.teamName.trim(),
+          title: formData.projectName.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          objectives: formData.objectives.trim(),
+          timeline: formData.timeline.trim(),
+          resources: formData.resources.trim(),
+          projectLink: formData.projectLink.trim(),
+          members: teamMembers,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '保存失败');
+      }
+
+      setSuccessMessage('项目已更新成功！');
+      setTimeout(() => {
+        router.push(`/projects/${id}`);
+      }, 1500);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleRemoveTech = (index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      techStack: prev.techStack.filter((_, i) => i !== index),
-    }));
-  };
+  // 加载中状态
+  if (authLoading || isLoading) {
+    return (
+      <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
+        <Header
+          navItems={[
+            { label: '首页', href: '/' },
+            { label: '关于', href: '/about' },
+            { label: '公告', href: '/notices' },
+            { label: '活动', href: '/activities' },
+          ]}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
+            <p className="text-[#618975]">加载中...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    // TODO: 保存到 API
-  };
+  // 错误状态
+  if (error && !project) {
+    return (
+      <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
+        <Header
+          navItems={[
+            { label: '首页', href: '/' },
+            { label: '关于', href: '/about' },
+            { label: '公告', href: '/notices' },
+            { label: '活动', href: '/activities' },
+          ]}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="max-w-md text-center">
+            <span className="material-symbols-outlined text-5xl text-red-400 mb-4">error</span>
+            <h1 className="text-2xl font-bold text-[#111814] dark:text-white mb-2">加载失败</h1>
+            <p className="text-[#618975] mb-6">{error}</p>
+            <Link href="/projects" className="text-[#13ec80] hover:underline">
+              返回项目列表
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#102219] text-white">
-      <Header />
+    <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
+      <Header
+        navItems={[
+          { label: '首页', href: '/' },
+          { label: '关于', href: '/about' },
+          { label: '公告', href: '/notices' },
+          { label: '活动', href: '/activities' },
+        ]}
+      />
 
-      <main className="grow py-8 px-4 md:px-10 lg:px-20">
-        <div className="max-w-4xl mx-auto">
-          {/* 面包屑 */}
-          <div className="mb-6 flex items-center gap-2 text-sm text-gray-400">
-            <a href="#" className="hover:text-white">
-              Dashboard
-            </a>
-            <span>/</span>
-            <a href="#" className="hover:text-white">
-              My Projects
-            </a>
-            <span>/</span>
-            <span className="text-white">Edit Project</span>
-          </div>
+      <main className="flex-1 p-4 py-8 lg:p-10">
+        <div className="max-w-3xl mx-auto">
+          {/* 管理员反馈 */}
+          {project?.adminFeedback && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-400">feedback</span>
+                <div>
+                  <p className="font-bold text-amber-400 mb-1">管理员反馈</p>
+                  <p className="text-amber-400/80">{project.adminFeedback}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* 页面头部 */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-8">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-black mb-2">Edit Project Details</h1>
-              <p className="text-gray-400">
-                Manage your project information, team, and visibility settings.
-              </p>
+          {/* 成功提示 */}
+          {successMessage && (
+            <div className="mb-6 p-4 rounded-xl bg-[#13ec80]/10 border border-[#13ec80]/30 flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#13ec80]">check_circle</span>
+              <p className="text-[#13ec80]">{successMessage}</p>
+            </div>
+          )}
+
+          {/* 错误提示 */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+              <span className="material-symbols-outlined text-red-400">error</span>
+              <p className="text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* 表单卡片 */}
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a2c24] rounded-2xl shadow-xl dark:shadow-none border border-[#e5e8e7] dark:border-[#2a3c34] overflow-hidden">
+            {/* 表单头部 */}
+            <div className="p-6 border-b border-[#e5e8e7] dark:border-[#2a3c34] bg-linear-to-r from-[#13ec80]/10 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[#13ec80]/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl text-[#13ec80]">edit</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-[#111814] dark:text-white">编辑项目</h1>
+                  <p className="text-sm text-[#618975]">修改项目信息后点击保存</p>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button variant="secondary">Cancel</Button>
-              <Button
-                variant="primary"
-                rightIcon="save"
-                onClick={handleSave}
-                isLoading={isSaving}
-              >
-                Save Changes
-              </Button>
-            </div>
-          </div>
+            <div className="p-6 space-y-6">
+              {/* 组名 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec80]">groups</span>
+                  团队信息
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    组名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="teamName"
+                    value={formData.teamName}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="输入您的团队名称"
+                    className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                  />
+                </div>
+              </div>
 
-          {/* 主要内容网格 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 左列 - 主要信息 */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* 基本信息 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-white/10">
-                <h3 className="text-xl font-bold mb-6">General Information</h3>
-
-                <div className="space-y-6">
-                  {/* 项目标题 */}
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Project Title</label>
-                    <Input
-                      value={form.title}
-                      onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                      placeholder="Enter project title..."
+              {/* 项目基本信息 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec80]">description</span>
+                  项目信息
+                </h3>
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                      项目名称 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="projectName"
+                      value={formData.projectName}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="输入项目名称"
+                      className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
                     />
                   </div>
-
-                  {/* 描述 */}
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Description</label>
-                    <textarea
-                      value={form.description}
-                      onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter project description..."
-                      rows={5}
-                      className="w-full rounded-xl border border-white/10 bg-[#102219] p-4 text-white placeholder-gray-500 focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80] outline-none transition-all resize-none"
-                    />
-                  </div>
-
-                  {/* 技术栈 */}
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Tech Stack</label>
-                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-[#102219] p-3 focus-within:ring-1 focus-within:ring-[#13ec80] focus-within:border-[#13ec80] transition-all">
-                      {form.techStack.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[#13ec80]/20 px-3 py-1 text-sm font-medium text-[#13ec80]"
-                        >
-                          {tech}
-                          <button
-                            onClick={() => handleRemoveTech(index)}
-                            className="rounded-full p-0.5 hover:bg-black/20"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">close</span>
-                          </button>
-                        </span>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                      项目类别 <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                    >
+                      <option value="">选择项目类别</option>
+                      {categories.map((cat) => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
                       ))}
-                      <input
-                        type="text"
-                        value={techInput}
-                        onChange={(e) => setTechInput(e.target.value)}
-                        onKeyDown={handleAddTech}
-                        placeholder="Add technology (e.g., React)..."
-                        className="flex-1 bg-transparent border-none p-1 text-base focus:ring-0 placeholder-gray-500"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-400 pt-1">Press Enter to add a tag.</p>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* 链接和资源 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-white/10">
-                <h3 className="text-xl font-bold mb-6">Links & Resources</h3>
+              {/* 项目描述 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec80]">article</span>
+                  项目详情
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    项目描述 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={4}
+                    placeholder="详细描述您的项目想法、功能和预期成果"
+                    className="w-full px-4 py-3 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] resize-none"
+                  />
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    项目目标
+                  </label>
+                  <textarea
+                    name="objectives"
+                    value={formData.objectives}
+                    onChange={handleInputChange}
+                    rows={3}
+                    placeholder="列出项目的主要目标和里程碑"
+                    className="w-full px-4 py-3 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] resize-none"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-bold mb-2">Repository URL</label>
-                    <Input
-                      type="url"
-                      value={form.repositoryUrl}
-                      onChange={(e) => setForm((prev) => ({ ...prev, repositoryUrl: e.target.value }))}
-                      placeholder="https://github.com/..."
-                      leftIcon="link"
+                    <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                      预计时间线
+                    </label>
+                    <input
+                      type="text"
+                      name="timeline"
+                      value={formData.timeline}
+                      onChange={handleInputChange}
+                      placeholder="例如：2 个月"
+                      className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-bold mb-2">Live Demo (Optional)</label>
-                    <Input
-                      type="url"
-                      value={form.demoUrl}
-                      onChange={(e) => setForm((prev) => ({ ...prev, demoUrl: e.target.value }))}
-                      placeholder="https://..."
-                      leftIcon="public"
+                    <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                      所需资源
+                    </label>
+                    <input
+                      type="text"
+                      name="resources"
+                      value={formData.resources}
+                      onChange={handleInputChange}
+                      placeholder="例如：服务器、API 等"
+                      className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
                     />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 右列 - 侧边栏 */}
-            <div className="space-y-6">
-              {/* 可见性设置 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 border border-white/10">
-                <h3 className="text-lg font-bold mb-4">Visibility</h3>
-
-                <div className="space-y-3">
-                  {/* Public */}
-                  <label
-                    className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      form.visibility === 'public'
-                        ? 'border-[#13ec80] bg-[#13ec80]/10'
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="public"
-                      checked={form.visibility === 'public'}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, visibility: e.target.value as 'public' | 'private' | 'members-only' }))
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="font-bold flex items-center gap-2 mb-1">
-                        <span className="material-symbols-outlined text-[#13ec80]">globe</span>
-                        Public
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Visible to all club members and guests.
-                      </p>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    项目链接（可选）
                   </label>
-
-                  {/* Private */}
-                  <label
-                    className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      form.visibility === 'private'
-                        ? 'border-[#13ec80] bg-[#13ec80]/10'
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="private"
-                      checked={form.visibility === 'private'}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, visibility: e.target.value as 'public' | 'private' | 'members-only' }))
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="font-bold flex items-center gap-2 mb-1">
-                        <span className="material-symbols-outlined">lock</span>
-                        Private
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Only visible to project members.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Members Only */}
-                  <label
-                    className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      form.visibility === 'members-only'
-                        ? 'border-[#13ec80] bg-[#13ec80]/10'
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="members-only"
-                      checked={form.visibility === 'members-only'}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, visibility: e.target.value as 'public' | 'private' | 'members-only' }))
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="font-bold flex items-center gap-2 mb-1">
-                        <span className="material-symbols-outlined">group</span>
-                        Members Only
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Only visible to club members.
-                      </p>
-                    </div>
-                  </label>
+                  <input
+                    type="url"
+                    name="projectLink"
+                    value={formData.projectLink}
+                    onChange={handleInputChange}
+                    placeholder="例如：GitHub 仓库链接"
+                    className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                  />
                 </div>
               </div>
 
               {/* 团队成员 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold">Team</h3>
-                  <span className="text-sm text-[#13ec80]">3</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#13ec80]">group</span>
+                    团队成员
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addTeamMember}
+                    className="flex items-center gap-1 text-sm font-medium text-[#13ec80] hover:text-[#0fd673] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">add</span>
+                    添加成员
+                  </button>
                 </div>
 
-                <div className="space-y-3 mb-4">
-                  {[
-                    { name: 'Alice Freeman', role: 'Lead Developer', avatar: '👩' },
-                    { name: 'Marcus Chen', role: 'Developer', avatar: '👨' },
-                    { name: 'Sarah Jones', role: 'Designer', avatar: '👩' },
-                  ].map((member, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                      <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#13ec80] to-blue-400 flex items-center justify-center">
-                        {member.avatar}
+                <div className="space-y-3">
+                  {teamMembers.map((member, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34]"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#13ec80]/20 flex items-center justify-center text-[#13ec80] font-bold">
+                        {index + 1}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold">{member.name}</p>
-                        <p className="text-xs text-gray-400">{member.role}</p>
+                      <div className="flex-1 grid gap-3 sm:grid-cols-3">
+                        <input
+                          type="text"
+                          value={member.name}
+                          onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+                          placeholder="姓名"
+                          required
+                          disabled={index === 0}
+                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] disabled:opacity-70 disabled:cursor-not-allowed"
+                        />
+                        <input
+                          type="email"
+                          value={member.email}
+                          onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+                          placeholder="邮箱"
+                          required
+                          disabled={index === 0}
+                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] disabled:opacity-70 disabled:cursor-not-allowed"
+                        />
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleMemberChange(index, 'role', e.target.value as TeamMember['role'])}
+                          disabled={index === 0}
+                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#13ec80] disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {roleOptions.map((role) => (
+                            <option key={role.value} value={role.value}>{role.label}</option>
+                          ))}
+                        </select>
                       </div>
-                      <button className="text-gray-400 hover:text-white">
-                        <span className="material-symbols-outlined text-sm">close</span>
-                      </button>
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTeamMember(index)}
+                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      )}
+                      {index === 0 && (
+                        <div className="px-3 py-1 rounded-full bg-[#13ec80]/20 text-xs font-medium text-[#13ec80]">
+                          组长
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-
-                <div className="relative">
-                  <Input placeholder="Search by name or email" leftIcon="person_add" />
-                </div>
-              </div>
-
-              {/* 危险区域 */}
-              <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/20">
-                <h3 className="text-lg font-bold text-red-400 mb-2">Danger Zone</h3>
-                <p className="text-xs text-red-400/70 mb-4">
-                  Deleting this project will remove all data and cannot be undone.
+                <p className="text-xs text-[#618975]">
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
+                  组员数量不限制。组长信息不可修改。
                 </p>
-
-                {!showDeleteConfirm ? (
-                  <Button
-                    variant="secondary"
-                    className="w-full bg-red-500/20! text-red-400! hover:bg-red-500/30!"
-                    rightIcon="delete"
-                  >
-                    Delete Project
-                  </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-red-400 font-bold">
-                      Are you sure? This action cannot be undone.
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        className="flex-1 bg-white/10!"
-                        onClick={() => setShowDeleteConfirm(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        className="flex-1 bg-red-500! text-white! hover:bg-red-600!"
-                        onClick={() => {
-                          // TODO: Delete project
-                          setShowDeleteConfirm(false);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
+
+            {/* 表单底部 */}
+            <div className="p-6 border-t border-[#e5e8e7] dark:border-[#2a3c34] bg-[#f6f8f7] dark:bg-[#102219]">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <p className="text-sm text-[#618975]">
+                  <span className="text-red-500">*</span> 为必填项
+                </p>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/projects/${id}`}
+                    className="h-12 px-6 flex items-center justify-center rounded-xl border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#1a2c24] transition-colors"
+                  >
+                    取消
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="h-12 px-8 flex items-center justify-center gap-2 rounded-xl bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSaving ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin">hourglass_bottom</span>
+                        保存中...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined">save</span>
+                        保存更改
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
         </div>
       </main>
     </div>

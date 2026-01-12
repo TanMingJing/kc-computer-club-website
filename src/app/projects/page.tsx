@@ -4,80 +4,80 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface ProjectMember {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 interface Project {
-  id: string;
+  projectId: string;
+  teamName: string;
   title: string;
   description: string;
   category: string;
-  status: 'planning' | 'in-progress' | 'completed';
-  progress: number;
-  team: { name: string; avatar: string }[];
-  lastUpdated: string;
+  status: 'pending' | 'approved' | 'rejected' | 'revision';
+  members: ProjectMember[];
+  leaderId: string;
+  leaderEmail: string;
+  projectLink?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    title: 'Smart Campus App',
-    description: 'A mobile app to simplify campus life for university students',
-    category: 'Mobile App',
-    status: 'in-progress',
-    progress: 65,
-    team: [
-      { name: 'Alex Johnson', avatar: '👨‍💻' },
-      { name: 'Sarah Lee', avatar: '👩‍🎨' },
-      { name: 'Mike Chen', avatar: '👨‍💼' },
-    ],
-    lastUpdated: '2 hours ago',
-  },
-  {
-    id: '2',
-    title: 'AI Chess Bot',
-    description: 'A Python-based chess engine using minimax algorithm',
-    category: 'AI/ML',
-    status: 'completed',
-    progress: 100,
-    team: [
-      { name: 'Alice Freeman', avatar: '👩' },
-      { name: 'Marcus Chen', avatar: '👨' },
-    ],
-    lastUpdated: '1 week ago',
-  },
-  {
-    id: '3',
-    title: 'Web Dev Training Platform',
-    description: 'Interactive platform for teaching web development',
-    category: 'Web App',
-    status: 'planning',
-    progress: 15,
-    team: [
-      { name: 'Sarah Jones', avatar: '👩' },
-    ],
-    lastUpdated: '3 days ago',
-  },
-];
-
 export default function ProjectsPage() {
-  const [filterStatus, setFilterStatus] = useState<'all' | 'planning' | 'in-progress' | 'completed'>('all');
+  const { user, isLoading: authLoading } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'revision'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredProjects = mockProjects.filter((project) => {
+  // 加载项目列表
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+
+        if (data.success) {
+          setProjects(data.projects || []);
+        } else {
+          setError(data.error || '加载项目失败');
+        }
+      } catch (err) {
+        console.error('加载项目失败:', err);
+        setError('加载项目失败，请稍后重试');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const filteredProjects = projects.filter((project) => {
     const matchSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       project.description.toLowerCase().includes(searchTerm.toLowerCase());
+                       project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       project.teamName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = filterStatus === 'all' || project.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planning':
-        return 'bg-blue-500/10 text-blue-400';
-      case 'in-progress':
+      case 'pending':
+        return 'bg-amber-500/10 text-amber-400';
+      case 'approved':
         return 'bg-[#13ec80]/10 text-[#13ec80]';
-      case 'completed':
-        return 'bg-purple-500/10 text-purple-400';
+      case 'rejected':
+        return 'bg-red-500/10 text-red-400';
+      case 'revision':
+        return 'bg-blue-500/10 text-blue-400';
       default:
         return 'bg-gray-500/10 text-gray-400';
     }
@@ -85,16 +85,66 @@ export default function ProjectsPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'planning':
-        return '规划中';
-      case 'in-progress':
-        return '进行中';
-      case 'completed':
-        return '已完成';
+      case 'pending':
+        return '待审核';
+      case 'approved':
+        return '已批准';
+      case 'rejected':
+        return '已拒绝';
+      case 'revision':
+        return '需修改';
       default:
         return status;
     }
   };
+
+  const getCategoryLabel = (category: string) => {
+    const categoryMap: Record<string, string> = {
+      'web': '网页应用',
+      'mobile': '移动应用',
+      'ai': 'AI/ML',
+      'game': '游戏开发',
+      'iot': '物联网',
+      'security': '网络安全',
+      'data': '数据分析',
+      'other': '其他',
+    };
+    return categoryMap[category] || category;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return '今天';
+    if (days === 1) return '昨天';
+    if (days < 7) return `${days} 天前`;
+    return date.toLocaleDateString('zh-CN');
+  };
+
+  // 检查当前用户是否已有项目
+  const userHasProject = user ? projects.some(p => 
+    p.members.some(m => m.email.toLowerCase() === user.email.toLowerCase())
+  ) : false;
+
+  if (isLoading || authLoading) {
+    return (
+      <div className="min-h-screen bg-[#102219] text-white">
+        <Header />
+        <main className="grow py-8 px-4 md:px-10 lg:px-20">
+          <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh]">
+            <div className="flex flex-col items-center gap-4">
+              <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
+              <p className="text-gray-400">加载中...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#102219] text-white">
@@ -110,9 +160,16 @@ export default function ProjectsPage() {
             </div>
 
             <Link href="/projects/submit">
-              <button className="flex items-center justify-center gap-2 rounded-xl bg-[#13ec80] text-[#102219] px-6 py-2.5 font-bold hover:bg-[#0bb871] transition-all">
+              <button 
+                disabled={userHasProject}
+                className={`flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 font-bold transition-all ${
+                  userHasProject 
+                    ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed' 
+                    : 'bg-[#13ec80] text-[#102219] hover:bg-[#0bb871]'
+                }`}
+              >
                 <span className="material-symbols-outlined">add</span>
-                新建项目
+                {userHasProject ? '已有项目' : '新建项目'}
               </button>
             </Link>
           </div>
@@ -136,13 +193,14 @@ export default function ProjectsPage() {
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'all', label: '全部' },
-                { value: 'planning', label: '规划中' },
-                { value: 'in-progress', label: '进行中' },
-                { value: 'completed', label: '已完成' },
+                { value: 'pending', label: '待审核' },
+                { value: 'approved', label: '已批准' },
+                { value: 'revision', label: '需修改' },
+                { value: 'rejected', label: '已拒绝' },
               ].map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setFilterStatus(option.value as 'all' | 'planning' | 'in-progress' | 'completed')}
+                  onClick={() => setFilterStatus(option.value as 'all' | 'pending' | 'approved' | 'rejected' | 'revision')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === option.value
                       ? 'bg-[#13ec80] text-[#102219]'
@@ -156,18 +214,28 @@ export default function ProjectsPage() {
           </div>
 
           {/* 项目网格 */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+              <span className="material-symbols-outlined text-red-400">error</span>
+              <p className="text-red-400">{error}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.length > 0 ? (
               filteredProjects.map((project) => (
-                <Link key={project.id} href={`/projects/${project.id}`}>
+                <Link key={project.projectId} href={`/projects/${project.projectId}`}>
                   <div className="h-full bg-[#1a2c24] rounded-2xl p-6 border border-white/10 hover:border-[#13ec80]/50 hover:shadow-lg hover:shadow-[#13ec80]/20 transition-all cursor-pointer group">
                     {/* 状态标签 */}
                     <div className="flex items-center justify-between mb-4">
                       <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold ${getStatusColor(project.status)}`}>
                         {getStatusLabel(project.status)}
                       </span>
-                      <span className="text-xs text-gray-400">{project.lastUpdated}</span>
+                      <span className="text-xs text-gray-400">{formatDate(project.updatedAt)}</span>
                     </div>
+
+                    {/* 组名 */}
+                    <p className="text-xs text-[#13ec80] font-medium mb-1">{project.teamName}</p>
 
                     {/* 标题和描述 */}
                     <h3 className="text-lg font-bold mb-2 group-hover:text-[#13ec80] transition-colors">
@@ -177,36 +245,44 @@ export default function ProjectsPage() {
 
                     {/* 分类 */}
                     <span className="inline-flex items-center px-3 py-1 rounded-lg bg-white/5 text-xs font-medium text-gray-300 mb-4">
-                      {project.category}
+                      {getCategoryLabel(project.category)}
                     </span>
 
-                    {/* 进度条 */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-gray-400">Progress</span>
-                        <span className="font-bold">{project.progress}%</span>
+                    {/* 项目链接 */}
+                    {project.projectLink && (
+                      <div className="mb-4">
+                        <a 
+                          href={project.projectLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="material-symbols-outlined text-sm">link</span>
+                          查看仓库
+                        </a>
                       </div>
-                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#13ec80] transition-all"
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    )}
 
                     {/* 团队成员 */}
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2">
-                        {project.team.map((member, idx) => (
+                        {project.members.slice(0, 4).map((member, idx) => (
                           <div
                             key={idx}
-                            className="w-8 h-8 rounded-full bg-linear-to-br from-[#13ec80] to-blue-400 flex items-center justify-center text-sm border-2 border-[#102219]"
+                            className="w-8 h-8 rounded-full bg-linear-to-br from-[#13ec80] to-blue-400 flex items-center justify-center text-sm font-bold border-2 border-[#102219]"
+                            title={member.name}
                           >
-                            {member.avatar}
+                            {member.name.charAt(0)}
                           </div>
                         ))}
+                        {project.members.length > 4 && (
+                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold border-2 border-[#102219]">
+                            +{project.members.length - 4}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xs text-gray-400">{project.team.length} members</span>
+                      <span className="text-xs text-gray-400">{project.members.length} 名成员</span>
                     </div>
                   </div>
                 </Link>
@@ -216,7 +292,9 @@ export default function ProjectsPage() {
                 <span className="material-symbols-outlined text-5xl text-gray-600 mb-4 block">
                   folder_open
                 </span>
-                <p className="text-gray-400">没有找到匹配的项目</p>
+                <p className="text-gray-400">
+                  {searchTerm || filterStatus !== 'all' ? '没有找到匹配的项目' : '暂无项目，快来创建第一个项目吧！'}
+                </p>
               </div>
             )}
           </div>

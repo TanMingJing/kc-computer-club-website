@@ -1,18 +1,33 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 
-interface ProjectPlan {
-  id: string;
+interface TeamMember {
+  userId: string;
+  name: string;
+  email: string;
+  role: 'leader' | 'member' | 'tech_lead' | 'design_lead';
+}
+
+interface Project {
+  projectId: string;
+  teamName: string;
   title: string;
-  category: string;
   description: string;
-  teamLeader: string;
-  teamSize: number;
-  submittedAt: string;
+  category: string;
+  objectives?: string;
+  timeline?: string;
+  resources?: string;
+  projectLink?: string;
+  members: TeamMember[];
+  leaderId: string;
+  leaderEmail: string;
   status: 'pending' | 'approved' | 'rejected' | 'revision';
+  adminFeedback?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ProjectStats {
@@ -22,87 +37,69 @@ interface ProjectStats {
   rejected: number;
 }
 
-// 模拟数据
-const mockStats: ProjectStats = {
-  total: 18,
-  pending: 5,
-  approved: 10,
-  rejected: 3,
-};
-
-const mockProjects: ProjectPlan[] = [
-  {
-    id: '1',
-    title: '智能校园导航系统',
-    category: '移动应用开发',
-    description: '基于 AR 技术的校园室内外导航应用，帮助新生快速熟悉校园环境。',
-    teamLeader: '张明华',
-    teamSize: 4,
-    submittedAt: '2026-01-09',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    title: 'AI 作业批改助手',
-    category: '人工智能/机器学习',
-    description: '利用 NLP 技术自动批改编程作业，提供详细的反馈和建议。',
-    teamLeader: '李小红',
-    teamSize: 3,
-    submittedAt: '2026-01-08',
-    status: 'pending',
-  },
-  {
-    id: '3',
-    title: '社团活动管理平台',
-    category: '网页应用开发',
-    description: '综合性社团管理系统，包括活动发布、报名、签到等功能。',
-    teamLeader: '王志强',
-    teamSize: 5,
-    submittedAt: '2026-01-05',
-    status: 'approved',
-  },
-  {
-    id: '4',
-    title: '物联网温室监控',
-    category: '物联网',
-    description: '基于 Arduino 的智能温室监控系统，自动调节温度和湿度。',
-    teamLeader: '陈美玲',
-    teamSize: 3,
-    submittedAt: '2026-01-03',
-    status: 'approved',
-  },
-  {
-    id: '5',
-    title: '区块链投票系统',
-    category: '网络安全',
-    description: '基于区块链的透明投票系统，确保选举公正性。',
-    teamLeader: '刘伟东',
-    teamSize: 2,
-    submittedAt: '2026-01-02',
-    status: 'rejected',
-  },
-  {
-    id: '6',
-    title: '游戏化学习平台',
-    category: '游戏开发',
-    description: '将编程学习与游戏元素结合，提高学习兴趣和效率。',
-    teamLeader: '赵小芳',
-    teamSize: 4,
-    submittedAt: '2026-01-01',
-    status: 'revision',
-  },
-];
-
 export default function AdminProjectsPage() {
-  const [stats] = useState<ProjectStats>(mockStats);
-  const [projects, setProjects] = useState<ProjectPlan[]>(mockProjects);
+  const [stats, setStats] = useState<ProjectStats>({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'revision'>('all');
-  const [selectedProject, setSelectedProject] = useState<ProjectPlan | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // 加载项目数据
+  const fetchProjects = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/projects?stats=true');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '获取项目列表失败');
+      }
+
+      setProjects(data.projects || []);
+      if (data.stats) {
+        setStats(data.stats);
+      }
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const getCategoryLabel = (category: string): string => {
+    const labels: Record<string, string> = {
+      'web': '网页应用开发',
+      'mobile': '移动应用开发',
+      'ai': '人工智能/机器学习',
+      'game': '游戏开发',
+      'iot': '物联网',
+      'security': '网络安全',
+      'data': '数据分析',
+      'other': '其他',
+    };
+    return labels[category] || category;
+  };
+
+  const formatDate = (dateStr: string): string => {
+    return new Date(dateStr).toLocaleDateString('zh-CN');
+  };
 
   const filteredProjects = projects.filter((project) => {
-    if (filter === 'all') return true;
-    return project.status === filter;
+    const matchesFilter = filter === 'all' || project.status === filter;
+    const matchesSearch = searchQuery === '' || 
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.teamName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
   const statusLabels: Record<string, string> = {
@@ -119,26 +116,134 @@ export default function AdminProjectsPage() {
     revision: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   };
 
-  const handleApprove = (projectId: string) => {
-    setProjects(projects.map((p) => 
-      p.id === projectId ? { ...p, status: 'approved' } : p
-    ));
-    setShowModal(false);
+  const roleLabels: Record<string, string> = {
+    leader: '组长',
+    member: '成员',
+    tech_lead: '技术负责',
+    design_lead: '设计负责',
   };
 
-  const handleReject = (projectId: string) => {
-    setProjects(projects.map((p) => 
-      p.id === projectId ? { ...p, status: 'rejected' } : p
-    ));
-    setShowModal(false);
+  const handleApprove = async (projectId: string) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '操作失败');
+      }
+
+      await fetchProjects();
+      setShowModal(false);
+      setSelectedProject(null);
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleRequestRevision = (projectId: string) => {
-    setProjects(projects.map((p) => 
-      p.id === projectId ? { ...p, status: 'revision' } : p
-    ));
-    setShowModal(false);
+  const handleReject = async (projectId: string) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'reject',
+          feedback: feedbackText || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '操作失败');
+      }
+
+      await fetchProjects();
+      setShowModal(false);
+      setSelectedProject(null);
+      setFeedbackText('');
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
+
+  const handleRequestRevision = async (projectId: string) => {
+    if (!feedbackText.trim()) {
+      alert('请填写修改意见');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'revision',
+          feedback: feedbackText,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '操作失败');
+      }
+
+      await fetchProjects();
+      setShowModal(false);
+      setSelectedProject(null);
+      setFeedbackText('');
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 加载中状态
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
+            <p className="text-[#8ba396]">加载中...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <span className="material-symbols-outlined text-5xl text-red-400 mb-4">error</span>
+            <h2 className="text-xl font-bold text-white mb-2">加载失败</h2>
+            <p className="text-[#8ba396] mb-4">{error}</p>
+            <button
+              onClick={fetchProjects}
+              className="h-10 px-4 bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] font-medium rounded-lg transition-colors"
+            >
+              重试
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -225,7 +330,9 @@ export default function AdminProjectsPage() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#618975]">search</span>
               <input
                 type="text"
-                placeholder="搜索项目名称..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="搜索项目或团队名称..."
                 className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#1a2c24] border border-[#2a3c34] text-sm text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
               />
             </div>
@@ -236,7 +343,7 @@ export default function AdminProjectsPage() {
         <div className="grid gap-4">
           {filteredProjects.map((project) => (
             <div
-              key={project.id}
+              key={project.projectId}
               className="bg-[#1a2c24] rounded-xl border border-[#2a3c34] p-6 hover:border-[#13ec80]/50 transition-colors"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -250,20 +357,24 @@ export default function AdminProjectsPage() {
                   <p className="text-sm text-[#8ba396] mb-4 line-clamp-2">{project.description}</p>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-[#618975]">
                     <div className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-lg">groups</span>
+                      <span>{project.teamName}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-lg">category</span>
-                      <span>{project.category}</span>
+                      <span>{getCategoryLabel(project.category)}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-lg">person</span>
-                      <span>{project.teamLeader}</span>
+                      <span>{project.members.find(m => m.role === 'leader')?.name || '未知'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-lg">group</span>
-                      <span>{project.teamSize} 人</span>
+                      <span>{project.members.length} 人</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-lg">schedule</span>
-                      <span>{project.submittedAt}</span>
+                      <span>{formatDate(project.createdAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -271,6 +382,7 @@ export default function AdminProjectsPage() {
                   <button
                     onClick={() => {
                       setSelectedProject(project);
+                      setFeedbackText(project.adminFeedback || '');
                       setShowModal(true);
                     }}
                     className="flex items-center gap-2 h-10 px-4 bg-[#102219] hover:bg-[#13ec80]/10 text-white rounded-lg transition-colors"
@@ -281,15 +393,17 @@ export default function AdminProjectsPage() {
                   {project.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => handleApprove(project.id)}
-                        className="flex items-center gap-2 h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        onClick={() => handleApprove(project.projectId)}
+                        disabled={actionLoading}
+                        className="flex items-center gap-2 h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
                       >
                         <span className="material-symbols-outlined text-lg">check</span>
                         批准
                       </button>
                       <button
-                        onClick={() => handleReject(project.id)}
-                        className="flex items-center gap-2 h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                        onClick={() => handleReject(project.projectId)}
+                        disabled={actionLoading}
+                        className="flex items-center gap-2 h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
                       >
                         <span className="material-symbols-outlined text-lg">close</span>
                         拒绝
@@ -312,12 +426,19 @@ export default function AdminProjectsPage() {
         {/* 项目详情弹窗 */}
         {showModal && selectedProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-[#1a2c24] rounded-2xl border border-[#2a3c34] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#1a2c24] rounded-2xl border border-[#2a3c34] w-full max-w-3xl max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-[#2a3c34]">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">{selectedProject.title}</h2>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">{selectedProject.title}</h2>
+                    <p className="text-sm text-[#8ba396] mt-1">团队：{selectedProject.teamName}</p>
+                  </div>
                   <button
-                    onClick={() => setShowModal(false)}
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedProject(null);
+                      setFeedbackText('');
+                    }}
                     className="p-2 hover:bg-[#102219] rounded-lg transition-colors"
                   >
                     <span className="material-symbols-outlined text-[#8ba396]">close</span>
@@ -325,38 +446,121 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
               <div className="p-6 space-y-6">
-                <div>
-                  <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目类别</h4>
-                  <p className="text-white">{selectedProject.category}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目描述</h4>
-                  <p className="text-white">{selectedProject.description}</p>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目负责人</h4>
-                    <p className="text-white">{selectedProject.teamLeader}</p>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目类别</h4>
+                    <p className="text-white">{getCategoryLabel(selectedProject.category)}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">团队人数</h4>
-                    <p className="text-white">{selectedProject.teamSize} 人</p>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">当前状态</h4>
+                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusColors[selectedProject.status]}`}>
+                      {statusLabels[selectedProject.status]}
+                    </span>
                   </div>
                 </div>
+
                 <div>
-                  <h4 className="text-sm font-medium text-[#8ba396] mb-2">提交时间</h4>
-                  <p className="text-white">{selectedProject.submittedAt}</p>
+                  <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目描述</h4>
+                  <p className="text-white whitespace-pre-wrap">{selectedProject.description}</p>
                 </div>
+
+                {selectedProject.objectives && (
+                  <div>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目目标</h4>
+                    <p className="text-white whitespace-pre-wrap">{selectedProject.objectives}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedProject.timeline && (
+                    <div>
+                      <h4 className="text-sm font-medium text-[#8ba396] mb-2">预计时间线</h4>
+                      <p className="text-white">{selectedProject.timeline}</p>
+                    </div>
+                  )}
+                  {selectedProject.resources && (
+                    <div>
+                      <h4 className="text-sm font-medium text-[#8ba396] mb-2">所需资源</h4>
+                      <p className="text-white">{selectedProject.resources}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedProject.projectLink && (
+                  <div>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">项目链接</h4>
+                    <a 
+                      href={selectedProject.projectLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#13ec80] hover:underline inline-flex items-center gap-1"
+                    >
+                      {selectedProject.projectLink}
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                  </div>
+                )}
+
                 <div>
-                  <h4 className="text-sm font-medium text-[#8ba396] mb-2">当前状态</h4>
-                  <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusColors[selectedProject.status]}`}>
-                    {statusLabels[selectedProject.status]}
-                  </span>
+                  <h4 className="text-sm font-medium text-[#8ba396] mb-3">团队成员（{selectedProject.members.length} 人）</h4>
+                  <div className="grid gap-2">
+                    {selectedProject.members.map((member, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-[#102219] rounded-lg">
+                        <div className="w-10 h-10 rounded-full bg-[#13ec80]/20 flex items-center justify-center text-[#13ec80] font-bold">
+                          {member.name.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">{member.name}</p>
+                          <p className="text-xs text-[#618975]">{member.email}</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          member.role === 'leader' 
+                            ? 'bg-[#13ec80]/20 text-[#13ec80]' 
+                            : 'bg-[#283930] text-[#8ba396]'
+                        }`}>
+                          {roleLabels[member.role]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">提交时间</h4>
+                    <p className="text-white">{formatDate(selectedProject.createdAt)}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">最后更新</h4>
+                    <p className="text-white">{formatDate(selectedProject.updatedAt)}</p>
+                  </div>
+                </div>
+
+                {/* 反馈输入框 */}
+                {(selectedProject.status === 'pending' || selectedProject.adminFeedback) && (
+                  <div>
+                    <h4 className="text-sm font-medium text-[#8ba396] mb-2">管理员反馈</h4>
+                    {selectedProject.status === 'pending' ? (
+                      <textarea
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                        placeholder="输入反馈意见（要求修改时必填）..."
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-xl bg-[#102219] border border-[#2a3c34] text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] resize-none"
+                      />
+                    ) : selectedProject.adminFeedback ? (
+                      <p className="text-white bg-[#102219] p-4 rounded-xl">{selectedProject.adminFeedback}</p>
+                    ) : null}
+                  </div>
+                )}
               </div>
-              <div className="p-6 border-t border-[#2a3c34] flex justify-end gap-3">
+              <div className="p-6 border-t border-[#2a3c34] flex flex-wrap justify-end gap-3">
                 <button
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedProject(null);
+                    setFeedbackText('');
+                  }}
                   className="h-10 px-4 bg-[#102219] hover:bg-[#283930] text-white rounded-lg transition-colors"
                 >
                   关闭
@@ -364,22 +568,25 @@ export default function AdminProjectsPage() {
                 {selectedProject.status === 'pending' && (
                   <>
                     <button
-                      onClick={() => handleRequestRevision(selectedProject.id)}
-                      className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      onClick={() => handleRequestRevision(selectedProject.projectId)}
+                      disabled={actionLoading}
+                      className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
-                      要求修改
+                      {actionLoading ? '处理中...' : '要求修改'}
                     </button>
                     <button
-                      onClick={() => handleReject(selectedProject.id)}
-                      className="h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      onClick={() => handleReject(selectedProject.projectId)}
+                      disabled={actionLoading}
+                      className="h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
-                      拒绝
+                      {actionLoading ? '处理中...' : '拒绝'}
                     </button>
                     <button
-                      onClick={() => handleApprove(selectedProject.id)}
-                      className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      onClick={() => handleApprove(selectedProject.projectId)}
+                      disabled={actionLoading}
+                      className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
-                      批准
+                      {actionLoading ? '处理中...' : '批准'}
                     </button>
                   </>
                 )}

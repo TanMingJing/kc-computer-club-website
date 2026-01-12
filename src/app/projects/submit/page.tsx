@@ -1,32 +1,103 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TeamMember {
-  id: string;
+  userId: string;
   name: string;
   email: string;
-  role: string;
+  role: 'leader' | 'member' | 'tech_lead' | 'design_lead';
+}
+
+interface ExistingProject {
+  projectId: string;
+  title: string;
+  teamName: string;
+  isLeader: boolean;
 }
 
 export default function ProjectSubmitPage() {
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [existingProject, setExistingProject] = useState<ExistingProject | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
+    teamName: '',
     projectName: '',
     category: '',
     description: '',
     objectives: '',
     timeline: '',
     resources: '',
+    projectLink: '',
   });
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    { id: '1', name: '', email: '', role: '组长' },
-  ]);
+  
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  
+  const roleOptions = [
+    { value: 'leader', label: '组长' },
+    { value: 'member', label: '成员' },
+    { value: 'tech_lead', label: '技术负责' },
+    { value: 'design_lead', label: '设计负责' },
+  ];
+
+  // 检查用户是否已登录且是否已在某个项目中
+  useEffect(() => {
+    const checkUserProject = async () => {
+      if (authLoading) return;
+      
+      if (!user) {
+        // 未登录，跳转到登录页
+        router.push('/auth/login?redirect=/projects/submit');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/projects?checkUser=${encodeURIComponent(user.email)}`);
+        const data = await response.json();
+
+        if (data.success && data.hasProject) {
+          // 用户已在项目中
+          setExistingProject({
+            projectId: data.project.projectId,
+            title: data.project.title,
+            teamName: data.project.teamName,
+            isLeader: data.isLeader,
+          });
+          
+          // 如果不是组长，直接跳转到项目页面
+          if (!data.isLeader) {
+            router.push(`/projects/${data.project.projectId}`);
+            return;
+          }
+        } else {
+          // 用户未在任何项目中，初始化组长信息
+          setTeamMembers([
+            {
+              userId: user.id,
+              name: user.name,
+              email: user.email,
+              role: 'leader',
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error('检查用户项目失败:', err);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkUserProject();
+  }, [user, authLoading, router]);
 
   const categories = [
     { value: 'web', label: '网页应用开发' },
@@ -42,37 +113,248 @@ export default function ProjectSubmitPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setError(null);
   };
+
+  const [memberValidation, setMemberValidation] = useState<Record<number, { valid: boolean; message?: string; loading?: boolean }>>({});
 
   const handleMemberChange = (index: number, field: keyof TeamMember, value: string) => {
     const newMembers = [...teamMembers];
     newMembers[index] = { ...newMembers[index], [field]: value };
     setTeamMembers(newMembers);
+    setError(null);
+    
+    // 当邮箱改变时，清除验证状态
+    if (field === 'email') {
+      setMemberValidation((prev) => ({
+        ...prev,
+        [index]: { valid: false, message: undefined, loading: false },
+      }));
+    }
+  };
+
+  // 验证组员邮箱是否在数据库中注册
+  const validateMemberEmail = async (index: number, email: string) => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMemberValidation((prev) => ({
+        ...prev,
+        [index]: { valid: false, message: '请输入有效的邮箱格式' },
+      }));
+      return false;
+    }
+
+    setMemberValidation((prev) => ({
+      ...prev,
+      [index]: { valid: false, loading: true },
+    }));
+
+    try {
+      const response = await fetch('/api/users/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.exists) {
+        // 用户存在，自动填充姓名和 userId
+        const newMembers = [...teamMembers];
+        newMembers[index] = {
+          ...newMembers[index],
+          userId: data.user.id,
+          name: data.user.name,
+        };
+        setTeamMembers(newMembers);
+        
+        setMemberValidation((prev) => ({
+          ...prev,
+          [index]: { valid: true, message: `已验证: ${data.user.name}` },
+        }));
+        return true;
+      } else {
+        setMemberValidation((prev) => ({
+          ...prev,
+          [index]: { valid: false, message: '该邮箱未在系统中注册' },
+        }));
+        return false;
+      }
+    } catch {
+      setMemberValidation((prev) => ({
+        ...prev,
+        [index]: { valid: false, message: '验证失败，请重试' },
+      }));
+      return false;
+    }
   };
 
   const addTeamMember = () => {
-    if (teamMembers.length < 5) {
-      setTeamMembers([...teamMembers, { id: Date.now().toString(), name: '', email: '', role: '成员' }]);
-    }
+    // 无限制组员数量
+    setTeamMembers([
+      ...teamMembers,
+      { userId: '', name: '', email: '', role: 'member' },
+    ]);
   };
 
   const removeTeamMember = (index: number) => {
-    if (teamMembers.length > 1) {
-      setTeamMembers(teamMembers.filter((_, i) => i !== index));
-    }
+    // 不能删除组长（第一个成员）
+    if (index === 0) return;
+    setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // TODO: 实际的提交 API 调用
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    // 跳转到成功页面或返回项目列表
-    router.push('/projects?submitted=true');
+    setError(null);
+
+    try {
+      // 验证必填字段
+      if (!formData.teamName.trim()) {
+        throw new Error('请输入组名');
+      }
+      if (!formData.projectName.trim()) {
+        throw new Error('请输入项目名称');
+      }
+      if (!formData.category) {
+        throw new Error('请选择项目类别');
+      }
+      if (!formData.description.trim()) {
+        throw new Error('请输入项目描述');
+      }
+
+      // 验证组员信息
+      for (let i = 0; i < teamMembers.length; i++) {
+        const member = teamMembers[i];
+        if (!member.name.trim()) {
+          throw new Error(`请输入第 ${i + 1} 位组员的姓名`);
+        }
+        if (!member.email.trim()) {
+          throw new Error(`请输入第 ${i + 1} 位组员的邮箱`);
+        }
+        // 验证邮箱格式
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) {
+          throw new Error(`第 ${i + 1} 位组员的邮箱格式不正确`);
+        }
+        // 验证非组长成员是否已在数据库注册
+        if (i > 0) {
+          const validation = memberValidation[i];
+          if (!validation?.valid) {
+            throw new Error(`第 ${i + 1} 位组员 (${member.email}) 未在系统中注册，请先让他们注册账号`);
+          }
+        }
+      }
+
+      // 检查是否有重复邮箱
+      const emails = teamMembers.map(m => m.email.toLowerCase());
+      const uniqueEmails = new Set(emails);
+      if (emails.length !== uniqueEmails.size) {
+        throw new Error('组员邮箱不能重复');
+      }
+
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamName: formData.teamName.trim(),
+          title: formData.projectName.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          objectives: formData.objectives.trim(),
+          timeline: formData.timeline.trim(),
+          resources: formData.resources.trim(),
+          projectLink: formData.projectLink.trim(),
+          members: teamMembers,
+          leaderId: user?.id || '',
+          leaderEmail: user?.email || '',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '提交失败');
+      }
+
+      // 提交成功，跳转到项目详情页
+      router.push(`/projects/${data.project.projectId}?submitted=true`);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // 加载中状态
+  if (authLoading || isChecking) {
+    return (
+      <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
+        <Header
+          navItems={[
+            { label: '首页', href: '/' },
+            { label: '关于', href: '/about' },
+            { label: '公告', href: '/notices' },
+            { label: '活动', href: '/activities' },
+          ]}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
+            <p className="text-[#618975]">正在检查项目状态...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // 如果用户已有项目且是组长，显示提示
+  if (existingProject && existingProject.isLeader) {
+    return (
+      <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
+        <Header
+          navItems={[
+            { label: '首页', href: '/' },
+            { label: '关于', href: '/about' },
+            { label: '公告', href: '/notices' },
+            { label: '活动', href: '/activities' },
+          ]}
+        />
+        <main className="flex-1 p-4 py-8 lg:p-10">
+          <div className="max-w-xl mx-auto">
+            <div className="bg-white dark:bg-[#1a2c24] rounded-2xl shadow-xl dark:shadow-none border border-[#e5e8e7] dark:border-[#2a3c34] p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-amber-400">info</span>
+              </div>
+              <h1 className="text-2xl font-bold text-[#111814] dark:text-white mb-4">
+                您已有一个项目
+              </h1>
+              <p className="text-[#618975] mb-6">
+                您是 <span className="font-bold text-[#13ec80]">{existingProject.teamName}</span> 的组长。
+                <br />
+                每个组只能提交一个项目，您可以编辑现有项目。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href={`/projects/${existingProject.projectId}`}
+                  className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] font-bold transition-colors"
+                >
+                  <span className="material-symbols-outlined">visibility</span>
+                  查看项目
+                </Link>
+                <Link
+                  href={`/projects/${existingProject.projectId}/edit`}
+                  className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#1a2c24] transition-colors"
+                >
+                  <span className="material-symbols-outlined">edit</span>
+                  编辑项目
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-[#f6f8f7] dark:bg-[#102219] overflow-x-hidden">
@@ -89,6 +371,14 @@ export default function ProjectSubmitPage() {
       {/* 主要内容区 */}
       <main className="flex-1 p-4 py-8 lg:p-10">
         <div className="max-w-3xl mx-auto">
+          {/* 错误提示 */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+              <span className="material-symbols-outlined text-red-400">error</span>
+              <p className="text-red-400">{error}</p>
+            </div>
+          )}
+
           {/* 表单卡片 */}
           <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a2c24] rounded-2xl shadow-xl dark:shadow-none border border-[#e5e8e7] dark:border-[#2a3c34] overflow-hidden">
             {/* 表单头部 */}
@@ -105,11 +395,34 @@ export default function ProjectSubmitPage() {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* 组名 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec80]">groups</span>
+                  团队信息
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    组名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="teamName"
+                    value={formData.teamName}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="输入您的团队名称"
+                    className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                  />
+                </div>
+              </div>
+
               {/* 项目基本信息 */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#13ec80]">description</span>
-                  基本信息
+                  项目信息
                 </h3>
                 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -212,6 +525,20 @@ export default function ProjectSubmitPage() {
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#111814] dark:text-white mb-2">
+                    项目链接（可选）
+                  </label>
+                  <input
+                    type="url"
+                    name="projectLink"
+                    value={formData.projectLink}
+                    onChange={handleInputChange}
+                    placeholder="例如：GitHub 仓库链接"
+                    className="w-full h-12 px-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                  />
+                </div>
               </div>
 
               {/* 团队成员 */}
@@ -221,94 +548,146 @@ export default function ProjectSubmitPage() {
                     <span className="material-symbols-outlined text-[#13ec80]">group</span>
                     团队成员
                   </h3>
-                  {teamMembers.length < 5 && (
-                    <button
-                      type="button"
-                      onClick={addTeamMember}
-                      className="flex items-center gap-1 text-sm font-medium text-[#13ec80] hover:text-[#0fd673] transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-xl">add</span>
-                      添加成员
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={addTeamMember}
+                    className="flex items-center gap-1 text-sm font-medium text-[#13ec80] hover:text-[#0fd673] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">add</span>
+                    添加成员
+                  </button>
                 </div>
 
                 <div className="space-y-3">
                   {teamMembers.map((member, index) => (
                     <div
-                      key={member.id}
-                      className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34]"
+                      key={index}
+                      className="p-4 rounded-xl bg-[#f0f4f2] dark:bg-[#102219] border border-[#e5e8e7] dark:border-[#2a3c34] space-y-3"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#13ec80]/20 flex items-center justify-center text-[#13ec80] font-bold">
-                        {index + 1}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#13ec80]/20 flex items-center justify-center text-[#13ec80] font-bold">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 grid gap-3 sm:grid-cols-3">
+                          {index === 0 ? (
+                            // 组长 - 只显示信息，不能编辑
+                            <>
+                              <input
+                                type="text"
+                                value={member.name}
+                                disabled
+                                className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white opacity-70 cursor-not-allowed"
+                              />
+                              <input
+                                type="email"
+                                value={member.email}
+                                disabled
+                                className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white opacity-70 cursor-not-allowed"
+                              />
+                              <select
+                                value={member.role}
+                                disabled
+                                className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white opacity-70 cursor-not-allowed"
+                              >
+                                {roleOptions.map((role) => (
+                                  <option key={role.value} value={role.value}>{role.label}</option>
+                                ))}
+                              </select>
+                            </>
+                          ) : (
+                            // 其他成员 - 先输入邮箱验证，再填充信息
+                            <>
+                              <div className="relative">
+                                <input
+                                  type="email"
+                                  value={member.email}
+                                  onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+                                  placeholder="邮箱（需先验证）"
+                                  required
+                                  className={`h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] w-full ${
+                                    memberValidation[index]?.valid
+                                      ? 'border-[#13ec80]'
+                                      : memberValidation[index]?.message && !memberValidation[index]?.loading
+                                      ? 'border-red-500'
+                                      : 'border-[#e5e8e7] dark:border-[#2a3c34]'
+                                  }`}
+                                />
+                              </div>
+                              <input
+                                type="text"
+                                value={member.name}
+                                placeholder="姓名（自动填充）"
+                                disabled
+                                className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] opacity-70"
+                              />
+                              <select
+                                value={member.role}
+                                onChange={(e) => handleMemberChange(index, 'role', e.target.value as TeamMember['role'])}
+                                className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                              >
+                                {roleOptions.filter(r => r.value !== 'leader').map((role) => (
+                                  <option key={role.value} value={role.value}>{role.label}</option>
+                                ))}
+                              </select>
+                            </>
+                          )}
+                        </div>
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => removeTeamMember(index)}
+                            className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
+                            <span className="material-symbols-outlined">delete</span>
+                          </button>
+                        )}
+                        {index === 0 && (
+                          <div className="px-3 py-1 rounded-full bg-[#13ec80]/20 text-xs font-medium text-[#13ec80]">
+                            组长（您）
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-1 grid gap-3 sm:grid-cols-3">
-                        <input
-                          type="text"
-                          value={member.name}
-                          onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
-                          placeholder="姓名"
-                          required
-                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
-                        />
-                        <input
-                          type="email"
-                          value={member.email}
-                          onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
-                          placeholder="邮箱"
-                          required
-                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
-                        />
-                        <select
-                          value={member.role}
-                          onChange={(e) => handleMemberChange(index, 'role', e.target.value)}
-                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
-                        >
-                          <option value="组长">组长</option>
-                          <option value="成员">成员</option>
-                          <option value="技术负责">技术负责</option>
-                          <option value="设计负责">设计负责</option>
-                        </select>
-                      </div>
-                      {teamMembers.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeTeamMember(index)}
-                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        >
-                          <span className="material-symbols-outlined">delete</span>
-                        </button>
+                      
+                      {/* 验证状态和按钮 */}
+                      {index > 0 && (
+                        <div className="flex items-center gap-3 pl-13">
+                          <button
+                            type="button"
+                            onClick={() => validateMemberEmail(index, member.email)}
+                            disabled={!member.email || memberValidation[index]?.loading}
+                            className="px-4 py-1.5 rounded-lg bg-[#13ec80]/20 text-[#13ec80] text-sm font-medium hover:bg-[#13ec80]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                          >
+                            {memberValidation[index]?.loading ? (
+                              <>
+                                <span className="material-symbols-outlined text-sm animate-spin">hourglass_empty</span>
+                                验证中...
+                              </>
+                            ) : (
+                              <>
+                                <span className="material-symbols-outlined text-sm">verified</span>
+                                验证邮箱
+                              </>
+                            )}
+                          </button>
+                          {memberValidation[index]?.message && (
+                            <span className={`text-xs flex items-center gap-1 ${
+                              memberValidation[index]?.valid ? 'text-[#13ec80]' : 'text-red-400'
+                            }`}>
+                              <span className="material-symbols-outlined text-sm">
+                                {memberValidation[index]?.valid ? 'check_circle' : 'error'}
+                              </span>
+                              {memberValidation[index].message}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
                 <p className="text-xs text-[#618975]">
-                  最多可添加 5 名团队成员
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
+                  组员必须已在系统中注册账号。添加组员后请点击"验证邮箱"确认用户存在。
                 </p>
-              </div>
-
-              {/* 附件上传 */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-[#111814] dark:text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#13ec80]">attach_file</span>
-                  附件（可选）
-                </h3>
-                
-                <div className="border-2 border-dashed border-[#e5e8e7] dark:border-[#2a3c34] rounded-xl p-8 text-center hover:border-[#13ec80] transition-colors cursor-pointer">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-[#f0f4f2] dark:bg-[#102219] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-2xl text-[#618975]">cloud_upload</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#111814] dark:text-white">
-                        点击或拖拽文件到此处上传
-                      </p>
-                      <p className="text-xs text-[#618975] mt-1">
-                        支持 PDF、Word、图片等格式，最大 10MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
