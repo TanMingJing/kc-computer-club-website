@@ -4,6 +4,7 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
+import { ProjectChecklistComponent } from '@/components/projects/ProjectChecklist';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -28,6 +29,21 @@ interface Project {
   members: TeamMember[];
   leaderId: string;
   leaderEmail: string;
+  checklist?: {
+    checklistId: string;
+    projectId: string;
+    title: string;
+    items: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      completed: boolean;
+      completedAt?: string;
+      assignee?: string;
+    }>;
+    createdAt: string;
+    updatedAt: string;
+  };
   status: 'pending' | 'approved' | 'rejected' | 'revision';
   adminFeedback?: string;
   createdAt: string;
@@ -293,6 +309,15 @@ export default function ProjectDetailPage() {
                     {project.adminFeedback}
                   </div>
                 </div>
+              )}
+
+              {/* 项目检查清单 */}
+              {project.status === 'approved' && (
+                <ProjectChecklistComponent
+                  projectId={project.projectId}
+                  checklist={project.checklist}
+                  isReadOnly={false}
+                />
               )}
             </div>
 

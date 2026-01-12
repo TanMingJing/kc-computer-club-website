@@ -8,6 +8,7 @@ const PROJECTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECT
 
 /**
  * GET /api/projects/[id]/checklist - 获取项目检查清单
+ * 检查清单存储在 resources 字段中的特殊格式中
  */
 export async function GET(
   request: NextRequest,
@@ -21,15 +22,12 @@ export async function GET(
       id
     );
 
-    // 解析 checklist 字段
+    // 从 resources 字段解析检查清单（格式: CHECKLIST::JSON）
     let checklist = null;
-    if (project.checklist) {
+    if (project.resources && typeof project.resources === 'string' && project.resources.startsWith('CHECKLIST::')) {
       try {
-        if (typeof project.checklist === 'string') {
-          checklist = JSON.parse(project.checklist);
-        } else {
-          checklist = project.checklist;
-        }
+        const checklistJson = project.resources.substring('CHECKLIST::'.length);
+        checklist = JSON.parse(checklistJson);
       } catch {
         checklist = null;
       }
@@ -58,6 +56,7 @@ export async function GET(
 
 /**
  * PUT /api/projects/[id]/checklist - 更新项目检查清单
+ * 检查清单存储在 resources 字段中
  */
 export async function PUT(
   request: NextRequest,
@@ -99,13 +98,17 @@ export async function PUT(
       updatedAt: new Date().toISOString(),
     };
 
+    // 将检查清单存储在 resources 字段中
+    // 格式: CHECKLIST::JSON
+    const checklistStorage = `CHECKLIST::${JSON.stringify(checklist)}`;
+
     // 更新项目文档
     await databases.updateDocument(
       APPWRITE_DATABASE_ID,
       PROJECTS_COLLECTION_ID,
       id,
       {
-        checklist: JSON.stringify(checklist),
+        resources: checklistStorage,
         updatedAt: new Date().toISOString(),
       }
     );

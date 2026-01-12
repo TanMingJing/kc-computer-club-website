@@ -274,6 +274,17 @@ function parseProject(doc: Record<string, unknown>): Partial<Project> {
     }
   }
 
+  // 解析 checklist 字段（从 resources 字段中提取）
+  let checklist: any = undefined;
+  if (doc.resources && typeof doc.resources === 'string' && (doc.resources as string).startsWith('CHECKLIST::')) {
+    try {
+      const checklistJson = (doc.resources as string).substring('CHECKLIST::'.length);
+      checklist = JSON.parse(checklistJson);
+    } catch {
+      checklist = undefined;
+    }
+  }
+
   return {
     projectId: doc.$id as string,
     teamName: doc.teamName as string,
@@ -285,6 +296,7 @@ function parseProject(doc: Record<string, unknown>): Partial<Project> {
     resources: doc.resources as string,
     projectLink: doc.projectLink as string,
     members,
+    checklist,
     leaderId: doc.leaderId as string,
     leaderEmail: doc.leaderEmail as string,
     status: doc.status as Project['status'],
