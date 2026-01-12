@@ -85,7 +85,10 @@ export default function AttendanceWidget({
   // 点名
   const handleCheckIn = async () => {
     if (!studentId || !studentName || !studentEmail) {
-      setError('学生信息不完整，无法点名');
+      // 未登录，重定向到登录页面
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login?redirect=/attendance';
+      }
       return;
     }
 

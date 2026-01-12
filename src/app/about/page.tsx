@@ -141,14 +141,7 @@ export default function AboutPage() {
     loadSettings();
   }, []);
 
-  // 检查学生权限 - 重定向逻辑必须在 render 之前执行
-  useEffect(() => {
-    if (!isLoading && !isStudent) {
-      router.push('/auth/login');
-    }
-  }, [isStudent, isLoading, router]);
-
-  // 如果正在加载或没有权限，显示加载状态
+  // Allow viewing without login - form will show login prompt if needed
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#102219] text-white">
@@ -156,16 +149,12 @@ export default function AboutPage() {
         <main className="grow flex items-center justify-center py-20">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec]"></div>
-            <p className="mt-4 text-gray-400">正在验证权限...</p>
+            <p className="mt-4 text-gray-400">正在加载...</p>
           </div>
         </main>
         <Footer />
       </div>
     );
-  }
-
-  if (!isStudent) {
-    return null; // 路由器会重定向
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -174,6 +163,13 @@ export default function AboutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if user is logged in - redirect if not
+    if (!user) {
+      router.push('/auth/login?redirect=/about');
+      return;
+    }
+
     setIsSubmitting(true);
 
     // 模拟提交
@@ -317,6 +313,34 @@ export default function AboutPage() {
                   </div>
                 )}
 
+                {/* 未登录提示 */}
+                {!user && (
+                  <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl flex items-center gap-3">
+                    <span className="material-symbols-outlined text-blue-400">info</span>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-400 font-medium mb-2">需要登录才能发送消息</p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => router.push('/auth/login?redirect=/about')}
+                          variant="primary"
+                          size="sm"
+                          leftIcon="login"
+                        >
+                          登录
+                        </Button>
+                        <Button
+                          onClick={() => router.push('/auth/signup?redirect=/about')}
+                          variant="secondary"
+                          size="sm"
+                          leftIcon="person_add"
+                        >
+                          注册
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                   {/* 姓名和学号 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -327,6 +351,7 @@ export default function AboutPage() {
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       leftIcon="badge"
                       required
+                      disabled={!user}
                     />
                     <Input
                       label="学号（选填）"
@@ -334,6 +359,7 @@ export default function AboutPage() {
                       value={formData.studentId}
                       onChange={(e) => handleInputChange('studentId', e.target.value)}
                       leftIcon="numbers"
+                      disabled={!user}
                     />
                   </div>
 
@@ -346,6 +372,7 @@ export default function AboutPage() {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     leftIcon="mail"
                     required
+                    disabled={!user}
                   />
 
                   {/* 主题 */}
@@ -355,18 +382,20 @@ export default function AboutPage() {
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
                     required
+                    disabled={!user}
                   />
 
                   {/* 消息内容 */}
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-white">您的消息</label>
                     <textarea
-                      className="w-full rounded-xl border border-white/10 bg-[#102219] p-4 text-white placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                      className="w-full rounded-xl border border-white/10 bg-[#102219] p-4 text-white placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="请输入您想说的话..."
                       rows={5}
                       value={formData.message}
                       onChange={(e) => handleInputChange('message', e.target.value)}
                       required
+                      disabled={!user}
                     />
                   </div>
 
@@ -378,8 +407,9 @@ export default function AboutPage() {
                       className="w-full"
                       rightIcon="send"
                       isLoading={isSubmitting}
+                      disabled={!user || isSubmitting}
                     >
-                      发送消息
+                      {!user ? '请先登录' : '发送消息'}
                     </Button>
                   </div>
                 </form>
