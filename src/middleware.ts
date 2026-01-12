@@ -2,55 +2,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that don't require authentication (public routes)
-const publicRoutes = [
-  '/auth/login', 
-  '/auth/signup', 
-  '/auth/forgot-password',
-  '/auth/reset-password',
-  '/auth/change-password',
-  '/auth/verify-email',
-  '/admin/login',
-  '/api',  // All API routes are public (they handle their own auth)
-];
-
 export function middleware(request: NextRequest) {
-  try {
-    const pathname = request.nextUrl?.pathname;
-
-    // If pathname is missing or invalid, just pass through
-    if (!pathname || typeof pathname !== 'string') {
-      return NextResponse.next();
-    }
-
-    // Allow API routes to pass through (they handle their own auth)
-    if (pathname.startsWith('/api')) {
-      return NextResponse.next();
-    }
-
-    // Allow public auth routes
-    if (publicRoutes.some((route) => pathname.startsWith(route))) {
-      return NextResponse.next();
-    }
-
-    // For all other routes, allow them through
-    // Client-side AuthContext will handle redirects if user is not authenticated
-    return NextResponse.next();
-  } catch (error) {
-    // If anything goes wrong in middleware, just pass through
-    console.error('Middleware error:', error);
-    return NextResponse.next();
-  }
+  // Minimal middleware - just pass through
+  // Client-side AuthContext handles all authentication logic
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Only run middleware on specific routes
+    // Exclude API routes entirely
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
