@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cloudflare": "next build && node scripts/prepare-cloudflare.js",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
