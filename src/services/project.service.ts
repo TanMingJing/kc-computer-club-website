@@ -161,10 +161,27 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
     if (input.resources !== undefined) updateData.resources = input.resources;
     if (input.projectLink !== undefined) updateData.projectLink = input.projectLink;
     if (input.status !== undefined) updateData.status = input.status;
-    // 注意：adminFeedback 属性因 Appwrite 免费版限制可能不存在
-    // 如果存在则更新，如果不存在则忽略该字段
+    
+    // adminFeedback 存储在 timeline 字段中，使用 FEEDBACK:: 前缀
+    // 因为 Appwrite 免费版属性数量限制
     if (input.adminFeedback !== undefined) {
-      updateData.adminFeedback = input.adminFeedback;
+      // 首先获取当前项目的 timeline 值
+      const currentProject = await databases.getDocument(
+        APPWRITE_DATABASE_ID,
+        PROJECTS_COLLECTION_ID,
+        id
+      );
+      let currentTimeline = (currentProject.timeline as string) || '';
+      // 移除旧的 FEEDBACK:: 内容
+      if (currentTimeline.includes('FEEDBACK::')) {
+        currentTimeline = currentTimeline.substring(0, currentTimeline.indexOf('FEEDBACK::')).trim();
+      }
+      // 添加新的反馈（如果有的话）
+      if (input.adminFeedback) {
+        updateData.timeline = currentTimeline + (currentTimeline ? '\n' : '') + 'FEEDBACK::' + input.adminFeedback;
+      } else {
+        updateData.timeline = currentTimeline;
+      }
     }
     
     // 处理 members 更新
@@ -177,29 +194,12 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
       updateData.members = JSON.stringify(membersWithTimestamp);
     }
 
-    let project;
-    try {
-      project = await databases.updateDocument(
-        APPWRITE_DATABASE_ID,
-        PROJECTS_COLLECTION_ID,
-        id,
-        updateData
-      );
-    } catch (updateError: unknown) {
-      const updateErr = updateError as Error & { message?: string };
-      // 如果因为 adminFeedback 属性不存在导致失败，尝试不更新该字段
-      if (updateErr.message?.includes('adminFeedback') && input.adminFeedback !== undefined) {
-        delete updateData.adminFeedback;
-        project = await databases.updateDocument(
-          APPWRITE_DATABASE_ID,
-          PROJECTS_COLLECTION_ID,
-          id,
-          updateData
-        );
-      } else {
-        throw updateError;
-      }
-    }
+    const project = await databases.updateDocument(
+      APPWRITE_DATABASE_ID,
+      PROJECTS_COLLECTION_ID,
+      id,
+      updateData
+    );
 
     return parseProject(project) as Project;
   } catch (error: unknown) {
@@ -285,6 +285,20 @@ function parseProject(doc: Record<string, unknown>): Partial<Project> {
     }
   }
 
+  // 解析 adminFeedback 字段（从 timeline 字段中提取 FEEDBACK:: 前缀的内容）
+  // 因为 Appwrite 免费版属性数量限制，我们复用 timeline 字段存储反馈
+  let adminFeedback = '';
+  let actualTimeline = doc.timeline as string || '';
+  if (actualTimeline.includes('FEEDBACK::')) {
+    const feedbackIndex = actualTimeline.indexOf('FEEDBACK::');
+    adminFeedback = actualTimeline.substring(feedbackIndex + 'FEEDBACK::'.length);
+    actualTimeline = actualTimeline.substring(0, feedbackIndex).trim();
+  }
+  // 也检查原始 adminFeedback 字段（如果存在）
+  if (!adminFeedback && doc.adminFeedback) {
+    adminFeedback = doc.adminFeedback as string;
+  }
+
   return {
     projectId: doc.$id as string,
     teamName: doc.teamName as string,
@@ -292,7 +306,7 @@ function parseProject(doc: Record<string, unknown>): Partial<Project> {
     description: doc.description as string,
     category: doc.category as Project['category'],
     objectives: doc.objectives as string,
-    timeline: doc.timeline as string,
+    timeline: actualTimeline,
     resources: doc.resources as string,
     projectLink: doc.projectLink as string,
     members,
@@ -300,7 +314,7 @@ function parseProject(doc: Record<string, unknown>): Partial<Project> {
     leaderId: doc.leaderId as string,
     leaderEmail: doc.leaderEmail as string,
     status: doc.status as Project['status'],
-    adminFeedback: (doc.adminFeedback as string) || '', // 处理属性不存在的情况
+    adminFeedback: adminFeedback,
     createdAt: doc.createdAt as string,
     updatedAt: doc.updatedAt as string,
   };

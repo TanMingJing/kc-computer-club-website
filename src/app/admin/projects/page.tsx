@@ -537,10 +537,17 @@ export default function AdminProjectsPage() {
                 </div>
 
                 {/* 反馈输入框 - 蓝色主题 */}
-                {(selectedProject.status === 'pending' || selectedProject.adminFeedback) && (
-                  <div>
-                    <h4 className="text-sm font-medium text-[#8ba3a6] mb-2">管理员反馈</h4>
-                    {selectedProject.status === 'pending' ? (
+                <div>
+                  <h4 className="text-sm font-medium text-[#8ba3a6] mb-2">管理员反馈</h4>
+                  {/* 待审核和需修改状态都可以输入反馈 */}
+                  {(selectedProject.status === 'pending' || selectedProject.status === 'revision') ? (
+                    <>
+                      {selectedProject.adminFeedback && (
+                        <div className="mb-3 p-3 bg-amber-900/20 border border-amber-600/30 rounded-lg">
+                          <p className="text-xs text-amber-400 mb-1">上次反馈：</p>
+                          <p className="text-white text-sm">{selectedProject.adminFeedback}</p>
+                        </div>
+                      )}
                       <textarea
                         value={feedbackText}
                         onChange={(e) => setFeedbackText(e.target.value)}
@@ -548,11 +555,13 @@ export default function AdminProjectsPage() {
                         rows={3}
                         className="w-full px-4 py-3 rounded-xl bg-[#101922] border border-[#2a3c4a] text-white placeholder:text-[#6189a5] focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
                       />
-                    ) : selectedProject.adminFeedback ? (
-                      <p className="text-white bg-[#101922] p-4 rounded-xl">{selectedProject.adminFeedback}</p>
-                    ) : null}
-                  </div>
-                )}
+                    </>
+                  ) : selectedProject.adminFeedback ? (
+                    <p className="text-white bg-[#101922] p-4 rounded-xl whitespace-pre-wrap">{selectedProject.adminFeedback}</p>
+                  ) : (
+                    <p className="text-[#6189a5] italic">暂无反馈</p>
+                  )}
+                </div>
               </div>
               <div className="p-6 border-t border-[#2a3c4a] flex flex-wrap justify-end gap-3">
                 <button
@@ -565,7 +574,8 @@ export default function AdminProjectsPage() {
                 >
                   关闭
                 </button>
-                {selectedProject.status === 'pending' && (
+                {/* 待审核和需修改状态都可以操作 */}
+                {(selectedProject.status === 'pending' || selectedProject.status === 'revision') && (
                   <>
                     <button
                       onClick={() => handleRequestRevision(selectedProject.projectId)}

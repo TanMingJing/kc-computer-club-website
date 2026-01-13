@@ -301,13 +301,54 @@ export default function ProjectDetailPage() {
                 </div>
               )}
 
-              {/* 管理员反馈 */}
+              {/* 管理员反馈 - 需修改时特别高亮显示 */}
               {project.adminFeedback && (
-                <div className="bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-white/10">
-                  <h3 className="text-lg font-bold mb-4">管理员反馈</h3>
-                  <div className="bg-[#101922] rounded-lg p-4 text-gray-300 whitespace-pre-wrap">
+                <div className={`rounded-2xl p-6 lg:p-8 border ${
+                  project.status === 'revision' 
+                    ? 'bg-amber-900/20 border-amber-500/30' 
+                    : project.status === 'rejected'
+                    ? 'bg-red-900/20 border-red-500/30'
+                    : 'bg-[#1a2c24] border-white/10'
+                }`}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className={`material-symbols-outlined ${
+                      project.status === 'revision' 
+                        ? 'text-amber-400' 
+                        : project.status === 'rejected'
+                        ? 'text-red-400'
+                        : 'text-[#13ec80]'
+                    }`}>
+                      {project.status === 'revision' ? 'edit_note' : project.status === 'rejected' ? 'cancel' : 'feedback'}
+                    </span>
+                    <h3 className={`text-lg font-bold ${
+                      project.status === 'revision' 
+                        ? 'text-amber-400' 
+                        : project.status === 'rejected'
+                        ? 'text-red-400'
+                        : 'text-white'
+                    }`}>
+                      {project.status === 'revision' 
+                        ? '需要修改 - 管理员反馈' 
+                        : project.status === 'rejected'
+                        ? '已拒绝 - 管理员反馈'
+                        : '管理员反馈'}
+                    </h3>
+                  </div>
+                  <div className={`rounded-lg p-4 whitespace-pre-wrap ${
+                    project.status === 'revision' 
+                      ? 'bg-amber-950/50 text-amber-100 border border-amber-500/20' 
+                      : project.status === 'rejected'
+                      ? 'bg-red-950/50 text-red-100 border border-red-500/20'
+                      : 'bg-[#101922] text-gray-300'
+                  }`}>
                     {project.adminFeedback}
                   </div>
+                  {project.status === 'revision' && (
+                    <div className="mt-4 flex items-center gap-2 text-amber-400 text-sm">
+                      <span className="material-symbols-outlined text-lg">info</span>
+                      <span>请根据反馈修改项目后重新提交</span>
+                    </div>
+                  )}
                 </div>
               )}
 

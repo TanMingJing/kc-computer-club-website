@@ -522,8 +522,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                           onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
                           placeholder="邮箱"
                           required
-                          disabled={index === 0}
-                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] disabled:opacity-70 disabled:cursor-not-allowed"
+                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
                         />
                         <select
                           value={member.role}

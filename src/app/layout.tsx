@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 import { ReCaptchaProvider } from "@/contexts/ReCaptchaContext";
 
 const spaceGrotesk = Space_Grotesk({
@@ -23,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="dark">
+    <html lang="zh-CN" className="dark" suppressHydrationWarning>
       <head>
         {/* Material Symbols Icons */}
         <link
@@ -42,6 +43,7 @@ export default function RootLayout({
           </AuthProvider>
         </ReCaptchaProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
