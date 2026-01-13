@@ -257,6 +257,16 @@ export async function requestRevision(id: string, feedback: string): Promise<Pro
 }
 
 /**
+ * 恢复项目为待审核状态
+ */
+export async function revertProjectToPending(id: string): Promise<Project> {
+  return updateProject(id, {
+    status: 'pending',
+    adminFeedback: '',
+  });
+}
+
+/**
  * 解析项目数据
  */
 function parseProject(doc: Record<string, unknown>): Partial<Project> {

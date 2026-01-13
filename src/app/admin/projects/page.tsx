@@ -210,6 +210,31 @@ export default function AdminProjectsPage() {
     }
   };
 
+  const handleRevertToPending = async (projectId: string) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'revert-pending' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '操作失败');
+      }
+
+      await fetchProjects();
+      setShowModal(false);
+      setSelectedProject(null);
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // 加载中状态
   if (isLoading) {
     return (
@@ -390,17 +415,39 @@ export default function AdminProjectsPage() {
                     <span className="material-symbols-outlined text-lg">visibility</span>
                     查看详情
                   </button>
-                  {(project.status === 'pending' || project.status === 'rejected' || project.status === 'revision') && (
+                  {(project.status === 'pending' || project.status === 'rejected' || project.status === 'revision' || project.status === 'approved') && (
                     <>
-                      <button
-                        onClick={() => handleApprove(project.projectId)}
-                        disabled={actionLoading}
-                        className="flex items-center gap-2 h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        <span className="material-symbols-outlined text-lg">check</span>
-                        批准
-                      </button>
-                      {project.status !== 'rejected' && (
+                      {project.status !== 'approved' && (
+                        <button
+                          onClick={() => handleApprove(project.projectId)}
+                          disabled={actionLoading}
+                          className="flex items-center gap-2 h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-lg">check</span>
+                          批准
+                        </button>
+                      )}
+                      {project.status === 'approved' && (
+                        <button
+                          onClick={() => handleRevertToPending(project.projectId)}
+                          disabled={actionLoading}
+                          className="flex items-center gap-2 h-10 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-lg">restore</span>
+                          变回待定
+                        </button>
+                      )}
+                      {project.status === 'rejected' && (
+                        <button
+                          onClick={() => handleRevertToPending(project.projectId)}
+                          disabled={actionLoading}
+                          className="flex items-center gap-2 h-10 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-lg">restore</span>
+                          变回待定
+                        </button>
+                      )}
+                      {project.status !== 'rejected' && project.status !== 'approved' && (
                         <button
                           onClick={() => handleReject(project.projectId)}
                           disabled={actionLoading}
@@ -576,10 +623,10 @@ export default function AdminProjectsPage() {
                 >
                   关闭
                 </button>
-                {/* 待审核、需修改和已拒绝状态都可以操作 */}
-                {(selectedProject.status === 'pending' || selectedProject.status === 'revision' || selectedProject.status === 'rejected') && (
+                {/* 待审核、需修改、已拒绝和已批准状态都可以操作 */}
+                {(selectedProject.status === 'pending' || selectedProject.status === 'revision' || selectedProject.status === 'rejected' || selectedProject.status === 'approved') && (
                   <>
-                    {selectedProject.status !== 'rejected' && (
+                    {selectedProject.status !== 'rejected' && selectedProject.status !== 'approved' && (
                       <button
                         onClick={() => handleRequestRevision(selectedProject.projectId)}
                         disabled={actionLoading}
@@ -588,7 +635,7 @@ export default function AdminProjectsPage() {
                         {actionLoading ? '处理中...' : '要求修改'}
                       </button>
                     )}
-                    {selectedProject.status !== 'rejected' && (
+                    {selectedProject.status !== 'rejected' && selectedProject.status !== 'approved' && (
                       <button
                         onClick={() => handleReject(selectedProject.projectId)}
                         disabled={actionLoading}
@@ -597,13 +644,24 @@ export default function AdminProjectsPage() {
                         {actionLoading ? '处理中...' : '拒绝'}
                       </button>
                     )}
-                    <button
-                      onClick={() => handleApprove(selectedProject.projectId)}
-                      disabled={actionLoading}
-                      className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {actionLoading ? '处理中...' : '批准'}
-                    </button>
+                    {(selectedProject.status === 'rejected' || selectedProject.status === 'approved') && (
+                      <button
+                        onClick={() => handleRevertToPending(selectedProject.projectId)}
+                        disabled={actionLoading}
+                        className="h-10 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading ? '处理中...' : '变回待定'}
+                      </button>
+                    )}
+                    {selectedProject.status !== 'approved' && (
+                      <button
+                        onClick={() => handleApprove(selectedProject.projectId)}
+                        disabled={actionLoading}
+                        className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading ? '处理中...' : '批准'}
+                      </button>
+                    )}
                   </>
                 )}
               </div>

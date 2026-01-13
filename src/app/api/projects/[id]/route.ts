@@ -7,6 +7,7 @@ import {
   approveProject,
   rejectProject,
   requestRevision,
+  revertProjectToPending,
 } from '@/services/project.service';
 
 /**
@@ -64,6 +65,9 @@ export async function PUT(
           );
         }
         project = await requestRevision(id, feedback);
+        break;
+      case 'revert-pending':
+        project = await revertProjectToPending(id);
         break;
       default:
         // 普通更新
