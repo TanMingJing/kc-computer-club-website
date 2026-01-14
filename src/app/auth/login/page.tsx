@@ -8,19 +8,36 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function StudentLoginPage() {
   const router = useRouter();
-  const { login, user, isLoading } = useAuth();
+  const { login, user, isLoading, requirePasswordChange, changePassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isFormLoading, setIsFormLoading] = useState(false);
+  
+  // 强制修改密码模态框状态
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPasswordForChange, setCurrentPasswordForChange] = useState('');
+  const [changePasswordError, setChangePasswordError] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Redirect to home if user already has a session
+  // Redirect to home if user already has a session and doesn't need password change
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && user && !requirePasswordChange) {
       router.push('/');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, requirePasswordChange, router]);
+
+  // 显示强制修改密码模态框
+  useEffect(() => {
+    if (user && requirePasswordChange) {
+      setShowChangePasswordModal(true);
+      // 记住当前密码用于验证
+      setCurrentPasswordForChange(password);
+    }
+  }, [user, requirePasswordChange, password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +53,52 @@ export default function StudentLoginPage() {
     setIsFormLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/');
+      const result = await login(email, password);
+      
+      if (result.requirePasswordChange) {
+        // 显示强制修改密码模态框
+        setShowChangePasswordModal(true);
+        setCurrentPasswordForChange(password);
+      } else {
+        router.push('/');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsFormLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePasswordError('');
+
+    // 验证新密码
+    if (newPassword.length < 6) {
+      setChangePasswordError('新密码至少需要6个字符');
+      return;
+    }
+
+    if (newPassword === '11111111') {
+      setChangePasswordError('新密码不能为默认密码');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setChangePasswordError('两次输入的密码不一致');
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      await changePassword(currentPasswordForChange, newPassword);
+      setShowChangePasswordModal(false);
+      router.push('/');
+    } catch (err) {
+      setChangePasswordError(err instanceof Error ? err.message : '修改密码失败');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -195,17 +252,6 @@ export default function StudentLoginPage() {
             </span>
             管理员登录
           </Link>
-
-          {/* 注册链接 */}
-          <p className="text-center text-[#9db9ab] text-sm">
-            还没有账号？{' '}
-            <Link
-              href="/auth/signup"
-              className="text-[#13ec80] hover:text-[#0fd673] font-medium transition-colors"
-            >
-              立即注册
-            </Link>
-          </p>
         </div>
 
         {/* 返回主站链接 */}
@@ -219,6 +265,96 @@ export default function StudentLoginPage() {
           </Link>
         </div>
       </div>
+
+      {/* 强制修改密码模态框 */}
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a2c23] rounded-2xl border border-[#283930] p-8 shadow-2xl max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-yellow-500/10 mb-4">
+                <span className="material-symbols-outlined text-yellow-500 text-3xl">
+                  lock_reset
+                </span>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">首次登录</h2>
+              <p className="text-[#9db9ab] text-sm">
+                为了账户安全，请设置您的新密码
+              </p>
+            </div>
+
+            {changePasswordError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {changePasswordError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  新密码
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9db9ab] material-symbols-outlined">
+                    lock
+                  </span>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="至少6个字符"
+                    required
+                    minLength={6}
+                    className="w-full pl-10 pr-4 py-3 bg-[#162a21] border border-[#283930] rounded-lg text-white placeholder-[#5a6b63] focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  确认新密码
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9db9ab] material-symbols-outlined">
+                    lock
+                  </span>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="再次输入新密码"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-[#162a21] border border-[#283930] rounded-lg text-white placeholder-[#5a6b63] focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="w-full py-3 bg-[#13ec80] text-[#102219] font-bold rounded-lg hover:bg-[#0fd673] disabled:opacity-50 transition-colors mt-4 flex items-center justify-center gap-2"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <span className="animate-spin material-symbols-outlined">
+                      hourglass_bottom
+                    </span>
+                    修改中...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">check</span>
+                    确认修改
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="text-center text-[#6b8f7c] text-xs mt-4">
+              * 新密码不能与默认密码相同
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

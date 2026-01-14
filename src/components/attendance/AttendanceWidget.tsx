@@ -173,7 +173,7 @@ export default function AttendanceWidget({
   return (
     <div className={`relative rounded-2xl border transition-all duration-300 overflow-hidden ${
       status.isAttendanceOpen 
-        ? 'bg-gradient-to-br from-[#1a2c24] to-[#13ec80]/10 border-[#13ec80]/30 shadow-[0_0_30px_rgba(19,236,128,0.15)]' 
+        ? 'bg-linear-to-br from-[#1a2c24] to-[#13ec80]/10 border-[#13ec80]/30 shadow-[0_0_30px_rgba(19,236,128,0.15)]' 
         : 'bg-[#1a2c24] border-[#2a3c34]'
     }`}>
       {/* 顶部装饰线 */}

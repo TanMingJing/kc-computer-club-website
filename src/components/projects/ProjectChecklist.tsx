@@ -282,7 +282,7 @@ export function ProjectChecklistComponent({
               <button
                 onClick={() => handleDeleteItem(item.id)}
                 disabled={isLoading}
-                className="flex-shrink-0 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                className="shrink-0 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
               >
                 <span className="material-symbols-outlined text-lg">delete</span>
               </button>

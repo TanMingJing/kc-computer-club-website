@@ -11,29 +11,29 @@
  * npx ts-node --project tsconfig.scripts.json scripts/add-student-attrs.ts
  */
 
-const { Client, Databases } = require('node-appwrite');
+const nodeAppwriteStudent = require('node-appwrite');
 require('dotenv').config({ path: '.env.local' });
 
-const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
-const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || '';
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'kccompt_db';
+const ENDPOINT_STUDENT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const PROJECT_ID_STUDENT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
+const API_KEY_STUDENT = process.env.APPWRITE_API_KEY || '';
+const DB_ID_STUDENT = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'kccompt_db';
 const USERS_COLLECTION_ID = 'users';
 
 async function addStudentAttributes() {
   console.log('🔧 添加学生管理所需的属性到 users collection...\n');
-  console.log('Endpoint:', APPWRITE_ENDPOINT);
-  console.log('Project:', APPWRITE_PROJECT_ID);
-  console.log('Database:', DATABASE_ID);
-  console.log('API Key:', APPWRITE_API_KEY ? '已设置' : '未设置');
+  console.log('Endpoint:', ENDPOINT_STUDENT);
+  console.log('Project:', PROJECT_ID_STUDENT);
+  console.log('Database:', DB_ID_STUDENT);
+  console.log('API Key:', API_KEY_STUDENT ? '已设置' : '未设置');
   console.log('');
 
-  const client = new Client()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID)
-    .setKey(APPWRITE_API_KEY);
+  const client = new nodeAppwriteStudent.Client()
+    .setEndpoint(ENDPOINT_STUDENT)
+    .setProject(PROJECT_ID_STUDENT)
+    .setKey(API_KEY_STUDENT);
 
-  const databases = new Databases(client);
+  const databases = new nodeAppwriteStudent.Databases(client);
 
   const attributesToAdd = [
     {
@@ -70,7 +70,7 @@ async function addStudentAttributes() {
     try {
       if (attr.type === 'string') {
         await databases.createStringAttribute(
-          DATABASE_ID,
+          DB_ID_STUDENT,
           USERS_COLLECTION_ID,
           attr.key,
           attr.size!,
@@ -81,7 +81,7 @@ async function addStudentAttributes() {
         console.log(`✅ 已添加属性: ${attr.key} (${attr.description})`);
       } else if (attr.type === 'boolean') {
         await databases.createBooleanAttribute(
-          DATABASE_ID,
+          DB_ID_STUDENT,
           USERS_COLLECTION_ID,
           attr.key,
           attr.required || false,

@@ -239,7 +239,7 @@ export default function AdminProjectsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="p-6 lg:p-8 flex items-center justify-center" style={{ minHeight: '400px' }}>
           <div className="flex flex-col items-center gap-4">
             <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
             <p className="text-[#8ba396]">加载中...</p>
@@ -253,7 +253,7 @@ export default function AdminProjectsPage() {
   if (error) {
     return (
       <AdminLayout>
-        <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="p-6 lg:p-8 flex items-center justify-center" style={{ minHeight: '400px' }}>
           <div className="text-center">
             <span className="material-symbols-outlined text-5xl text-red-400 mb-4">error</span>
             <h2 className="text-xl font-bold text-white mb-2">加载失败</h2>

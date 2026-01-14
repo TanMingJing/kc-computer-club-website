@@ -8,9 +8,19 @@ import * as XLSX from 'xlsx';
 interface StudentFullInfo {
   $id: string;
   email: string;
-  name: string;
   studentId: string;
-  className?: string;
+  chineseName: string;
+  englishName: string;
+  classNameCn: string;
+  classNameEn: string;
+  classCode: string;
+  groupLevel: string;
+  level: string;
+  phone: string;
+  instagram: string;
+  group: string;
+  position: string;
+  notes: string;
   role: string;
   createdAt: string;
   attendanceStats: {
@@ -33,10 +43,19 @@ interface ImportPreview {
   rows: string[][];
   mapping: Record<string, string>;
   students: Array<{
-    name: string;
-    email: string;
     studentId: string;
-    className?: string;
+    chineseName: string;
+    englishName: string;
+    classNameCn: string;
+    classNameEn: string;
+    classCode: string;
+    groupLevel: string;
+    level: string;
+    phone: string;
+    instagram: string;
+    group: string;
+    position: string;
+    notes: string;
   }>;
 }
 
@@ -114,16 +133,22 @@ export default function StudentsPage() {
             return idx >= 0 ? String(row[idx] || '').trim() : '';
           };
 
-          const email = getCell('email');
-          const studentId = getCell('studentId') || extractStudentIdFromEmail(email);
-
           return {
-            name: getCell('name'),
-            email: email,
-            studentId: studentId,
-            className: getCell('className'),
+            studentId: getCell('studentId'),
+            chineseName: getCell('chineseName'),
+            englishName: getCell('englishName'),
+            classNameCn: getCell('classNameCn'),
+            classNameEn: getCell('classNameEn'),
+            classCode: getCell('classCode'),
+            groupLevel: getCell('groupLevel'),
+            level: getCell('level'),
+            phone: getCell('phone'),
+            instagram: getCell('instagram'),
+            group: getCell('group'),
+            position: getCell('position'),
+            notes: getCell('notes'),
           };
-        }).filter(s => s.name && s.email);
+        }).filter(s => s.studentId && s.chineseName);
 
         setImportPreview({
           headers,
@@ -149,22 +174,32 @@ export default function StudentsPage() {
   const detectColumnMapping = (headers: string[]): Record<string, string> => {
     const mapping: Record<string, string> = {};
     
-    const namePatterns = ['姓名', '名字', 'name', 'student name', '学生姓名', '全名'];
-    const emailPatterns = ['邮箱', 'email', '电邮', 'e-mail', '邮件地址', 'student email'];
-    const studentIdPatterns = ['学号', 'student id', 'id', '编号', 'student number', '学生编号'];
-    const classPatterns = ['班级', 'class', '班', '年级班级', 'grade', '年级'];
+    const patterns: Record<string, string[]> = {
+      studentId: ['学号', 'student id', 'id', '编号'],
+      chineseName: ['中文姓名', '中文名', '姓名', 'chinese name', '名字'],
+      englishName: ['英文姓名', '英文名', 'english name', 'name'],
+      classNameCn: ['班级(中文)', '班级（中文）', '班级中文', 'class cn'],
+      classNameEn: ['班级(英文)', '班级（英文）', '班级英文', 'class en', 'class'],
+      classCode: ['班级代号', 'class code', '代号'],
+      groupLevel: ['高级组/初级组', '学点&服务', '学点', '组别', 'group level'],
+      level: ['级别', '课程&课室', '课程', 'level'],
+      phone: ['电话号码', '电话', 'phone', '手机', '联系电话'],
+      instagram: ['instagram', 'ig', 'ins', 'instagram (如有)', 'instagram(如有)'],
+      group: ['分组', 'group', '小组'],
+      position: ['职位', 'position', '职务', '岗位'],
+      notes: ['备注', 'notes', 'remark', '说明'],
+    };
     
     headers.forEach((header) => {
       const lowerHeader = header.toLowerCase().trim();
       
-      if (!mapping['name'] && namePatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-        mapping['name'] = header;
-      } else if (!mapping['email'] && emailPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-        mapping['email'] = header;
-      } else if (!mapping['studentId'] && studentIdPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-        mapping['studentId'] = header;
-      } else if (!mapping['className'] && classPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-        mapping['className'] = header;
+      for (const [field, fieldPatterns] of Object.entries(patterns)) {
+        if (fieldPatterns.some(p => lowerHeader.includes(p.toLowerCase()) || lowerHeader === p.toLowerCase())) {
+          if (!mapping[field]) {
+            mapping[field] = header;
+          }
+          break;
+        }
       }
     });
     
@@ -192,16 +227,22 @@ export default function StudentsPage() {
         return idx >= 0 ? String(row[idx] || '').trim() : '';
       };
 
-      const email = getCell('email');
-      const studentId = getCell('studentId') || extractStudentIdFromEmail(email);
-
       return {
-        name: getCell('name'),
-        email: email,
-        studentId: studentId,
-        className: getCell('className'),
+        studentId: getCell('studentId'),
+        chineseName: getCell('chineseName'),
+        englishName: getCell('englishName'),
+        classNameCn: getCell('classNameCn'),
+        classNameEn: getCell('classNameEn'),
+        classCode: getCell('classCode'),
+        groupLevel: getCell('groupLevel'),
+        level: getCell('level'),
+        phone: getCell('phone'),
+        instagram: getCell('instagram'),
+        group: getCell('group'),
+        position: getCell('position'),
+        notes: getCell('notes'),
       };
-    }).filter(s => s.name && s.email);
+    }).filter(s => s.studentId && s.chineseName);
 
     setImportPreview({
       ...importPreview,
@@ -299,10 +340,15 @@ export default function StudentsPage() {
 
   // 过滤学生
   const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.chineseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.englishName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.studentId.includes(searchTerm) ||
-    (s.className && s.className.includes(searchTerm))
+    s.classNameCn.includes(searchTerm) ||
+    s.classNameEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.classCode.includes(searchTerm) ||
+    s.group.includes(searchTerm) ||
+    s.position.includes(searchTerm)
   );
 
   return (
@@ -327,6 +373,27 @@ export default function StudentsPage() {
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
+            <a
+              href="/admin/students/create"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 20px',
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>person_add</span>
+              创建学生
+            </a>
             <button
               onClick={() => fileInputRef.current?.click()}
               style={{
@@ -446,10 +513,10 @@ export default function StudentsPage() {
                 <thead>
                   <tr style={{ backgroundColor: '#101922' }}>
                     <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>学号</th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>姓名</th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>邮箱</th>
+                    <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>中文姓名</th>
+                    <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>英文姓名</th>
                     <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>班级</th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>活动</th>
+                    <th style={{ padding: '16px', textAlign: 'left', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>分组</th>
                     <th style={{ padding: '16px', textAlign: 'center', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>出勤</th>
                     <th style={{ padding: '16px', textAlign: 'center', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>项目</th>
                     <th style={{ padding: '16px', textAlign: 'center', color: '#8a9e94', fontWeight: 600, fontSize: '13px', borderBottom: '1px solid #2a3c4a' }}>操作</th>
@@ -464,9 +531,16 @@ export default function StudentsPage() {
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                       <td style={{ padding: '16px', color: '#137fec', fontWeight: 600, fontFamily: 'monospace' }}>{student.studentId}</td>
-                      <td style={{ padding: '16px', color: 'white', fontWeight: 500 }}>{student.name}</td>
-                      <td style={{ padding: '16px', color: '#8a9e94', fontSize: '13px' }}>{student.email}</td>
-                      <td style={{ padding: '16px', color: '#8a9e94' }}>{student.className || '-'}</td>
+                      <td style={{ padding: '16px', color: 'white', fontWeight: 500 }}>{student.chineseName}</td>
+                      <td style={{ padding: '16px', color: '#8a9e94', fontSize: '13px' }}>{student.englishName || '-'}</td>
+                      <td style={{ padding: '16px', color: '#8a9e94' }}>
+                        <div>{student.classNameCn || '-'}</div>
+                        {student.classCode && <div style={{ fontSize: '11px', color: '#6189a5' }}>{student.classCode}</div>}
+                      </td>
+                      <td style={{ padding: '16px', color: '#8a9e94' }}>
+                        <div>{student.group || '-'}</div>
+                        {student.position && <div style={{ fontSize: '11px', color: '#f59e0b' }}>{student.position}</div>}
+                      </td>
                       <td style={{ padding: '16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
                           <span style={{ 
@@ -597,18 +671,29 @@ export default function StudentsPage() {
                         <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '8px', verticalAlign: 'middle' }}>tune</span>
                         字段映射（自动识别，可手动调整）
                       </h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                        {['name', 'email', 'studentId', 'className'].map((field) => (
-                          <div key={field} style={{ backgroundColor: '#101922', padding: '12px', borderRadius: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                        {[
+                          { key: 'studentId', label: '学号 *' },
+                          { key: 'chineseName', label: '中文姓名 *' },
+                          { key: 'englishName', label: '英文姓名' },
+                          { key: 'classNameCn', label: '班级(中文)' },
+                          { key: 'classNameEn', label: '班级(英文)' },
+                          { key: 'classCode', label: '班级代号' },
+                          { key: 'groupLevel', label: '高级组/初级组' },
+                          { key: 'level', label: '级别' },
+                          { key: 'phone', label: '电话号码' },
+                          { key: 'instagram', label: 'Instagram' },
+                          { key: 'group', label: '分组' },
+                          { key: 'position', label: '职位' },
+                          { key: 'notes', label: '备注' },
+                        ].map(({ key, label }) => (
+                          <div key={key} style={{ backgroundColor: '#101922', padding: '12px', borderRadius: '10px' }}>
                             <label style={{ display: 'block', color: '#8a9e94', fontSize: '12px', marginBottom: '6px' }}>
-                              {field === 'name' && '姓名 *'}
-                              {field === 'email' && '邮箱 *'}
-                              {field === 'studentId' && '学号'}
-                              {field === 'className' && '班级'}
+                              {label}
                             </label>
                             <select
-                              value={importPreview.mapping[field] || ''}
-                              onChange={(e) => updateMapping(field, e.target.value)}
+                              value={importPreview.mapping[key] || ''}
+                              onChange={(e) => updateMapping(key, e.target.value)}
                               style={{
                                 width: '100%',
                                 padding: '8px',
@@ -663,20 +748,22 @@ export default function StudentsPage() {
                           <thead>
                             <tr style={{ backgroundColor: '#0a1015' }}>
                               <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>#</th>
-                              <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>姓名</th>
-                              <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>邮箱</th>
                               <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>学号</th>
+                              <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>中文姓名</th>
+                              <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>英文姓名</th>
                               <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>班级</th>
+                              <th style={{ padding: '12px', textAlign: 'left', color: '#8a9e94', fontSize: '12px', position: 'sticky', top: 0, backgroundColor: '#0a1015' }}>分组</th>
                             </tr>
                           </thead>
                           <tbody>
                             {importPreview.students.slice(0, 50).map((s, idx) => (
                               <tr key={idx} style={{ borderBottom: '1px solid #2a3c4a' }}>
                                 <td style={{ padding: '10px 12px', color: '#6189a5', fontSize: '12px' }}>{idx + 1}</td>
-                                <td style={{ padding: '10px 12px', color: 'white', fontSize: '13px' }}>{s.name}</td>
-                                <td style={{ padding: '10px 12px', color: '#8a9e94', fontSize: '13px' }}>{s.email}</td>
                                 <td style={{ padding: '10px 12px', color: '#137fec', fontSize: '13px', fontFamily: 'monospace' }}>{s.studentId}</td>
-                                <td style={{ padding: '10px 12px', color: '#8a9e94', fontSize: '13px' }}>{s.className || '-'}</td>
+                                <td style={{ padding: '10px 12px', color: 'white', fontSize: '13px' }}>{s.chineseName}</td>
+                                <td style={{ padding: '10px 12px', color: '#8a9e94', fontSize: '13px' }}>{s.englishName || '-'}</td>
+                                <td style={{ padding: '10px 12px', color: '#8a9e94', fontSize: '13px' }}>{s.classNameCn || s.classNameEn || '-'}</td>
+                                <td style={{ padding: '10px 12px', color: '#8a9e94', fontSize: '13px' }}>{s.group || '-'}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -710,7 +797,7 @@ export default function StudentsPage() {
                 {!importResult && (
                   <button
                     onClick={handleImport}
-                    disabled={importing || importPreview.students.length === 0 || !importPreview.mapping.name || !importPreview.mapping.email}
+                    disabled={importing || importPreview.students.length === 0 || !importPreview.mapping.studentId || !importPreview.mapping.chineseName}
                     style={{
                       padding: '10px 24px',
                       backgroundColor: '#137fec',
@@ -825,18 +912,54 @@ export default function StudentsPage() {
                       <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'white' }}>person</span>
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, color: 'white', fontSize: '20px' }}>{selectedStudent.name}</h3>
-                      <p style={{ margin: '4px 0 0', color: '#8a9e94' }}>{selectedStudent.email}</p>
+                      <h3 style={{ margin: 0, color: 'white', fontSize: '20px' }}>{selectedStudent.chineseName}</h3>
+                      <p style={{ margin: '4px 0 0', color: '#8a9e94' }}>{selectedStudent.englishName || selectedStudent.email}</p>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                     <div>
                       <span style={{ color: '#6189a5', fontSize: '12px' }}>学号</span>
                       <p style={{ color: '#137fec', fontFamily: 'monospace', fontWeight: 600, margin: '4px 0 0' }}>{selectedStudent.studentId}</p>
                     </div>
                     <div>
-                      <span style={{ color: '#6189a5', fontSize: '12px' }}>班级</span>
-                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.className || '未设置'}</p>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>班级(中文)</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.classNameCn || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>班级(英文)</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.classNameEn || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>班级代号</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.classCode || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>分组</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.group || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>职位</span>
+                      <p style={{ color: '#f59e0b', margin: '4px 0 0' }}>{selectedStudent.position || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>高级组/初级组</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.groupLevel || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>级别</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.level || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>电话</span>
+                      <p style={{ color: 'white', margin: '4px 0 0' }}>{selectedStudent.phone || '未设置'}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>Instagram</span>
+                      <p style={{ color: '#e4405f', margin: '4px 0 0' }}>{selectedStudent.instagram || '未设置'}</p>
+                    </div>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <span style={{ color: '#6189a5', fontSize: '12px' }}>备注</span>
+                      <p style={{ color: '#8a9e94', margin: '4px 0 0' }}>{selectedStudent.notes || '无'}</p>
                     </div>
                   </div>
                 </div>

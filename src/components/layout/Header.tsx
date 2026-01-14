@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -148,7 +149,10 @@ export function Header({
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle compact className="hidden md:flex" />
+          
           {isStudent && user ? (
             // Student logged in
             <div className="hidden md:flex items-center gap-3">

@@ -6,23 +6,23 @@
  * npx ts-node --project tsconfig.scripts.json scripts/add-attendance-code-attrs.ts
  */
 
-const { Client, Databases } = require('node-appwrite');
+const nodeAppwrite = require('node-appwrite');
 require('dotenv').config({ path: '.env.local' });
 
-const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
-const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || '';
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'kccompt_db';
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
+const API_KEY = process.env.APPWRITE_API_KEY || '';
+const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'kccompt_db';
 
 async function addAttendanceCodeAttributes() {
   console.log('=== 添加点名验证码属性 ===\n');
 
-  const client = new Client()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID)
-    .setKey(APPWRITE_API_KEY);
+  const client = new nodeAppwrite.Client()
+    .setEndpoint(ENDPOINT)
+    .setProject(PROJECT_ID)
+    .setKey(API_KEY);
 
-  const databases = new Databases(client);
+  const databases = new nodeAppwrite.Databases(client);
   const SETTINGS_COLLECTION_ID = 'clubSettings';
 
   try {
@@ -30,7 +30,7 @@ async function addAttendanceCodeAttributes() {
     console.log('添加 attendanceCode 属性...');
     try {
       await databases.createStringAttribute(
-        DATABASE_ID,
+        DB_ID,
         SETTINGS_COLLECTION_ID,
         'attendanceCode',
         10,  // size
@@ -50,7 +50,7 @@ async function addAttendanceCodeAttributes() {
     console.log('添加 attendanceCodeEnabled 属性...');
     try {
       await databases.createBooleanAttribute(
-        DATABASE_ID,
+        DB_ID,
         SETTINGS_COLLECTION_ID,
         'attendanceCodeEnabled',
         false // required

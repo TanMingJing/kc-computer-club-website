@@ -394,7 +394,7 @@ export default function ProjectDetailPage() {
                         <p className="text-sm font-medium">{member.name}</p>
                         <p className="text-xs text-gray-400 truncate">{member.email}</p>
                       </div>
-                      <span className={`flex-shrink-0 px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                      <span className={`shrink-0 px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                         member.role === 'leader' 
                           ? 'bg-[#13ec80]/20 text-[#13ec80]' 
                           : 'bg-white/10 text-gray-300'

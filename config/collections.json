@@ -34,6 +34,122 @@
           "required": false
         },
         {
+          "key": "studentId",
+          "type": "string",
+          "required": false,
+          "size": 64,
+          "description": "学生学号"
+        },
+        {
+          "key": "chineseName",
+          "type": "string",
+          "required": false,
+          "size": 256,
+          "description": "中文姓名"
+        },
+        {
+          "key": "englishName",
+          "type": "string",
+          "required": false,
+          "size": 256,
+          "description": "英文姓名"
+        },
+        {
+          "key": "classNameCn",
+          "type": "string",
+          "required": false,
+          "size": 256,
+          "description": "班级（中文）"
+        },
+        {
+          "key": "classNameEn",
+          "type": "string",
+          "required": false,
+          "size": 256,
+          "description": "班级（英文）"
+        },
+        {
+          "key": "classCode",
+          "type": "string",
+          "required": false,
+          "size": 64,
+          "description": "班级代号"
+        },
+        {
+          "key": "groupLevel",
+          "type": "string",
+          "required": false,
+          "size": 128,
+          "description": "高级组/初级组"
+        },
+        {
+          "key": "level",
+          "type": "string",
+          "required": false,
+          "size": 128,
+          "description": "级别"
+        },
+        {
+          "key": "phone",
+          "type": "string",
+          "required": false,
+          "size": 32,
+          "description": "电话号码"
+        },
+        {
+          "key": "instagram",
+          "type": "string",
+          "required": false,
+          "size": 128,
+          "description": "Instagram"
+        },
+        {
+          "key": "group",
+          "type": "string",
+          "required": false,
+          "size": 128,
+          "description": "分组"
+        },
+        {
+          "key": "position",
+          "type": "string",
+          "required": false,
+          "size": 128,
+          "description": "职位"
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "required": false,
+          "size": 1024,
+          "description": "备注"
+        },
+        {
+          "key": "passwordHash",
+          "type": "string",
+          "required": false,
+          "size": 512,
+          "description": "密码哈希"
+        },
+        {
+          "key": "requirePasswordChange",
+          "type": "boolean",
+          "required": false,
+          "description": "是否需要修改密码"
+        },
+        {
+          "key": "emailVerified",
+          "type": "boolean",
+          "required": false,
+          "description": "邮箱是否已验证"
+        },
+        {
+          "key": "lastLogin",
+          "type": "datetime",
+          "required": false,
+          "description": "最后登录时间"
+        },
+        {
           "key": "createdAt",
           "type": "datetime",
           "required": true

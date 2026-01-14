@@ -137,12 +137,7 @@ export default function HomePage() {
       </main>
 
       {/* 页脚 */}
-      <Footer
-        clubName="电脑学会"
-        description="培养学生编程能力和创新思维，推动校园信息技术教育。加入我们，一起探索技术的无限可能。"
-        email="club@school.edu"
-        address="304 室，科技楼"
-      />
+      <Footer />
     </div>
   );
 }

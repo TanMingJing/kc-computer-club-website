@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
@@ -55,6 +55,43 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
   });
   
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [lookupLoading, setLookupLoading] = useState<Record<number, boolean>>({});
+  const debounceTimers = useRef<Record<number, NodeJS.Timeout>>({});
+
+  // 查找用户信息
+  const lookupUserByEmail = useCallback(async (email: string, memberIndex: number) => {
+    if (!email || !email.includes('@')) return;
+    
+    setLookupLoading(prev => ({ ...prev, [memberIndex]: true }));
+    
+    try {
+      const response = await fetch('/api/users/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.exists && data.user) {
+        setTeamMembers(prev => {
+          const updated = [...prev];
+          if (updated[memberIndex]) {
+            updated[memberIndex] = {
+              ...updated[memberIndex],
+              name: data.user.name,
+              userId: data.user.id,
+            };
+          }
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('查找用户失败:', err);
+    } finally {
+      setLookupLoading(prev => ({ ...prev, [memberIndex]: false }));
+    }
+  }, []);
 
   const categories = [
     { value: 'web', label: '网页应用开发' },
@@ -138,6 +175,18 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
     newMembers[index] = { ...newMembers[index], [field]: value };
     setTeamMembers(newMembers);
     setError(null);
+    
+    // 当邮箱变化时，自动查找用户姓名
+    if (field === 'email' && value.includes('@')) {
+      // 清除之前的定时器
+      if (debounceTimers.current[index]) {
+        clearTimeout(debounceTimers.current[index]);
+      }
+      // 设置新的定时器（500ms 延迟）
+      debounceTimers.current[index] = setTimeout(() => {
+        lookupUserByEmail(value, index);
+      }, 500);
+    }
   };
 
   const addTeamMember = () => {
@@ -516,14 +565,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                           disabled={index === 0}
                           className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] disabled:opacity-70 disabled:cursor-not-allowed"
                         />
-                        <input
-                          type="email"
-                          value={member.email}
-                          onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
-                          placeholder="邮箱"
-                          required
-                          className="h-10 px-3 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
-                        />
+                        <div className="relative">
+                          <input
+                            type="email"
+                            value={member.email}
+                            onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+                            placeholder="邮箱（输入后自动填充姓名）"
+                            required
+                            className="w-full h-10 px-3 pr-8 rounded-lg bg-white dark:bg-[#1a2c24] border border-[#e5e8e7] dark:border-[#2a3c34] text-sm text-[#111814] dark:text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80]"
+                          />
+                          {lookupLoading[index] && (
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#13ec80] text-sm animate-spin">sync</span>
+                          )}
+                        </div>
                         <select
                           value={member.role}
                           onChange={(e) => handleMemberChange(index, 'role', e.target.value as TeamMember['role'])}

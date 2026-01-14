@@ -14,6 +14,7 @@ interface Attendee {
   avatar: string;
   status: 'present' | 'absent' | 'late' | 'pending';
   checkInTime?: string;
+  notes?: string; // 迟到原因备注
 }
 
 interface SessionInfo {
@@ -53,6 +54,7 @@ export default function TakeAttendancePage() {
   const [attendees, setAttendees] = useState<Attendee[]>(mockAttendees);
   const [filter, setFilter] = useState<'all' | 'present' | 'absent' | 'late' | 'pending'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingNotes, setEditingNotes] = useState<{ attendeeId: string; notes: string } | null>(null);
 
   const filteredAttendees = attendees.filter((attendee) => {
     const matchesFilter = filter === 'all' || attendee.status === filter;
@@ -112,6 +114,19 @@ export default function TakeAttendancePage() {
       ...a,
       status: a.status === 'pending' ? 'absent' : a.status,
     })));
+  };
+
+  const handleSaveNotes = (attendeeId: string, notes: string) => {
+    setAttendees(attendees.map((a) => {
+      if (a.id === attendeeId) {
+        return {
+          ...a,
+          notes: notes.trim(),
+        };
+      }
+      return a;
+    }));
+    setEditingNotes(null);
   };
 
   return (
@@ -256,6 +271,7 @@ export default function TakeAttendancePage() {
                   <th className="text-left px-6 py-4 text-sm font-medium text-[#8ba396]">邮箱</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-[#8ba396]">签到时间</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-[#8ba396]">状态</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#8ba396]">备注</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-[#8ba396]">操作</th>
                 </tr>
               </thead>
@@ -279,6 +295,31 @@ export default function TakeAttendancePage() {
                       <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusColors[attendee.status]}`}>
                         {statusLabels[attendee.status]}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-[#8ba396]">
+                      {attendee.notes ? (
+                        <div className="flex items-center gap-2 group">
+                          <span className="text-xs text-[#618975] line-clamp-1">{attendee.notes}</span>
+                          {attendee.status === 'late' && (
+                            <button
+                              onClick={() => setEditingNotes({ attendeeId: attendee.id, notes: attendee.notes || '' })}
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#2a3c34] rounded transition-all"
+                              title="编辑备注"
+                            >
+                              <span className="material-symbols-outlined text-sm text-[#618975]">edit</span>
+                            </button>
+                          )}
+                        </div>
+                      ) : attendee.status === 'late' ? (
+                        <button
+                          onClick={() => setEditingNotes({ attendeeId: attendee.id, notes: '' })}
+                          className="text-xs text-[#618975] hover:text-[#13ec80] transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-sm align-middle">add_note</span> 添加备注
+                        </button>
+                      ) : (
+                        <span className="text-xs text-[#2a3c34]">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-1">
@@ -347,6 +388,44 @@ export default function TakeAttendancePage() {
             </button>
           </div>
         </div>
+
+        {/* 编辑备注模态框 */}
+        {editingNotes && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-[#1a2c24] rounded-xl border border-[#2a3c34] max-w-md w-full p-6 shadow-2xl">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-white mb-2">
+                  添加迟到原因备注
+                </h2>
+                <p className="text-sm text-[#8ba396]">
+                  学生：{attendees.find((a) => a.id === editingNotes.attendeeId)?.name}
+                </p>
+              </div>
+
+              <textarea
+                value={editingNotes.notes}
+                onChange={(e) => setEditingNotes({ ...editingNotes, notes: e.target.value })}
+                placeholder="请输入迟到原因...（如：车迟到、突发事件等）"
+                className="w-full h-24 p-3 rounded-lg bg-[#102219] border border-[#2a3c34] text-sm text-white placeholder:text-[#618975] focus:outline-none focus:ring-2 focus:ring-[#13ec80] resize-none"
+              />
+
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  onClick={() => setEditingNotes(null)}
+                  className="flex-1 h-10 px-4 bg-[#102219] hover:bg-[#283930] text-white rounded-lg transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleSaveNotes(editingNotes.attendeeId, editingNotes.notes)}
+                  className="flex-1 h-10 px-4 bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] font-bold rounded-lg transition-colors"
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

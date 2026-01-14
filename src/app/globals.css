@@ -2,22 +2,15 @@
 
 /* ========================================
    学校电脑社官网 - 全局样式
-   基于设计稿：stitch_duplicate_of_finance_tracker_dashboard
+   支持浅色主题、深色主题和自定义主题色
    ======================================== */
 
 :root {
-  /* 主色调 - 绿色主题 */
+  /* 主色调 - 可通过 ThemeContext 动态修改 */
   --primary: #13ec80;
   --primary-hover: #0fd673;
   --primary-light: rgba(19, 236, 128, 0.1);
   --primary-glow: rgba(19, 236, 128, 0.3);
-
-  /* 浅色模式 */
-  --background: #f6f8f7;
-  --surface: #ffffff;
-  --foreground: #111814;
-  --text-secondary: #618975;
-  --border: #e5e7eb;
 
   /* 管理后台配色（蓝色主题） */
   --admin-primary: #137fec;
@@ -25,14 +18,56 @@
   --admin-surface: #1a2632;
 }
 
+/* ========================================
+   浅色主题
+   ======================================== */
+.light, :root:not(.dark) {
+  --background: #f8faf9;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f3;
+  --foreground: #111814;
+  --text-secondary: #618975;
+  --border: #e2e8e5;
+  
+  /* 卡片和组件 */
+  --card-bg: #ffffff;
+  --card-border: #e2e8e5;
+  --card-hover: #f1f5f3;
+  
+  /* 输入框 */
+  --input-bg: #ffffff;
+  --input-border: #d1d9d5;
+  --input-focus: var(--primary);
+  
+  /* 导航 */
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --nav-border: #e2e8e5;
+}
+
+/* ========================================
+   深色主题
+   ======================================== */
 .dark {
-  /* 深色模式 */
-  --background: #102219;
+  --background: #0d1812;
   --surface: #162a21;
   --surface-hover: #1c3328;
   --foreground: #ffffff;
   --text-secondary: #9db9ab;
   --border: #283930;
+  
+  /* 卡片和组件 */
+  --card-bg: #162a21;
+  --card-border: #283930;
+  --card-hover: #1c3328;
+  
+  /* 输入框 */
+  --input-bg: #102219;
+  --input-border: #283930;
+  --input-focus: var(--primary);
+  
+  /* 导航 */
+  --nav-bg: rgba(13, 24, 18, 0.95);
+  --nav-border: #283930;
   
   /* 管理后台深色模式 */
   --background-dark: #0a0f13;
@@ -54,6 +89,7 @@ body {
   font-family: 'Space Grotesk', 'Lexend', 'Inter', 'Manrope', 'Noto Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ========================================
@@ -69,20 +105,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #102219;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #1e3a2f;
 }
 
 /* ========================================
@@ -100,6 +128,7 @@ body {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
+  font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -125,11 +154,22 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Fade in animation */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 /* ========================================
    工具类
    ======================================== */
 .line-clamp-2 {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -137,6 +177,7 @@ body {
 
 .line-clamp-3 {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -144,13 +185,40 @@ body {
 
 /* 毛玻璃效果 */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .dark .glass {
   background: rgba(16, 34, 25, 0.8);
+}
+
+/* ========================================
+   主题色动态样式
+   ======================================== */
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.border-primary {
+  border-color: var(--primary) !important;
+}
+
+.ring-primary {
+  --tw-ring-color: var(--primary) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--primary) !important;
+}
+
+.hover\:text-primary:hover {
+  color: var(--primary) !important;
 }
 
 /* ========================================
@@ -179,4 +247,31 @@ body {
   padding-left: 1rem;
   background: var(--surface);
   border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* ========================================
+   浅色主题特定调整
+   ======================================== */
+.light {
+  /* 卡片阴影 */
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.light .card-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+/* 浅色主题下的输入框 */
+.light input,
+.light textarea,
+.light select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+}
+
+.light input:focus,
+.light textarea:focus,
+.light select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }

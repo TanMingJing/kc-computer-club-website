@@ -70,7 +70,7 @@ const MOCK_NOTICES: NormalizedNotice[] = [
   {
     id: '4',
     title: '招募执行委员会成员',
-    excerpt: '俱乐部现招募新一届执行委员会成员，包括财务主管和秘书等职位...',
+    excerpt: '俱乐部现招募新一届执行委员会成员，包括财务和总务等职位...',
     category: 'general',
     author: 'Alex Chen',
     date: '2024-01-08',

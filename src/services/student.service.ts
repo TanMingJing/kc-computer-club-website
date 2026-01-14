@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { databases, account } from './appwrite';
+import { databases } from './appwrite';
 import { ID, Query } from 'appwrite';
 import bcrypt from 'bcryptjs';
 
@@ -15,15 +15,37 @@ const PROJECTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECT
 
 /**
  * 学生完整信息接口（含出勤、项目）
+ * 基于 Excel 表格字段设计
  */
 export interface StudentFullInfo {
   $id: string;
-  email: string;
-  name: string;
-  studentId: string;
-  className?: string;
+  // 基本信息
+  studentId: string;           // 学号
+  chineseName: string;         // 中文姓名
+  englishName: string;         // 英文姓名
+  email: string;               // 邮箱（学号@kuencheng.edu.my）
+  
+  // 班级信息
+  classNameCn: string;         // 班级(中文) - 如 "高三纯商C"
+  classNameEn: string;         // 班级(英文) - 如 "Sr3ComC"
+  classCode: string;           // 班级代号 - 如 "A802"
+  
+  // 社团分组信息
+  groupLevel: string;          // 高级组/初级组 "学点&服务" - 如 "初级组 '1 学点'"
+  level: string;               // 级别 "课程&课室" - 如 "Advance '高级'"
+  
+  // 联系方式
+  phone: string;               // 电话号码
+  instagram: string;           // Instagram (如有)
+  
+  // 社团职位
+  group: string;               // 分组 - 如 "C1 陈俊霖"
+  position: string;            // 职位
+  notes: string;               // 备注
+  
   role: string;
   createdAt: string;
+  
   // 关联数据
   attendanceStats: {
     total: number;
@@ -42,14 +64,29 @@ export interface StudentFullInfo {
 
 /**
  * Excel导入的学生数据接口
+ * 对应 Excel 表格的所有列
  */
 export interface ImportStudentData {
-  name: string;
-  email: string;
-  studentId: string;
-  className?: string;
-  password?: string;
+  studentId: string;           // 学号
+  chineseName: string;         // 中文姓名
+  englishName: string;         // 英文姓名
+  classNameCn: string;         // 班级(中文)
+  classNameEn: string;         // 班级(英文)
+  classCode: string;           // 班级代号
+  groupLevel: string;          // 高级组/初级组
+  level: string;               // 级别
+  phone: string;               // 电话号码
+  instagram: string;           // Instagram
+  group: string;               // 分组
+  position: string;            // 职位
+  notes: string;               // 备注
+  password?: string;           // 密码（可选，默认使用学号）
 }
+
+/**
+ * 默认学生密码
+ */
+export const DEFAULT_STUDENT_PASSWORD = '11111111';
 
 /**
  * 从邮箱提取学号
@@ -61,28 +98,47 @@ export function extractStudentIdFromEmail(email: string): string {
 }
 
 /**
+ * 从学号生成邮箱
+ * 格式: 12345 -> 12345@kuencheng.edu.my
+ */
+export function generateEmailFromStudentId(studentId: string): string {
+  return `${studentId}@kuencheng.edu.my`;
+}
+
+/**
  * 自动识别Excel列名映射
  * 支持多种常见列名格式
  */
 export function detectColumnMapping(headers: string[]): Record<string, string> {
   const mapping: Record<string, string> = {};
   
-  const namePatterns = ['姓名', '名字', 'name', 'student name', '学生姓名', '全名'];
-  const emailPatterns = ['邮箱', 'email', '电邮', 'e-mail', '邮件地址', 'student email'];
-  const studentIdPatterns = ['学号', 'student id', 'id', '编号', 'student number', '学生编号'];
-  const classPatterns = ['班级', 'class', '班', '年级班级', 'grade', '年级'];
+  // 列名匹配规则
+  const patterns: Record<string, string[]> = {
+    studentId: ['学号', 'student id', 'id', '编号'],
+    chineseName: ['中文姓名', '中文名', '姓名', 'chinese name', '名字'],
+    englishName: ['英文姓名', '英文名', 'english name', 'name'],
+    classNameCn: ['班级(中文)', '班级（中文）', '班级中文', 'class cn', '班级'],
+    classNameEn: ['班级(英文)', '班级（英文）', '班级英文', 'class en', 'class'],
+    classCode: ['班级代号', 'class code', '代号'],
+    groupLevel: ['高级组/初级组', '学点&服务', '学点', '组别', 'group level'],
+    level: ['级别', '课程&课室', '课程', 'level'],
+    phone: ['电话号码', '电话', 'phone', '手机', '联系电话'],
+    instagram: ['instagram', 'ig', 'ins', 'instagram (如有)', 'instagram(如有)'],
+    group: ['分组', 'group', '小组'],
+    position: ['职位', 'position', '职务', '岗位'],
+    notes: ['备注', 'notes', 'remark', '说明'],
+  };
   
-  headers.forEach((header, index) => {
+  headers.forEach((header) => {
     const lowerHeader = header.toLowerCase().trim();
     
-    if (namePatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-      mapping['name'] = header;
-    } else if (emailPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-      mapping['email'] = header;
-    } else if (studentIdPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-      mapping['studentId'] = header;
-    } else if (classPatterns.some(p => lowerHeader.includes(p.toLowerCase()))) {
-      mapping['className'] = header;
+    for (const [field, fieldPatterns] of Object.entries(patterns)) {
+      if (fieldPatterns.some(p => lowerHeader.includes(p.toLowerCase()) || lowerHeader === p.toLowerCase())) {
+        if (!mapping[field]) {
+          mapping[field] = header;
+        }
+        break;
+      }
     }
   });
   
@@ -95,17 +151,14 @@ export function detectColumnMapping(headers: string[]): Record<string, string> {
 export function validateStudentData(data: ImportStudentData): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!data.name || data.name.trim().length < 2) {
-    errors.push('姓名至少需要2个字符');
+  // 必须有学号
+  if (!data.studentId || data.studentId.trim().length < 3) {
+    errors.push('学号必填且至少3位');
   }
   
-  if (!data.email || !data.email.includes('@')) {
-    errors.push('邮箱格式无效');
-  }
-  
-  // 如果没有学号，尝试从邮箱提取
-  if (!data.studentId && data.email) {
-    data.studentId = extractStudentIdFromEmail(data.email);
+  // 必须有中文姓名
+  if (!data.chineseName || data.chineseName.trim().length < 2) {
+    errors.push('中文姓名至少需要2个字符');
   }
   
   return { valid: errors.length === 0, errors };
@@ -116,12 +169,12 @@ export function validateStudentData(data: ImportStudentData): { valid: boolean; 
  */
 export async function bulkImportStudents(
   students: ImportStudentData[],
-  defaultPassword: string = 'Kc@12345'
-): Promise<{ success: number; failed: number; errors: Array<{ email: string; error: string }> }> {
+  defaultPassword?: string
+): Promise<{ success: number; failed: number; errors: Array<{ studentId: string; error: string }> }> {
   const results = {
     success: 0,
     failed: 0,
-    errors: [] as Array<{ email: string; error: string }>,
+    errors: [] as Array<{ studentId: string; error: string }>,
   };
   
   for (const student of students) {
@@ -130,38 +183,57 @@ export async function bulkImportStudents(
       const validation = validateStudentData(student);
       if (!validation.valid) {
         results.failed++;
-        results.errors.push({ email: student.email || 'unknown', error: validation.errors.join('; ') });
+        results.errors.push({ studentId: student.studentId || 'unknown', error: validation.errors.join('; ') });
         continue;
       }
+      
+      // 生成邮箱
+      const email = generateEmailFromStudentId(student.studentId);
       
       // 检查邮箱是否已存在
       const existing = await databases.listDocuments(
         APPWRITE_DATABASE_ID,
         USERS_COLLECTION_ID,
-        [Query.equal('email', student.email)]
+        [Query.equal('email', email)]
       );
       
       if (existing.documents.length > 0) {
         results.failed++;
-        results.errors.push({ email: student.email, error: '该邮箱已注册' });
+        results.errors.push({ studentId: student.studentId, error: '该学号已注册' });
         continue;
       }
       
-      // 创建用户记录（直接在数据库中创建，无需Appwrite Account）
+      // 创建用户记录
       const now = new Date().toISOString();
-      const passwordHash = await bcrypt.hash(student.password || defaultPassword, 10);
+      // 默认密码：11111111，首次登录必须修改
+      const password = student.password || defaultPassword || DEFAULT_STUDENT_PASSWORD;
+      const passwordHash = await bcrypt.hash(password, 10);
+      // 如果使用默认密码，标记为需要修改密码
+      const requirePasswordChange = (password === DEFAULT_STUDENT_PASSWORD);
       
       await databases.createDocument(
         APPWRITE_DATABASE_ID,
         USERS_COLLECTION_ID,
         ID.unique(),
         {
-          email: student.email.toLowerCase().trim(),
-          name: student.name.trim(),
-          studentId: student.studentId || extractStudentIdFromEmail(student.email),
-          className: student.className || '',
+          email: email.toLowerCase().trim(),
+          name: student.chineseName.trim(), // 主要显示名称用中文
+          studentId: student.studentId.trim(),
+          chineseName: student.chineseName.trim(),
+          englishName: (student.englishName || '').trim(),
+          classNameCn: (student.classNameCn || '').trim(),
+          classNameEn: (student.classNameEn || '').trim(),
+          classCode: (student.classCode || '').trim(),
+          groupLevel: (student.groupLevel || '').trim(),
+          level: (student.level || '').trim(),
+          phone: (student.phone || '').trim(),
+          instagram: (student.instagram || '').trim(),
+          group: (student.group || '').trim(),
+          position: (student.position || '').trim(),
+          notes: (student.notes || '').trim(),
           role: 'student',
           passwordHash: passwordHash,
+          requirePasswordChange: requirePasswordChange,
           emailVerified: true, // 批量导入的自动验证
           createdAt: now,
           updatedAt: now,
@@ -172,7 +244,7 @@ export async function bulkImportStudents(
     } catch (error) {
       results.failed++;
       const err = error as Error;
-      results.errors.push({ email: student.email || 'unknown', error: err.message || '未知错误' });
+      results.errors.push({ studentId: student.studentId || 'unknown', error: err.message || '未知错误' });
     }
   }
   
@@ -196,35 +268,36 @@ export async function getAllStudents(): Promise<StudentFullInfo[]> {
       // 获取出勤统计
       let attendanceStats = { total: 0, present: 0, late: 0, absent: 0 };
       try {
-        // 尝试使用 studentEmail 索引查询
-        const attendanceResponse = await databases.listDocuments(
-          APPWRITE_DATABASE_ID,
-          ATTENDANCE_COLLECTION_ID,
-          [Query.equal('studentEmail', doc.email), Query.limit(200)]
-        );
-        attendanceStats.total = attendanceResponse.documents.length;
-        attendanceStats.present = attendanceResponse.documents.filter(a => a.status === 'present').length;
-        attendanceStats.late = attendanceResponse.documents.filter(a => a.status === 'late').length;
-        attendanceStats.absent = attendanceResponse.documents.filter(a => a.status === 'absent').length;
-      } catch (e) {
-        // 如果索引不存在，尝试使用 studentId 查询（备选方案）
-        console.warn('使用 studentEmail 查询失败，尝试使用 studentId:', doc.studentId);
-        try {
-          const studentIdToFind = doc.studentId || extractStudentIdFromEmail(doc.email);
-          if (studentIdToFind) {
+        const possibleStudentIds: string[] = [];
+        const extractedId = extractStudentIdFromEmail(doc.email);
+        if (extractedId) possibleStudentIds.push(extractedId);
+        if (doc.studentId && !possibleStudentIds.includes(doc.studentId)) {
+          possibleStudentIds.push(doc.studentId);
+        }
+        if (doc.$id && !possibleStudentIds.includes(doc.$id)) {
+          possibleStudentIds.push(doc.$id);
+        }
+        
+        for (const studentIdToFind of possibleStudentIds) {
+          try {
             const attendanceResponse = await databases.listDocuments(
               APPWRITE_DATABASE_ID,
               ATTENDANCE_COLLECTION_ID,
               [Query.equal('studentId', studentIdToFind), Query.limit(200)]
             );
-            attendanceStats.total = attendanceResponse.documents.length;
-            attendanceStats.present = attendanceResponse.documents.filter(a => a.status === 'present').length;
-            attendanceStats.late = attendanceResponse.documents.filter(a => a.status === 'late').length;
-            attendanceStats.absent = attendanceResponse.documents.filter(a => a.status === 'absent').length;
+            
+            if (attendanceResponse.documents.length > 0) {
+              attendanceStats.total += attendanceResponse.documents.length;
+              attendanceStats.present += attendanceResponse.documents.filter(a => a.status === 'present').length;
+              attendanceStats.late += attendanceResponse.documents.filter(a => a.status === 'late').length;
+              attendanceStats.absent += attendanceResponse.documents.filter(a => a.status === 'absent').length;
+            }
+          } catch (queryError) {
+            console.warn(`查询 studentId=${studentIdToFind} 失败:`, queryError);
           }
-        } catch (e2) {
-          console.warn('获取出勤记录失败:', e2);
         }
+      } catch (e) {
+        console.warn('获取出勤记录失败:', e);
       }
       
       // 获取项目信息
@@ -237,7 +310,6 @@ export async function getAllStudents(): Promise<StudentFullInfo[]> {
         );
         const studentEmail = doc.email.toLowerCase().trim();
         
-        // 查找该学生参与的项目
         for (const project of projectResponse.documents) {
           const leaderEmail = (project.leaderEmail || '').toLowerCase().trim();
           
@@ -275,10 +347,20 @@ export async function getAllStudents(): Promise<StudentFullInfo[]> {
       
       students.push({
         $id: doc.$id,
-        email: doc.email,
-        name: doc.name,
         studentId: doc.studentId || extractStudentIdFromEmail(doc.email),
-        className: doc.className || '',
+        chineseName: doc.chineseName || doc.name || '',
+        englishName: doc.englishName || '',
+        email: doc.email,
+        classNameCn: doc.classNameCn || doc.className || '',
+        classNameEn: doc.classNameEn || '',
+        classCode: doc.classCode || '',
+        groupLevel: doc.groupLevel || '',
+        level: doc.level || '',
+        phone: doc.phone || '',
+        instagram: doc.instagram || '',
+        group: doc.group || '',
+        position: doc.position || '',
+        notes: doc.notes || '',
         role: doc.role,
         createdAt: doc.createdAt || doc.$createdAt,
         attendanceStats,
@@ -307,15 +389,34 @@ export async function getStudentById(studentId: string): Promise<StudentFullInfo
     // 获取出勤统计
     let attendanceStats = { total: 0, present: 0, late: 0, absent: 0 };
     try {
-      const attendanceResponse = await databases.listDocuments(
-        APPWRITE_DATABASE_ID,
-        ATTENDANCE_COLLECTION_ID,
-        [Query.equal('studentEmail', doc.email), Query.limit(200)]
-      );
-      attendanceStats.total = attendanceResponse.documents.length;
-      attendanceStats.present = attendanceResponse.documents.filter(a => a.status === 'present').length;
-      attendanceStats.late = attendanceResponse.documents.filter(a => a.status === 'late').length;
-      attendanceStats.absent = attendanceResponse.documents.filter(a => a.status === 'absent').length;
+      const possibleStudentIds: string[] = [];
+      const extractedId = extractStudentIdFromEmail(doc.email);
+      if (extractedId) possibleStudentIds.push(extractedId);
+      if (doc.studentId && !possibleStudentIds.includes(doc.studentId)) {
+        possibleStudentIds.push(doc.studentId);
+      }
+      if (doc.$id && !possibleStudentIds.includes(doc.$id)) {
+        possibleStudentIds.push(doc.$id);
+      }
+      
+      for (const studentIdToFind of possibleStudentIds) {
+        try {
+          const attendanceResponse = await databases.listDocuments(
+            APPWRITE_DATABASE_ID,
+            ATTENDANCE_COLLECTION_ID,
+            [Query.equal('studentId', studentIdToFind), Query.limit(200)]
+          );
+          
+          if (attendanceResponse.documents.length > 0) {
+            attendanceStats.total += attendanceResponse.documents.length;
+            attendanceStats.present += attendanceResponse.documents.filter(a => a.status === 'present').length;
+            attendanceStats.late += attendanceResponse.documents.filter(a => a.status === 'late').length;
+            attendanceStats.absent += attendanceResponse.documents.filter(a => a.status === 'absent').length;
+          }
+        } catch (queryError) {
+          console.warn(`查询 studentId=${studentIdToFind} 失败:`, queryError);
+        }
+      }
     } catch (e) {
       console.warn('获取出勤记录失败:', e);
     }
@@ -367,10 +468,20 @@ export async function getStudentById(studentId: string): Promise<StudentFullInfo
     
     return {
       $id: doc.$id,
-      email: doc.email,
-      name: doc.name,
       studentId: doc.studentId || extractStudentIdFromEmail(doc.email),
-      className: doc.className || '',
+      chineseName: doc.chineseName || doc.name || '',
+      englishName: doc.englishName || '',
+      email: doc.email,
+      classNameCn: doc.classNameCn || doc.className || '',
+      classNameEn: doc.classNameEn || '',
+      classCode: doc.classCode || '',
+      groupLevel: doc.groupLevel || '',
+      level: doc.level || '',
+      phone: doc.phone || '',
+      instagram: doc.instagram || '',
+      group: doc.group || '',
+      position: doc.position || '',
+      notes: doc.notes || '',
       role: doc.role,
       createdAt: doc.createdAt || doc.$createdAt,
       attendanceStats,
@@ -437,22 +548,36 @@ export async function deleteAllStudents(): Promise<{ deleted: number; failed: nu
  * 更新学生信息
  */
 export async function updateStudent(
-  studentId: string,
-  data: { name?: string; className?: string; studentId?: string }
+  docId: string,
+  data: Partial<Omit<StudentFullInfo, '$id' | 'attendanceStats' | 'projects' | 'createdAt'>>
 ): Promise<void> {
   try {
     const updateData: Record<string, unknown> = {
       updatedAt: new Date().toISOString(),
     };
     
-    if (data.name) updateData.name = data.name;
-    if (data.className !== undefined) updateData.className = data.className;
-    if (data.studentId) updateData.studentId = data.studentId;
+    // 复制所有可更新的字段
+    const allowedFields = [
+      'studentId', 'chineseName', 'englishName', 'email',
+      'classNameCn', 'classNameEn', 'classCode',
+      'groupLevel', 'level', 'phone', 'instagram',
+      'group', 'position', 'notes', 'role'
+    ];
+    
+    for (const field of allowedFields) {
+      if (data[field as keyof typeof data] !== undefined) {
+        updateData[field] = data[field as keyof typeof data];
+        // 同时更新 name 字段（用于兼容旧代码）
+        if (field === 'chineseName') {
+          updateData['name'] = data.chineseName;
+        }
+      }
+    }
     
     await databases.updateDocument(
       APPWRITE_DATABASE_ID,
       USERS_COLLECTION_ID,
-      studentId,
+      docId,
       updateData
     );
   } catch (error) {

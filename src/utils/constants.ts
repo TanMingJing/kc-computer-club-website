@@ -8,12 +8,15 @@ export const COLLECTIONS = {
   NOTICES: process.env.NEXT_PUBLIC_APPWRITE_NOTICES_COLLECTION || 'notices',
   ACTIVITIES:
     process.env.NEXT_PUBLIC_APPWRITE_ACTIVITIES_COLLECTION || 'activities',
-  SIGNUPS: process.env.NEXT_PUBLIC_APPWRITE_SIGNUPS_COLLECTION || 'signups',
+  ATTENDANCE:
+    process.env.NEXT_PUBLIC_APPWRITE_ATTENDANCE_COLLECTION || 'attendance',
   COMMENTS: process.env.NEXT_PUBLIC_APPWRITE_COMMENTS_COLLECTION || 'comments',
   AI_CHATS:
     process.env.NEXT_PUBLIC_APPWRITE_AI_CHATS_COLLECTION || 'ai_chats',
   CLUB_INFO:
     process.env.NEXT_PUBLIC_APPWRITE_CLUB_INFO_COLLECTION || 'club_info',
+  PROJECTS:
+    process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECTION || 'projects',
 };
 
 // Appwrite Database
@@ -47,12 +50,12 @@ export const COMMENT_STATUS = {
   REJECTED: 'rejected',
 };
 
-// Signup Status
-export const SIGNUP_STATUS = {
-  PENDING: 'pending',
-  CONFIRMED: 'confirmed',
-  CANCELLED: 'cancelled',
-  ATTENDED: 'attended',
+// Attendance Status
+export const ATTENDANCE_STATUS = {
+  PRESENT: 'present',
+  LATE: 'late',
+  ABSENT: 'absent',
+  EXCUSED: 'excused',
 };
 
 // Activity Categories
@@ -80,11 +83,15 @@ export const ROUTES = {
   NOTICE_DETAIL: '/notices',
   ACTIVITIES: '/activities',
   ACTIVITY_DETAIL: '/activities',
-  ACTIVITY_SIGNUP: '/signup',
+  ATTENDANCE: '/attendance',
+  PROJECTS: '/projects',
   ADMIN_LOGIN: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_NOTICES: '/admin/dashboard/notices',
   ADMIN_ACTIVITIES: '/admin/dashboard/activities',
+  ADMIN_STUDENTS: '/admin/manage',
+  ADMIN_ATTENDANCE: '/admin/attendance',
+  ADMIN_PROJECTS: '/admin/projects',
   ADMIN_COMMENTS: '/admin/dashboard/comments',
   ADMIN_SETTINGS: '/admin/dashboard/settings',
 };

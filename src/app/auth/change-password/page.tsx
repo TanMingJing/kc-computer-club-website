@@ -5,11 +5,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { changePassword } from '@/services/auth.service';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, changePassword } = useAuth();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

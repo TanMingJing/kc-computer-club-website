@@ -216,8 +216,8 @@ Services use `console.error()`/`console.warn()` for failures. Check:
 
 - **Product Context**: [docs/context.md](../docs/context.md) - requirements, data schema, UI system
 - **Development Plan**: [docs/plan.md](../docs/plan.md) - phases, status, checklists (8 phases total)
-- **Phase 3 Summary**: [docs/ADMIN_LOGIN_COMPLETE.md](../docs/ADMIN_LOGIN_COMPLETE.md) - auth implementation details
-- **Setup Guides**: [docs/ADMIN_LOGIN_SETUP.md](../docs/ADMIN_LOGIN_SETUP.md) - configuration walkthrough
+- **Phase 3.2 Services**: [docs/PHASE_3_2_SERVICES.md](../docs/PHASE_3_2_SERVICES.md) - service implementation details
+- **Database Fix**: [docs/DATABASE_FIX.md](../docs/DATABASE_FIX.md) - database troubleshooting guide
 - **README**: [README.md](../README.md) - quick start, tech stack, commands
 
 ---

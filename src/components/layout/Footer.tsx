@@ -1,52 +1,57 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 // ========================================
 // Footer 组件
-// 参考设计：club_homepage_1/code.html
+// 完整的页脚设计，支持浅色/深色主题
+// 自动从社团设置获取数据
 // ========================================
 
 interface FooterLink {
   label: string;
   href: string;
+  icon?: string;
 }
 
 interface SocialLink {
-  platform: 'github' | 'discord' | 'twitter' | 'email';
+  platform: 'github' | 'discord' | 'instagram' | 'youtube' | 'email';
   href: string;
+  label?: string;
+}
+
+interface ClubSettings {
+  aboutTitle?: string;
+  aboutDescription?: string;
+  aboutEmail?: string;
+  aboutLocation?: string;
+  aboutMeetingTime?: string;
+  githubUrl?: string;
+  discordUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
 }
 
 interface FooterProps {
-  /** 社团名称 */
-  clubName?: string;
-  /** 社团描述 */
-  description?: string;
-  /** 快速链接 */
-  quickLinks?: FooterLink[];
-  /** 社交媒体链接 */
-  socialLinks?: SocialLink[];
-  /** 联系邮箱 */
-  email?: string;
-  /** 地址 */
-  address?: string;
   /** 额外类名 */
   className?: string;
 }
 
 const defaultQuickLinks: FooterLink[] = [
-  { label: 'About Us', href: '/about' },
-  { label: 'Notices', href: '/notices' },
-  { label: 'Activities', href: '/activities' },
-  { label: 'Contact', href: '/contact' },
+  { label: '关于我们', href: '/about', icon: 'info' },
+  { label: '公告通知', href: '/notices', icon: 'campaign' },
+  { label: '活动列表', href: '/activities', icon: 'event' },
+  { label: '项目展示', href: '/projects', icon: 'folder' },
 ];
 
-const defaultSocialLinks: SocialLink[] = [
-  { platform: 'github', href: '#' },
-  { platform: 'discord', href: '#' },
-  { platform: 'email', href: 'mailto:contact@example.com' },
+const defaultResourceLinks: FooterLink[] = [
+  { label: '签到系统', href: '/attendance', icon: 'event_available' },
+  { label: '群聊讨论', href: '/chat', icon: 'chat' },
+  { label: '提交项目', href: '/projects/submit', icon: 'lightbulb' },
+  { label: '帮助中心', href: '/help', icon: 'help' },
 ];
 
 // 社交媒体图标
@@ -63,76 +68,120 @@ const SocialIcon = ({ platform }: { platform: SocialLink['platform'] }) => {
         </svg>
       );
     case 'discord':
-      return (
-        <span className="material-symbols-outlined text-[20px]">chat</span>
-      );
-    case 'twitter':
-      return (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-        </svg>
-      );
+      return <span className="material-symbols-outlined text-[20px]">forum</span>;
+    case 'instagram':
+      return <span className="material-symbols-outlined text-[20px]">photo_camera</span>;
+    case 'youtube':
+      return <span className="material-symbols-outlined text-[20px]">play_circle</span>;
     case 'email':
-      return (
-        <span className="material-symbols-outlined text-[20px]">mail</span>
-      );
+      return <span className="material-symbols-outlined text-[20px]">mail</span>;
     default:
       return null;
   }
 };
 
-export function Footer({
-  clubName = '电脑学会',
-  description = '推动学校信息技术教育，培养学生编程能力和创新思维。加入我们，一起探索技术的无限可能。',
-  quickLinks = defaultQuickLinks,
-  socialLinks = defaultSocialLinks,
-  email = 'contact@example.com',
-  address = 'Room 304, Tech Building',
-  className,
-}: FooterProps) {
+export function Footer({ className }: FooterProps) {
+  const [settings, setSettings] = useState<ClubSettings | null>(null);
   const currentYear = new Date().getFullYear();
+
+  // 从 API 获取社团设置
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const response = await fetch('/api/club-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.error) {
+            setSettings(data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch club settings for footer:', error);
+      }
+    }
+    fetchSettings();
+  }, []);
+
+  // 使用设置或默认值
+  const clubName = settings?.aboutTitle || '康中电脑学会';
+  const description = settings?.aboutDescription || '培养学生编程能力和创新思维，推动校园信息技术教育。加入我们，一起探索技术的无限可能。';
+  const email = settings?.aboutEmail || 'computerclub@kuencheng.edu.my';
+  const address = settings?.aboutLocation || '电脑室 A304，科学楼三楼';
+  const meetingTime = settings?.aboutMeetingTime || '每周五 16:00 - 18:00';
+
+  // 根据设置动态生成社交链接
+  const socialLinks: SocialLink[] = [];
+  if (settings?.githubUrl) {
+    socialLinks.push({ platform: 'github', href: settings.githubUrl, label: 'GitHub' });
+  }
+  if (settings?.discordUrl) {
+    socialLinks.push({ platform: 'discord', href: settings.discordUrl, label: 'Discord' });
+  }
+  if (settings?.instagramUrl) {
+    socialLinks.push({ platform: 'instagram', href: settings.instagramUrl, label: 'Instagram' });
+  }
+  if (settings?.youtubeUrl) {
+    socialLinks.push({ platform: 'youtube', href: settings.youtubeUrl, label: 'YouTube' });
+  }
+  // 如果没有任何社交链接，使用默认链接
+  if (socialLinks.length === 0) {
+    socialLinks.push(
+      { platform: 'github', href: 'https://github.com', label: 'GitHub' },
+      { platform: 'discord', href: 'https://discord.gg', label: 'Discord' },
+      { platform: 'instagram', href: 'https://instagram.com', label: 'Instagram' },
+      { platform: 'youtube', href: 'https://youtube.com', label: 'YouTube' }
+    );
+  }
 
   return (
     <footer
       className={cn(
         'border-t border-gray-200 dark:border-[#283930]',
-        'bg-white dark:bg-[#111814]',
-        'mt-12 py-12',
+        'bg-gray-50 dark:bg-[#0d1812]',
+        'mt-12',
         className
       )}
     >
-      <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* 社团信息 */}
-          <div className="md:col-span-2">
+      {/* 主要内容区 */}
+      <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* 社团信息 - 占 5 列 */}
+          <div className="lg:col-span-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
                 <span className="material-symbols-outlined">terminal</span>
               </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                {clubName}
-              </h2>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {clubName}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Kuen Cheng Computer Club
+                </p>
+              </div>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xs mb-6 leading-relaxed">
+            
+            <p className="text-gray-600 dark:text-gray-400 text-sm max-w-sm mb-6 leading-relaxed">
               {description}
             </p>
 
             {/* 社交媒体链接 */}
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-2">
               {socialLinks.map((link) => (
                 <a
                   key={link.platform}
                   href={link.href}
+                  title={link.label || link.platform}
                   className={cn(
-                    'w-8 h-8 rounded-full',
-                    'bg-gray-200 dark:bg-[#283930]',
+                    'w-10 h-10 rounded-xl',
+                    'bg-gray-200 dark:bg-[#1a2c23]',
                     'flex items-center justify-center',
-                    'text-gray-600 dark:text-white',
-                    'hover:bg-primary hover:text-[#111814]',
-                    'transition-all'
+                    'text-gray-600 dark:text-gray-300',
+                    'hover:bg-primary hover:text-black dark:hover:text-black',
+                    'transition-all duration-300'
                   )}
-                  target={link.platform !== 'email' ? '_blank' : undefined}
-                  rel={link.platform !== 'email' ? 'noopener noreferrer' : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <SocialIcon platform={link.platform} />
                 </a>
@@ -140,18 +189,23 @@ export function Footer({
             </div>
           </div>
 
-          {/* 快速链接 */}
-          <div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-              Quick Links
+          {/* 快速链接 - 占 2 列 */}
+          <div className="lg:col-span-2">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">
+              快速链接
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              {quickLinks.map((link) => (
+            <ul className="space-y-3">
+              {defaultQuickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="hover:text-primary transition-colors"
+                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-2 group"
                   >
+                    {link.icon && (
+                      <span className="material-symbols-outlined text-[16px] opacity-50 group-hover:opacity-100 transition-opacity">
+                        {link.icon}
+                      </span>
+                    )}
                     {link.label}
                   </Link>
                 </li>
@@ -159,36 +213,93 @@ export function Footer({
             </ul>
           </div>
 
-          {/* 联系信息 */}
-          <div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-              Contact
+          {/* 资源链接 - 占 2 列 */}
+          <div className="lg:col-span-2">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">
+              资源
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">mail</span>
-                {email}
+            <ul className="space-y-3">
+              {defaultResourceLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-2 group"
+                  >
+                    {link.icon && (
+                      <span className="material-symbols-outlined text-[16px] opacity-50 group-hover:opacity-100 transition-opacity">
+                        {link.icon}
+                      </span>
+                    )}
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 联系信息 - 占 3 列 */}
+          <div className="lg:col-span-3">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">
+              联系我们
+            </h3>
+            <ul className="space-y-4">
+              <li>
+                <a 
+                  href={`mailto:${email}`}
+                  className="flex items-start gap-3 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors group"
+                >
+                  <span className="material-symbols-outlined text-[18px] mt-0.5 text-primary/50 group-hover:text-primary">
+                    mail
+                  </span>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-0.5">邮箱</p>
+                    <p className="text-sm font-medium">{email}</p>
+                  </div>
+                </a>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">
+              <li className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
+                <span className="material-symbols-outlined text-[18px] mt-0.5 text-primary/50">
                   location_on
                 </span>
-                {address}
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-0.5">地址</p>
+                  <p className="text-sm font-medium">{address}</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
+                <span className="material-symbols-outlined text-[18px] mt-0.5 text-primary/50">
+                  schedule
+                </span>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-0.5">活动时间</p>
+                  <p className="text-sm font-medium">{meetingTime}</p>
+                </div>
               </li>
             </ul>
           </div>
         </div>
+      </div>
 
-        {/* 版权信息 */}
-        <div className="border-t border-gray-200 dark:border-[#283930] mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-          <p>© {currentYear} {clubName}. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-primary">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-primary">
-              Terms of Service
-            </Link>
+      {/* 版权信息 */}
+      <div className="border-t border-gray-200 dark:border-[#283930]">
+        <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+            <div className="flex items-center gap-2">
+              <span>© {currentYear} {clubName}</span>
+              <span className="hidden md:inline">·</span>
+              <span className="hidden md:inline">保留所有权利</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <Link href="/privacy" className="hover:text-primary transition-colors">
+                隐私政策
+              </Link>
+              <Link href="/terms" className="hover:text-primary transition-colors">
+                使用条款
+              </Link>
+              <span className="text-gray-400 dark:text-gray-600">
+                用 💚 在马来西亚制作
+              </span>
+            </div>
           </div>
         </div>
       </div>

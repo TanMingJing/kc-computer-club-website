@@ -192,7 +192,11 @@ export default function AttendancePage() {
 
           {/* 点名组件 */}
           <AttendanceWidget
-            studentId={user?.id || ''}
+            studentId={(() => {
+              // 从邮箱提取学号，格式: 12345@kuencheng.edu.my -> 12345
+              const match = user?.email?.match(/^(\d+)@/);
+              return match ? match[1] : (user?.id || '');
+            })()}
             studentName={user?.name || ''}
             studentEmail={user?.email || ''}
             showDebugButton={showDebugButton || !isStudent}

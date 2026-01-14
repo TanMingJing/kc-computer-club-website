@@ -5,10 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { changePassword } from '@/services/auth.service';
 
 export default function ProfilePage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, changePassword } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'info' | 'password'>('info');
   const [oldPassword, setOldPassword] = useState('');
