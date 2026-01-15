@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { SecureCache } from '@/lib/cache';
 import * as XLSX from 'xlsx';
 
 interface StudentFullInfo {
@@ -79,14 +80,31 @@ export default function StudentsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  // 加载学生列表
-  const fetchStudents = useCallback(async () => {
+  // 缓存配置
+  const CACHE_KEY = 'admin_students_list';
+  const CACHE_TTL = 5 * 60 * 1000; // 5 分钟缓存
+
+  // 加载学生列表（带缓存）
+  const fetchStudents = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     try {
+      // 先检查缓存（除非强制刷新）
+      if (!forceRefresh) {
+        const cached = SecureCache.get<StudentFullInfo[]>(CACHE_KEY, { ttl: CACHE_TTL, encrypt: false });
+        if (cached && cached.length > 0) {
+          setStudents(cached);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 从 API 获取数据
       const response = await fetch('/api/admin/students');
       const data = await response.json();
       if (data.success) {
         setStudents(data.students);
+        // 更新缓存
+        SecureCache.set(CACHE_KEY, data.students, { ttl: CACHE_TTL, encrypt: false });
       }
     } catch (error) {
       console.error('获取学生列表失败:', error);
@@ -273,7 +291,9 @@ export default function StudentsPage() {
       setImportResult(result);
 
       if (result.success > 0) {
-        fetchStudents();
+        // 清除缓存并重新获取
+        SecureCache.remove(CACHE_KEY);
+        fetchStudents(true);
       }
     } catch (error) {
       console.error('导入失败:', error);
@@ -301,7 +321,9 @@ export default function StudentsPage() {
         alert(`已删除 ${result.deleted} 名学生`);
         setShowDeleteAllModal(false);
         setDeleteConfirmText('');
-        fetchStudents();
+        // 清除缓存并重新获取
+        SecureCache.remove(CACHE_KEY);
+        fetchStudents(true);
       } else {
         alert(result.error || '删除失败');
       }
@@ -324,7 +346,9 @@ export default function StudentsPage() {
 
       const result = await response.json();
       if (result.success) {
-        fetchStudents();
+        // 清除缓存并重新获取
+        SecureCache.remove(CACHE_KEY);
+        fetchStudents(true);
         if (selectedStudent?.$id === studentId) {
           setShowDetailModal(false);
           setSelectedStudent(null);

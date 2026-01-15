@@ -3,8 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -144,16 +143,14 @@ export default function AboutPage() {
   // Allow viewing without login - form will show login prompt if needed
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#102219] text-white">
-        <Header />
+      <StudentLayout>
         <main className="grow flex items-center justify-center py-20">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#137fec]"></div>
-            <p className="mt-4 text-gray-400">正在加载...</p>
+            <p className="mt-4 text-[var(--text-secondary)]">正在加载...</p>
           </div>
         </main>
-        <Footer />
-      </div>
+      </StudentLayout>
     );
   }
 
@@ -190,9 +187,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#102219] text-white">
-      <Header />
-
+    <StudentLayout>
       <main className="grow py-8 px-4 md:px-10 lg:px-20">
         <div className="max-w-300 mx-auto">
           {/* 主要内容区域 */}
@@ -204,20 +199,20 @@ export default function AboutPage() {
                 <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
                   联系我们
                 </h1>
-                <p className="text-gray-400 text-base md:text-lg leading-relaxed">
+                <p className="text-[var(--text-secondary)] text-base md:text-lg leading-relaxed">
                   有关于黑客马拉松、工作坊或社员资格的问题？欢迎随时联系我们或来我们的社团教室拜访。
                 </p>
               </div>
 
               {/* 联系方式列表 */}
-              <div className="flex flex-col border-t border-b border-white/10">
+              <div className="flex flex-col border-t border-b border-[var(--border)]">
                 {/* 邮箱 */}
-                <div className="py-6 flex items-start gap-4 border-b border-white/10">
-                  <div className="bg-[#283930] p-3 rounded-full shrink-0">
+                <div className="py-6 flex items-start gap-4 border-b border-[var(--border)]">
+                  <div className="bg-[var(--surface-hover)] p-3 rounded-full shrink-0">
                     <span className="material-symbols-outlined">mail</span>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-medium mb-1">邮箱</p>
+                    <p className="text-[var(--text-secondary)] text-sm font-medium mb-1">邮箱</p>
                     <a
                       href={`mailto:${clubInfo.email}`}
                       className="text-lg font-semibold hover:text-primary transition-colors"
@@ -228,23 +223,23 @@ export default function AboutPage() {
                 </div>
 
                 {/* 地点 */}
-                <div className="py-6 flex items-start gap-4 border-b border-white/10">
-                  <div className="bg-[#283930] p-3 rounded-full shrink-0">
+                <div className="py-6 flex items-start gap-4 border-b border-[var(--border)]">
+                  <div className="bg-[var(--surface-hover)] p-3 rounded-full shrink-0">
                     <span className="material-symbols-outlined">location_on</span>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-medium mb-1">地点</p>
+                    <p className="text-[var(--text-secondary)] text-sm font-medium mb-1">地点</p>
                     <p className="text-lg font-semibold">{clubInfo.location}</p>
                   </div>
                 </div>
 
                 {/* 活动时间 */}
                 <div className="py-6 flex items-start gap-4">
-                  <div className="bg-[#283930] p-3 rounded-full shrink-0">
+                  <div className="bg-[var(--surface-hover)] p-3 rounded-full shrink-0">
                     <span className="material-symbols-outlined">schedule</span>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-medium mb-1">活动时间</p>
+                    <p className="text-[var(--text-secondary)] text-sm font-medium mb-1">活动时间</p>
                     <p className="text-lg font-semibold">{clubInfo.meetingTime}</p>
                   </div>
                 </div>
@@ -252,13 +247,13 @@ export default function AboutPage() {
 
               {/* 社交媒体链接 */}
               <div>
-                <p className="text-gray-400 text-sm font-medium mb-4">关注我们</p>
+                <p className="text-[var(--text-secondary)] text-sm font-medium mb-4">关注我们</p>
                 <div className="flex flex-wrap gap-3">
                   <a
                     href={clubInfo.socialLinks.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-[#283930] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
+                    className="group flex items-center gap-3 bg-[var(--surface-hover)] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
                   >
                     <span className="material-symbols-outlined group-hover:text-primary">code</span>
                     <span className="text-sm font-bold group-hover:text-primary">GitHub</span>
@@ -267,7 +262,7 @@ export default function AboutPage() {
                     href={clubInfo.socialLinks.discord}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-[#283930] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
+                    className="group flex items-center gap-3 bg-[var(--surface-hover)] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
                   >
                     <span className="material-symbols-outlined group-hover:text-primary">
                       forum
@@ -278,7 +273,7 @@ export default function AboutPage() {
                     href={clubInfo.socialLinks.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-[#283930] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
+                    className="group flex items-center gap-3 bg-[var(--surface-hover)] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
                   >
                     <span className="material-symbols-outlined group-hover:text-primary">
                       photo_camera
@@ -289,7 +284,7 @@ export default function AboutPage() {
                     href={clubInfo.socialLinks.youtube}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-[#283930] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
+                    className="group flex items-center gap-3 bg-[var(--surface-hover)] hover:bg-primary/20 px-4 py-3 rounded-lg transition-all duration-300"
                   >
                     <span className="material-symbols-outlined group-hover:text-primary">
                       play_circle
@@ -302,8 +297,8 @@ export default function AboutPage() {
 
             {/* 右侧 - 联系表单 */}
             <div className="lg:col-span-7">
-              <div className="bg-[#1A2C23] rounded-2xl p-6 md:p-8 border border-white/5">
-                <h3 className="text-2xl font-bold mb-6">发送消息</h3>
+              <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)]">
+                <h3 className="text-2xl font-bold mb-6 text-[var(--foreground)]">发送消息</h3>
 
                 {/* 成功提示 */}
                 {showSuccess && (
@@ -387,9 +382,9 @@ export default function AboutPage() {
 
                   {/* 消息内容 */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-white">您的消息</label>
+                    <label className="text-sm font-medium text-[var(--foreground)]">您的消息</label>
                     <textarea
-                      className="w-full rounded-xl border border-white/10 bg-[#102219] p-4 text-white placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 text-[var(--foreground)] placeholder-[var(--text-secondary)] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="请输入您想说的话..."
                       rows={5}
                       value={formData.message}
@@ -418,11 +413,11 @@ export default function AboutPage() {
           </div>
 
           {/* FAQ 区域 */}
-          <div className="py-16 border-t border-white/10 mt-12">
+          <div className="py-16 border-t border-[var(--border)] mt-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
               <div>
                 <h2 className="text-3xl font-bold mb-2">常见问题</h2>
-                <p className="text-gray-400">关于社团的一些常见问题解答</p>
+                <p className="text-[var(--text-secondary)]">关于社团的一些常见问题解答</p>
               </div>
               <a
                 href="#"
@@ -438,7 +433,7 @@ export default function AboutPage() {
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="bg-[#1A2C23] border border-white/5 rounded-xl p-6 hover:border-primary/50 transition-colors"
+                  className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6 hover:border-primary/50 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="mt-1 bg-primary/20 rounded-lg p-2 text-primary shrink-0">
@@ -446,7 +441,7 @@ export default function AboutPage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-lg mb-2">{faq.question}</h4>
-                      <p className="text-gray-400 leading-relaxed text-sm">{faq.answer}</p>
+                      <p className="text-[var(--text-secondary)] leading-relaxed text-sm">{faq.answer}</p>
                     </div>
                   </div>
                 </div>
@@ -463,7 +458,7 @@ export default function AboutPage() {
           </div>
 
           {/* 关于社团区域 */}
-          <div className="py-16 border-t border-white/10">
+          <div className="py-16 border-t border-[var(--border)]">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* 左侧 - 社团介绍 */}
               <div>
@@ -471,48 +466,48 @@ export default function AboutPage() {
                   <span className="material-symbols-outlined text-base">terminal</span>
                   关于我们
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black mb-6">{clubInfo.name}</h2>
-                <p className="text-gray-400 text-lg leading-relaxed mb-8">{clubInfo.description}</p>
+                <h2 className="text-3xl md:text-4xl font-black mb-6 text-[var(--foreground)]">{clubInfo.name}</h2>
+                <p className="text-[var(--text-secondary)] text-lg leading-relaxed mb-8">{clubInfo.description}</p>
 
                 {/* 活动类型 */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-4 bg-[#1A2C23] rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3 p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
                     <span className="material-symbols-outlined text-primary">code</span>
-                    <span className="font-medium">编程工作坊</span>
+                    <span className="font-medium text-[var(--foreground)]">编程工作坊</span>
                   </div>
-                  <div className="flex items-center gap-3 p-4 bg-[#1A2C23] rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3 p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
                     <span className="material-symbols-outlined text-primary">emoji_events</span>
-                    <span className="font-medium">黑客马拉松</span>
+                    <span className="font-medium text-[var(--foreground)]">黑客马拉松</span>
                   </div>
-                  <div className="flex items-center gap-3 p-4 bg-[#1A2C23] rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3 p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
                     <span className="material-symbols-outlined text-primary">security</span>
-                    <span className="font-medium">网络安全</span>
+                    <span className="font-medium text-[var(--foreground)]">网络安全</span>
                   </div>
-                  <div className="flex items-center gap-3 p-4 bg-[#1A2C23] rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3 p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
                     <span className="material-symbols-outlined text-primary">smart_toy</span>
-                    <span className="font-medium">人工智能</span>
+                    <span className="font-medium text-[var(--foreground)]">人工智能</span>
                   </div>
                 </div>
               </div>
 
               {/* 右侧 - 装饰图片或统计 */}
-              <div className="bg-linear-to-br from-primary/20 via-[#1A2C23] to-[#102219] rounded-3xl p-8 border border-white/10">
+              <div className="bg-gradient-to-br from-primary/20 via-[var(--surface)] to-[var(--input-bg)] rounded-3xl p-8 border border-[var(--border)]">
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
+                  <div className="text-center p-6 bg-[var(--input-bg)] rounded-2xl">
                     <div className="text-4xl font-black text-primary mb-2">{stats.activeMembers}+</div>
-                    <div className="text-gray-400 text-sm">活跃社员</div>
+                    <div className="text-[var(--text-secondary)] text-sm">活跃社员</div>
                   </div>
-                  <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
+                  <div className="text-center p-6 bg-[var(--input-bg)] rounded-2xl">
                     <div className="text-4xl font-black text-primary mb-2">{stats.yearlyActivities}+</div>
-                    <div className="text-gray-400 text-sm">年度活动</div>
+                    <div className="text-[var(--text-secondary)] text-sm">年度活动</div>
                   </div>
-                  <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
+                  <div className="text-center p-6 bg-[var(--input-bg)] rounded-2xl">
                     <div className="text-4xl font-black text-primary mb-2">{stats.awardProjects}+</div>
-                    <div className="text-gray-400 text-sm">获奖项目</div>
+                    <div className="text-[var(--text-secondary)] text-sm">获奖项目</div>
                   </div>
-                  <div className="text-center p-6 bg-[#102219]/50 rounded-2xl">
+                  <div className="text-center p-6 bg-[var(--input-bg)] rounded-2xl">
                     <div className="text-4xl font-black text-primary mb-2">{stats.partners}+</div>
-                    <div className="text-gray-400 text-sm">合作伙伴</div>
+                    <div className="text-[var(--text-secondary)] text-sm">合作伙伴</div>
                   </div>
                 </div>
 
@@ -533,23 +528,21 @@ export default function AboutPage() {
         </div>
       </main>
 
-      <Footer />
-
       {/* Toast 通知 */}
       {showSuccess && (
         <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
           <div className="flex items-center gap-3 p-4 rounded-xl border shadow-lg backdrop-blur-xl bg-green-500/20 border-green-500/30">
             <span className="material-symbols-outlined text-green-500">check_circle</span>
-            <p className="text-sm text-white">消息已成功发送！</p>
+            <p className="text-sm text-[var(--foreground)]">消息已成功发送！</p>
             <button
               onClick={() => setShowSuccess(false)}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors"
             >
               <span className="material-symbols-outlined text-base">close</span>
             </button>
           </div>
         </div>
       )}
-    </div>
+    </StudentLayout>
   );
 }

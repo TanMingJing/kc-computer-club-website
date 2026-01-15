@@ -59,12 +59,12 @@ export function Header({
       )}
     >
       <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 text-white">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-            <span className="material-symbols-outlined">terminal</span>
+        {/* Logo - 使用文字代替图标 */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20">
+            <span className="text-primary font-black text-lg">KC</span>
           </div>
-          <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block">
             电脑学会
           </h2>
         </Link>

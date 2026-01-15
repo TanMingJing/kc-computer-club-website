@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import AttendanceWidget from '@/components/attendance/AttendanceWidget';
 import StudentAttendanceRecords from '@/components/attendance/StudentAttendanceRecords';
@@ -116,42 +116,26 @@ export default function AttendancePage() {
   // 等待认证加载
   if (authLoading) {
     return (
-      <div className="relative flex min-h-screen w-full flex-col bg-[#102219] overflow-x-hidden">
-        <Header
-          navItems={[
-            { label: '首页', href: '/' },
-            { label: '关于', href: '/about' },
-            { label: '公告', href: '/notices' },
-            { label: '活动', href: '/activities' },
-          ]}
-        />
+      <StudentLayout>
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">sync</span>
             <p className="text-[#8a9e94] mt-4">加载中...</p>
           </div>
         </main>
-      </div>
+      </StudentLayout>
     );
   }
 
   // 未登录时显示登录提示
   if (!user) {
     return (
-      <div className="relative flex min-h-screen w-full flex-col bg-[#102219] overflow-x-hidden">
-        <Header
-          navItems={[
-            { label: '首页', href: '/' },
-            { label: '关于', href: '/about' },
-            { label: '公告', href: '/notices' },
-            { label: '活动', href: '/activities' },
-          ]}
-        />
+      <StudentLayout>
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-[#1a2c24] border border-[#2a3c34] rounded-2xl p-8 text-center max-w-md">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 text-center max-w-md">
             <span className="material-symbols-outlined text-6xl text-[#13ec80] mb-4">login</span>
-            <h2 className="text-2xl font-bold text-white mb-2">请先登录</h2>
-            <p className="text-[#8a9e94] mb-6">您需要登录学生账号才能进行点名</p>
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">请先登录</h2>
+            <p className="text-[var(--text-secondary)] mb-6">您需要登录学生账号才能进行点名</p>
             <Link 
               href="/auth/login?redirect=/attendance"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#13ec80] text-[#102219] font-semibold rounded-xl hover:bg-[#0fd673] transition-all"
@@ -161,31 +145,21 @@ export default function AttendancePage() {
             </Link>
           </div>
         </main>
-      </div>
+      </StudentLayout>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#102219] overflow-x-hidden">
-      {/* 顶部导航 */}
-      <Header
-        navItems={[
-          { label: '首页', href: '/' },
-          { label: '关于', href: '/about' },
-          { label: '公告', href: '/notices' },
-          { label: '活动', href: '/activities' },
-        ]}
-      />
-
+    <StudentLayout>
       {/* 主要内容区 */}
       <main className="flex-1 flex flex-col items-center p-4 py-8 lg:p-10">
         <div className="w-full max-w-2xl flex flex-col gap-8">
           {/* 页面标题 */}
           <div className="text-center">
-            <h1 className="text-3xl font-black text-white mb-2">
+            <h1 className="text-3xl font-black text-[var(--foreground)] mb-2">
               社团点名
             </h1>
-            <p className="text-[#8a9e94]">
+            <p className="text-[var(--text-secondary)]">
               {user ? `欢迎，${user.name}` : '请在规定时间内完成点名'}
             </p>
           </div>
@@ -212,13 +186,13 @@ export default function AttendancePage() {
         </div>
 
         {/* 提示信息 */}
-        <div className="w-full max-w-2xl bg-[#1a2c24] border border-[#2a3c34] rounded-xl p-4 text-center">
-          <p className="text-[#8a9e94] text-sm">
+        <div className="w-full max-w-2xl bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 text-center mt-8">
+          <p className="text-[var(--text-secondary)] text-sm">
             <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
             点名时间：{formatAttendanceTime()}
           </p>
         </div>
       </main>
-    </div>
+    </StudentLayout>
   );
 }

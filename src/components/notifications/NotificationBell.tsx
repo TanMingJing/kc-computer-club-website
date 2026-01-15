@@ -70,14 +70,14 @@ export default function NotificationBell() {
       {/* 通知铃铛按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-[#1a2c24] transition-colors flex items-center justify-center"
+        className="relative p-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors flex items-center justify-center"
         title="通知"
       >
-        <span className="material-symbols-outlined text-[#13ec80]">notifications</span>
+        <span className="material-symbols-outlined text-primary">notifications</span>
 
         {/* 未读数量徽章 */}
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1 -translate-y-1 bg-[#13ec80] rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-[#102219] transform translate-x-1 -translate-y-1 bg-primary rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -85,17 +85,17 @@ export default function NotificationBell() {
 
       {/* 通知下拉菜单 */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-[#102219] rounded-lg border border-[#283930] shadow-2xl z-50">
+        <div className="absolute right-0 mt-2 w-96 bg-[var(--surface)] rounded-lg border border-[var(--border)] shadow-2xl z-50">
           {/* 头部 */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#283930]">
-            <h3 className="font-semibold text-white">通知</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+            <h3 className="font-semibold text-[var(--foreground)]">通知</h3>
             {unreadCount > 0 && (
               <button
                 onClick={() => {
                   markAllAsRead();
                   setIsOpen(false);
                 }}
-                className="text-xs text-[#13ec80] hover:text-[#0bb871] transition-colors"
+                className="text-xs text-primary hover:opacity-80 transition-colors"
               >
                 全部已读
               </button>
@@ -110,28 +110,28 @@ export default function NotificationBell() {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={`px-4 py-3 border-l-4 ${getNotificationColor(notification.type)} ${
-                    !notification.read ? 'bg-[#1a2c24]' : 'bg-[#102219]'
-                  } hover:bg-[#1a2c24] cursor-pointer transition-colors flex items-center gap-3 group`}
+                    !notification.read ? 'bg-[var(--surface-hover)]' : 'bg-[var(--surface)]'
+                  } hover:bg-[var(--surface-hover)] cursor-pointer transition-colors flex items-center gap-3 group`}
                 >
                   {/* 图标 */}
-                  <div className="shrink-0 text-[#13ec80] h-6 flex items-center justify-center">
+                  <div className="shrink-0 text-primary h-6 flex items-center justify-center">
                     {getNotificationIcon(notification.type)}
                   </div>
 
                   {/* 内容 */}
                   <div className="grow min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="font-medium text-white text-sm truncate">
+                      <h4 className="font-medium text-[var(--foreground)] text-sm truncate">
                         {notification.title}
                       </h4>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-[#13ec80] rounded-full shrink-0" />
+                        <div className="w-2 h-2 bg-primary rounded-full shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-[var(--text-secondary)] opacity-70 mt-2">
                       {formatTime(new Date(notification.createdAt))}
                     </p>
                   </div>
@@ -142,7 +142,7 @@ export default function NotificationBell() {
                       e.stopPropagation();
                       removeNotification(notification.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all shrink-0"
+                    className="opacity-0 group-hover:opacity-100 text-[var(--text-secondary)] hover:text-red-400 transition-all shrink-0"
                     title="删除"
                   >
                     <span className="material-symbols-outlined text-sm">close</span>
@@ -150,7 +150,7 @@ export default function NotificationBell() {
                 </div>
               ))
             ) : (
-              <div className="px-4 py-8 text-center text-gray-500 text-sm">
+              <div className="px-4 py-8 text-center text-[var(--text-secondary)] text-sm">
                 <span className="material-symbols-outlined block text-3xl mb-2 opacity-50">
                   notifications_none
                 </span>
@@ -161,8 +161,8 @@ export default function NotificationBell() {
 
           {/* 查看全部链接 */}
           {notifications.length > 5 && (
-            <div className="border-t border-[#283930] px-4 py-2">
-              <button className="w-full text-center text-xs text-[#13ec80] hover:text-[#0bb871] transition-colors py-2">
+            <div className="border-t border-[var(--border)] px-4 py-2">
+              <button className="w-full text-center text-xs text-primary hover:opacity-80 transition-colors py-2">
                 查看全部通知
               </button>
             </div>

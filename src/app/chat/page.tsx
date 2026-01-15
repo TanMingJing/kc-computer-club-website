@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Header } from '@/components/layout/Header';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 
 interface ChatGroup {
   id: string;
@@ -158,19 +158,9 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#f6f8f7] dark:bg-[#102219] overflow-hidden flex-col">
-      {/* 顶部导航 */}
-      <Header
-        navItems={[
-          { label: '首页', href: '/' },
-          { label: '关于', href: '/about' },
-          { label: '公告', href: '/notices' },
-          { label: '活动', href: '/activities' },
-        ]}
-      />
-
+    <StudentLayout>
       {/* 主要内容 */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
         {/* 左侧群组列表 */}
         <aside className={`${showSidebar ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-80 lg:w-96 border-r border-[#e5e8e7] dark:border-[#2a3c34] bg-white dark:bg-[#102219]`}>
           {/* 群组头部 */}
@@ -328,6 +318,6 @@ export default function ChatPage() {
         )}
       </main>
       </div>
-    </div>
+    </StudentLayout>
   );
 }

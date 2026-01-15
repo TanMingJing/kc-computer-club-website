@@ -40,20 +40,20 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
     <section className={cn('flex flex-col gap-4', className)}>
       {/* 标题栏 */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">rocket_launch</span>
           活跃项目
         </h2>
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className="size-8 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+            className="size-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
           </button>
           <button
             onClick={() => scroll('right')}
-            className="size-8 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+            className="size-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
@@ -68,7 +68,7 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
         {projects.map((project) => (
           <div
             key={project.id}
-            className="min-w-70 md:min-w-80 bg-[#162a21] rounded-2xl overflow-hidden border border-white/5 snap-start hover:border-primary/30 transition-colors group"
+            className="min-w-70 md:min-w-80 bg-[var(--surface)] rounded-2xl overflow-hidden border border-[var(--border)] snap-start hover:border-primary/30 transition-colors group"
           >
             {/* 封面图片 */}
             <div
@@ -76,7 +76,7 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
               style={{
                 backgroundImage: project.coverImage
                   ? `url('${project.coverImage}')`
-                  : 'linear-gradient(135deg, #1c3128 0%, #162a21 100%)',
+                  : 'linear-gradient(135deg, var(--primary-light) 0%, var(--surface) 100%)',
               }}
             >
               {!project.coverImage && (
@@ -90,10 +90,10 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
 
             {/* 内容 */}
             <div className="p-5">
-              <h3 className="font-bold text-white text-lg mb-1 group-hover:text-primary transition-colors">
+              <h3 className="font-bold text-[var(--foreground)] text-lg mb-1 group-hover:text-primary transition-colors">
                 {project.title}
               </h3>
-              <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+              <p className="text-sm text-[var(--text-secondary)] mb-4 line-clamp-2">
                 {project.description}
               </p>
               <div className="flex items-center justify-between">
@@ -103,7 +103,7 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
                     (_, i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full border-2 border-[#162a21] bg-primary/20 flex items-center justify-center"
+                        className="w-8 h-8 rounded-full border-2 border-[var(--surface)] bg-primary/20 flex items-center justify-center"
                       >
                         <span className="material-symbols-outlined text-primary text-sm">
                           person
@@ -112,7 +112,7 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
                     )
                   )}
                   {project.contributors > 3 && (
-                    <div className="w-8 h-8 rounded-full border-2 border-[#162a21] bg-white/10 flex items-center justify-center text-[10px] text-white font-bold">
+                    <div className="w-8 h-8 rounded-full border-2 border-[var(--surface)] bg-[var(--surface-hover)] flex items-center justify-center text-[10px] text-[var(--foreground)] font-bold">
                       +{project.contributors - 3}
                     </div>
                   )}
@@ -129,7 +129,7 @@ export function ProjectsSection({ projects, className }: ProjectsSectionProps) {
                     查看仓库
                   </a>
                 ) : (
-                  <span className="text-xs font-bold text-gray-500">
+                  <span className="text-xs font-bold text-[var(--text-secondary)]">
                     开发中
                   </span>
                 )}

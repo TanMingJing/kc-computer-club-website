@@ -3,8 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Loading } from '@/components/ui/Loading';
@@ -182,9 +181,7 @@ export default function ActivitiesPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#102219]">
-      <Header />
-
+    <StudentLayout>
       <main className="flex-1 w-full max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 页面标题 */}
         <div className="mb-8">
@@ -309,9 +306,7 @@ export default function ActivitiesPage() {
           </div>
         )}
       </main>
-
-      <Footer />
-    </div>
+    </StudentLayout>
   );
 }
 

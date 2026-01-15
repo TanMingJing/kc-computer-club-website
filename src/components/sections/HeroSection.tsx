@@ -46,14 +46,19 @@ export function HeroSection({
   return (
     <section className={cn('grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-120', className)}>
       {/* 主 Hero 卡片 */}
-      <div className="lg:col-span-8 relative flex flex-col justify-end overflow-hidden rounded-3xl bg-[#162a21] p-8 md:p-12 group">
+      <div className="lg:col-span-8 relative flex flex-col justify-end overflow-hidden rounded-3xl bg-[var(--surface)] p-8 md:p-12 group border border-[var(--border)]">
         {/* 抽象背景图案 */}
         <div 
           className="absolute inset-0 z-0 opacity-40 mix-blend-overlay pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(circle at 20% 150%, #13ec80 0%, transparent 50%), radial-gradient(circle at 80% -50%, #1c523d 0%, transparent 50%)'
+            backgroundImage: 'radial-gradient(circle at 20% 150%, var(--primary) 0%, transparent 50%), radial-gradient(circle at 80% -50%, var(--primary-light) 0%, transparent 50%)'
           }}
         />
+        
+        {/* Logo - 左上角 */}
+        <div className="absolute top-6 left-6 z-20 w-16 h-16 opacity-20 group-hover:opacity-30 transition-opacity flex items-center justify-center">
+          <span className="text-primary font-black text-3xl">KC</span>
+        </div>
         
         <div className="relative z-10 flex flex-col gap-6 max-w-2xl">
           {/* 状态标签 */}
@@ -63,13 +68,13 @@ export function HeroSection({
           </div>
           
           {/* 主标题 */}
-          <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight text-white">
+          <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight text-[var(--foreground)]">
             创造 <span className="text-primary">未来</span>。<br />
             加入社团。
           </h1>
           
           {/* 副标题 */}
-          <p className="text-lg text-gray-300 max-w-md">
+          <p className="text-lg text-[var(--text-secondary)] max-w-md">
             {subheadline}
           </p>
           
@@ -92,33 +97,33 @@ export function HeroSection({
       {/* 侧边信息栏 */}
       <div className="lg:col-span-4 flex flex-col gap-6">
         {/* 状态卡片 */}
-        <div className="flex-1 rounded-3xl bg-[#162a21] p-6 border border-white/5 flex flex-col justify-center">
+        <div className="flex-1 rounded-3xl bg-[var(--surface)] p-6 border border-[var(--border)] flex flex-col justify-center">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">机房状态</h3>
+            <h3 className="text-[var(--text-secondary)] font-medium">机房状态</h3>
             <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/20 uppercase tracking-wider">
               开放中
             </span>
           </div>
           <div className="flex items-end gap-2">
-            <span className="text-5xl font-bold text-white">{activeUsers}</span>
-            <span className="text-gray-400 mb-1">人在线</span>
+            <span className="text-5xl font-bold text-[var(--foreground)]">{activeUsers}</span>
+            <span className="text-[var(--text-secondary)] mb-1">人在线</span>
           </div>
-          <div className="mt-4 h-2 w-full bg-gray-700 rounded-full overflow-hidden">
+          <div className="mt-4 h-2 w-full bg-[var(--border)] rounded-full overflow-hidden">
             <div 
               className="h-full bg-primary transition-all duration-500"
               style={{ width: `${capacityPercent}%` }}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-2">容量 {capacityPercent}%</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-2">容量 {capacityPercent}%</p>
         </div>
         
         {/* 特色项目卡片 */}
-        <div className="flex-1 rounded-3xl bg-[#162a21] p-6 border border-white/5 relative overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer">
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent z-10" />
+        <div className="flex-1 rounded-3xl bg-[var(--surface)] p-6 border border-[var(--border)] relative overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer">
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent z-10 dark:from-black/80 from-gray-900/60" />
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110 opacity-50"
             style={{
-              backgroundImage: 'linear-gradient(135deg, #1c3128 0%, #162a21 100%)'
+              backgroundImage: 'linear-gradient(135deg, var(--primary-light) 0%, var(--surface) 100%)'
             }}
           />
           <div className="relative z-20 h-full flex flex-col justify-end">

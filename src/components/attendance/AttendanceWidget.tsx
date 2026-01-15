@@ -163,9 +163,9 @@ export default function AttendanceWidget({
 
   if (!status) {
     return (
-      <div className="bg-[#1a2c24] border border-[#2a3c34] rounded-2xl p-6 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#13ec80]"></div>
-        <p className="mt-3 text-[#8a9e94]">加载中...</p>
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="mt-3 text-[var(--text-secondary)]">加载中...</p>
       </div>
     );
   }
@@ -173,17 +173,17 @@ export default function AttendanceWidget({
   return (
     <div className={`relative rounded-2xl border transition-all duration-300 overflow-hidden ${
       status.isAttendanceOpen 
-        ? 'bg-linear-to-br from-[#1a2c24] to-[#13ec80]/10 border-[#13ec80]/30 shadow-[0_0_30px_rgba(19,236,128,0.15)]' 
-        : 'bg-[#1a2c24] border-[#2a3c34]'
+        ? 'bg-[linear-to-br] from-[var(--surface)] to-primary/10 border-primary/30 shadow-[0_0_30px_rgba(19,236,128,0.15)]' 
+        : 'bg-[var(--surface)] border-[var(--border)]'
     }`}>
       {/* 顶部装饰线 */}
-      <div className={`h-1 w-full ${status.isAttendanceOpen ? 'bg-[#13ec80]' : 'bg-[#2a3c34]'}`}></div>
+      <div className={`h-1 w-full ${status.isAttendanceOpen ? 'bg-primary' : 'bg-[var(--border)]'}`}></div>
       
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-            <span className="material-symbols-outlined text-[#13ec80]">assignment</span>
+          <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--foreground)]">
+            <span className="material-symbols-outlined text-primary">assignment</span>
             点名系统
             {debugMode && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
@@ -191,7 +191,7 @@ export default function AttendanceWidget({
               </span>
             )}
           </h3>
-          <span className="px-3 py-1.5 bg-[#13ec80]/10 text-[#13ec80] text-sm font-semibold rounded-full border border-[#13ec80]/20">
+          <span className="px-3 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full border border-primary/20">
             第 {status.weekNumber} 周
           </span>
         </div>
@@ -201,25 +201,25 @@ export default function AttendanceWidget({
           {status.isAttendanceOpen ? (
             <>
               {/* 点名开放时的信息 */}
-              <div className="bg-[#102219] border border-[#2a3c34] rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#13ec80] text-2xl">schedule</span>
+                  <span className="material-symbols-outlined text-primary text-2xl">schedule</span>
                   <div>
-                    <p className="text-white font-bold text-lg">{status.session?.sessionTime}</p>
-                    <p className="text-[#8a9e94] text-sm">当前点名时段</p>
+                    <p className="text-[var(--foreground)] font-bold text-lg">{status.session?.sessionTime}</p>
+                    <p className="text-[var(--text-secondary)] text-sm">当前点名时段</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-amber-400 font-bold text-lg animate-pulse">
                     {status.session?.minutesRemaining} 分钟
                   </p>
-                  <p className="text-[#8a9e94] text-sm">剩余时间</p>
+                  <p className="text-[var(--text-secondary)] text-sm">剩余时间</p>
                 </div>
               </div>
 
               {/* 验证码输入框 */}
               {requireCode && !hasCheckedIn && (
-                <div className="bg-[#102219] border border-amber-500/30 rounded-xl p-4">
+                <div className="bg-[var(--surface-hover)] border border-amber-500/30 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-amber-400">pin</span>
                     <p className="text-amber-400 font-medium">请输入验证码</p>
@@ -230,9 +230,9 @@ export default function AttendanceWidget({
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     placeholder="输入4位验证码"
                     maxLength={4}
-                    className="w-full px-4 py-3 bg-[#1a2c24] border border-[#2a3c34] rounded-lg text-white text-center text-2xl font-mono tracking-widest placeholder:text-[#5a6a64] focus:outline-none focus:border-amber-500/50"
+                    className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--foreground)] text-center text-2xl font-mono tracking-widest placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-amber-500/50"
                   />
-                  <p className="text-[#8a9e94] text-xs mt-2 text-center">
+                  <p className="text-[var(--text-secondary)] text-xs mt-2 text-center">
                     请向在场的管理员获取验证码
                   </p>
                 </div>
@@ -244,12 +244,12 @@ export default function AttendanceWidget({
                 disabled={isLoading || hasCheckedIn || (requireCode && verificationCode.length !== 4)}
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                   hasCheckedIn
-                    ? 'bg-[#13ec80] text-[#102219] cursor-default'
+                    ? 'bg-primary text-[var(--surface)] cursor-default'
                     : isLoading
-                    ? 'bg-[#13ec80]/50 text-[#102219] cursor-wait'
+                    ? 'bg-primary/50 text-[var(--surface)] cursor-wait'
                     : (requireCode && verificationCode.length !== 4)
-                    ? 'bg-[#2a3c34] text-[#5a6a64] cursor-not-allowed'
-                    : 'bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] hover:shadow-[0_0_20px_rgba(19,236,128,0.4)] active:scale-[0.98]'
+                    ? 'bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed'
+                    : 'bg-primary hover:bg-primary-hover text-[var(--surface)] hover:shadow-[0_0_20px_rgba(19,236,128,0.4)] active:scale-[0.98]'
                 }`}
               >
                 {isLoading ? (
@@ -272,15 +272,15 @@ export default function AttendanceWidget({
             </>
           ) : (
             /* 非点名时间 */
-            <div className="bg-[#102219] border border-[#2a3c34] rounded-xl p-5 text-center">
-              <span className="material-symbols-outlined text-[#8a9e94] text-4xl mb-3">schedule</span>
-              <p className="text-white font-medium mb-2">当前不在点名时间</p>
-              <div className="text-[#8a9e94] text-sm space-y-1">
+            <div className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl p-5 text-center">
+              <span className="material-symbols-outlined text-[var(--text-secondary)] text-4xl mb-3">schedule</span>
+              <p className="text-[var(--foreground)] font-medium mb-2">当前不在点名时间</p>
+              <div className="text-[var(--text-secondary)] text-sm space-y-1">
                 {status.config ? (
                   <>
                     <p>点名时间：{['周日', '周一', '周二', '周三', '周四', '周五', '周六'][status.config.dayOfWeek]}</p>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-[#13ec80] text-sm">location_on</span>
+                      <span className="material-symbols-outlined text-primary text-sm">location_on</span>
                       <span>
                         {String(status.config.session1Start.hour).padStart(2, '0')}:
                         {String(status.config.session1Start.minute).padStart(2, '0')}-
@@ -289,7 +289,7 @@ export default function AttendanceWidget({
                       </span>
                     </div>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-[#13ec80] text-sm">location_on</span>
+                      <span className="material-symbols-outlined text-primary text-sm">location_on</span>
                       <span>
                         {String(status.config.session2Start.hour).padStart(2, '0')}:
                         {String(status.config.session2Start.minute).padStart(2, '0')}-
@@ -307,9 +307,9 @@ export default function AttendanceWidget({
 
           {/* 成功/错误消息 */}
           {message && (
-            <div className="flex items-center gap-2 p-3 bg-[#13ec80]/10 border border-[#13ec80]/30 rounded-lg">
-              <span className="material-symbols-outlined text-[#13ec80]">check_circle</span>
-              <p className="text-[#13ec80] text-sm font-medium">{message}</p>
+            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+              <span className="material-symbols-outlined text-primary">check_circle</span>
+              <p className="text-primary text-sm font-medium">{message}</p>
             </div>
           )}
           {error && (
@@ -321,13 +321,13 @@ export default function AttendanceWidget({
 
           {/* Debug 按钮 */}
           {showDebugButton && (
-            <div className="pt-4 border-t border-[#2a3c34]">
+            <div className="pt-4 border-t border-[var(--border)]">
               <button
                 onClick={toggleDebugMode}
                 className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                   debugMode
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
-                    : 'bg-[#2a3c34] text-[#8a9e94] hover:bg-[#3a4c44] hover:text-white border border-[#3a4c44]'
+                    : 'bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--card-hover)] hover:text-[var(--foreground)] border border-[var(--border)]'
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">bug_report</span>

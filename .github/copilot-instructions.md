@@ -2,9 +2,12 @@
 
 ## Project Overview
 
-**KC Computer Club Website** is a Next.js 16 + TypeScript + Appwrite application for managing a school computer club. It provides public-facing features (notices, activities, signups, comments) and an admin dashboard for content management and member administration.
+**KC Computer Club Website** is a Next.js 16 + TypeScript + Appwrite application for managing a school computer club. It provides:
+- **Public-facing features**: notices, activities, signups, comments
+- **Admin dashboard**: content management and member administration
+- **Authentication**: Student (email/password) + Admin (custom collection with bcryptjs)
 
-- **Status**: Phase 3 (User Authentication System) completed; Phase 3.2+ in progress
+- **Status**: Phase 3 (User Authentication System) ✅ completed
 - **Tech Stack**: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Appwrite, Zustand, React Hook Form
 - **Deployment**: Vercel-ready (no Node.js API routes)
 - **Language**: Chinese (Simplified) for UI/documentation
@@ -15,24 +18,28 @@
 
 ### 1. Service Layer Architecture
 All data operations are isolated in `/src/services/`:
-- **auth.service.ts** - Auth logic (OAuth, JWT, session management, password hashing with bcryptjs)
+- **auth.service.ts** (549 lines) - Student & admin auth, password hashing with bcryptjs, session management
 - **notice.service.ts** - Notice CRUD (with JSON parsing for image arrays)
 - **activity.service.ts** - Activity CRUD + participant counting
 - **comment.service.ts** - Comment moderation workflow
 - **signup.service.ts** - Activity enrollment + email notifications
-- **attendance.service.ts** - Attendance tracking for activities
+- **appwrite.ts** - Appwrite client initialization (databases, storage, account)
 
-**Pattern**: Each service exports named functions (not classes), includes JSDoc comments, handles Appwrite errors consistently, and maps Appwrite responses to typed interfaces.
+**Pattern**: Each service exports named functions (not classes), includes JSDoc comments, handles Appwrite errors with try-catch, and maps Appwrite responses to typed interfaces.
 
 ```typescript
 // Example: Services always wrap Appwrite calls with error handling
-export async function getNoticeById(id: string): Promise<Notice> {
+export async function studentLogin(email: string, password: string): Promise<StudentUser> {
   try {
-    const doc = await databases.getDocument(DB_ID, COLLECTION_ID, id);
-    return parseNotice(doc); // Transform Appwrite response
+    const records = await databases.listDocuments(DB_ID, COLLECTION_ID, [Query.equal('email', email)]);
+    if (records.documents.length === 0) throw new Error('账号或密码错误');
+    const user = records.documents[0];
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) throw new Error('账号或密码错误');
+    return parseUserResponse(user); // Transform Appwrite response to typed interface
   } catch (error) {
-    console.error('Operation failed:', error);
-    throw new Error('User-friendly message');
+    console.error('Login failed:', error);
+    throw new Error('User-friendly message'); // Don't expose Appwrite internals
   }
 }
 ```
@@ -44,11 +51,17 @@ export async function getNoticeById(id: string): Promise<Notice> {
 - **No `any` types** - strict TypeScript enforced via ESLint + tsconfig
 
 ### 3. Authentication Flow (Phase 3 Complete)
-- **Student auth**: Appwrite Account + email verification
-- **Admin auth**: Custom Appwrite collection (`admins`) + bcrypt password hashing
+- **Student auth**: Email/password stored in `users` collection with bcryptjs hashing
+- **Admin auth**: Custom `admins` collection with bcryptjs password hashing
 - **Session management**: AuthContext (React) + localStorage caching + Appwrite as source of truth
 - **Cross-tab coordination**: Always check Appwrite session first, use localStorage as fallback
-- **Key files**: `AuthContext.tsx`, `auth.service.ts` (691 lines - comprehensive implementation)
+- **Key files**: `AuthContext.tsx` (196 lines), `auth.service.ts` (549 lines)
+
+**Password hashing pattern** (bcryptjs with 10 rounds):
+```typescript
+// Hashing: await bcrypt.hash(password, 10)
+// Verification: await bcrypt.compare(providedPassword, storedHash)
+```
 
 ### 4. Context & State Management
 - **React Context** for authentication (AuthContext.tsx, NotificationContext.tsx)
@@ -60,8 +73,6 @@ export async function getNoticeById(id: string): Promise<Notice> {
 - API routes in `/src/app/api/` only handle HTTP transport + basic auth checks
 - Actual business logic stays in services (e.g., `notice.service.ts`)
 - No long-running processes or webhooks
-
-### 6. Component Organization
 ```
 src/components/
 ├── admin/           # Admin-specific UI
@@ -114,15 +125,15 @@ npm run fix:comments           # Add reply relationship to comments
 ## Code Conventions & Patterns
 
 ### Naming & Organization
-- **Collections & constants**: Use `COLLECTIONS` enum from `utils/constants.ts`
-- **Routes**: Use `ROUTES` object for navigation (avoid hardcoded strings)
-- **Storage keys**: Use `STORAGE_KEYS` object (localStorage consistency)
+- **Collections & constants**: Use environment variables `NEXT_PUBLIC_APPWRITE_*` + constants in auth.service.ts
+- **Routes**: Use hardcoded paths (TODO: extract to `ROUTES` object for consistency)
+- **Storage keys**: `studentSession`, `adminSession` in localStorage
 - **Path aliases**: Always use `@/` prefix (`import { X } from '@/services'`)
 
 ### Error Handling
 - **Services**: Catch Appwrite errors, log + throw user-friendly message
 - **Components**: Use try-catch in async operations, display via NotificationContext
-- **API routes**: Return `{ error: 'message' }` with appropriate HTTP status
+- **Pattern**: Never expose Appwrite error details to users
 
 ### TypeScript Usage
 ```typescript
@@ -149,13 +160,13 @@ const metadata: Record<string, string> = { key: 'value' };
 
 | File | Purpose | Maintainers Note |
 |------|---------|------------------|
-| [src/services/auth.service.ts](../src/services/auth.service.ts) | OAuth, login, session - 691 lines | Complex; test carefully after changes |
-| [src/contexts/AuthContext.tsx](../src/contexts/AuthContext.tsx) | Auth state + hooks (useAuth) | Single source of truth for user state |
-| [src/services/notice.service.ts](../src/services/notice.service.ts) | Notice CRUD + Markdown support | Custom JSON parsing for images |
-| [src/utils/constants.ts](../src/utils/constants.ts) | Collections, routes, roles | Update here, not hardcoded |
-| [src/types/index.ts](../src/types/index.ts) | All domain types | Central schema - keep in sync |
-| [tsconfig.json](../tsconfig.json) | Path aliases + TypeScript strict | `@/*` paths enabled |
-| [docs/plan.md](../docs/plan.md) | Development roadmap (8 phases) | Source of truth for task status |
+| `src/services/auth.service.ts` | Student & admin auth, bcryptjs, session - 549 lines | Complex; test carefully after changes |
+| `src/contexts/AuthContext.tsx` | Auth state + hooks (useAuth) - 196 lines | Single source of truth for user state |
+| `src/services/notice.service.ts` | Notice CRUD + JSON image parsing | Custom JSON parsing for images field |
+| `tsconfig.json` | Path aliases + TypeScript strict | `@/*` paths enabled, strict: true |
+| `src/types/index.ts` | All domain types | Central schema - keep in sync |
+| `docs/context.md` | Product requirements & data schema | Source of truth for features |
+| `docs/plan.md` | Development roadmap (8 phases) | Task status tracking
 
 ---
 
@@ -175,7 +186,7 @@ Services use `console.error()`/`console.warn()` for failures. Check:
 
 ---
 
-## Important Constraints & Decisions
+### Important Constraints & Decisions
 
 ### Why This Architecture?
 - **Appwrite-first**: No custom backend - use cloud services for scalability
@@ -185,10 +196,11 @@ Services use `console.error()`/`console.warn()` for failures. Check:
 
 ### What NOT to Do
 - ❌ Don't store sensitive data (passwords, tokens) in localStorage beyond session
-- ❌ Don't add Node.js API logic (not deployable to Vercel static)
-- ❌ Don't hardcode collection/route names (use constants)
+- ❌ Don't add Node.js API logic (not deployable to Vercel)
+- ❌ Don't hardcode collection/route names (use constants in auth.service.ts)
 - ❌ Don't import from sibling paths (`../../`) - use `@/`
 - ❌ Don't skip TypeScript types for "faster coding" - it creates technical debt
+- ❌ Don't use Appwrite Account for auth (use DB collections instead - per this project's design)
 
 ---
 
@@ -200,11 +212,11 @@ Services use `console.error()`/`console.warn()` for failures. Check:
 3. **Add API route** in `src/app/api/feature/` if needed
 4. **Build components** in `src/components/feature/`
 5. **Add route** to `src/app/feature/page.tsx`
-6. **Update ROUTES** in `utils/constants.ts`
+6. **Update ROUTES** in `utils/constants.ts` (TODO: create this if missing)
 
 ### Adding a Database Collection
 1. Create Collection in Appwrite Console
-2. Add to `COLLECTIONS` in `utils/constants.ts`
+2. Add to constants (currently in auth.service.ts)
 3. Add environment variable to `.env.example`
 4. Define interface in `src/types/index.ts`
 5. Create service functions with standard error handling
@@ -214,11 +226,11 @@ Services use `console.error()`/`console.warn()` for failures. Check:
 
 ## Documentation References
 
-- **Product Context**: [docs/context.md](../docs/context.md) - requirements, data schema, UI system
-- **Development Plan**: [docs/plan.md](../docs/plan.md) - phases, status, checklists (8 phases total)
-- **Phase 3.2 Services**: [docs/PHASE_3_2_SERVICES.md](../docs/PHASE_3_2_SERVICES.md) - service implementation details
-- **Database Fix**: [docs/DATABASE_FIX.md](../docs/DATABASE_FIX.md) - database troubleshooting guide
-- **README**: [README.md](../README.md) - quick start, tech stack, commands
+- **Product Context**: `docs/context.md` - requirements, data schema, UI system
+- **Development Plan**: `docs/plan.md` - phases, status, checklists (8 phases total)
+- **Phase 3.2 Services**: `docs/PHASE_3_2_SERVICES.md` - service implementation details
+- **Database Fix**: `docs/DATABASE_FIX.md` - database troubleshooting guide
+- **README**: `README.md` - quick start, tech stack, commands
 
 ---
 

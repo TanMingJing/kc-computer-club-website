@@ -3,8 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -196,9 +195,7 @@ export default function NoticesPage() {
   const regularNotices = filteredNotices.filter((n) => !n.isPinned);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#102219]">
-      <Header />
-
+    <StudentLayout>
       <main className="flex-1 w-full max-w-300 mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 面包屑导航 */}
         <nav className="flex items-center text-sm text-[#9db9ab] mb-6 font-medium">
@@ -305,9 +302,7 @@ export default function NoticesPage() {
           </div>
         )}
       </main>
-
-      <Footer />
-    </div>
+    </StudentLayout>
   );
 }
 

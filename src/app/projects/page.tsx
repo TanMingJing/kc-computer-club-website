@@ -1,8 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -131,25 +130,21 @@ export default function ProjectsPage() {
 
   if (isLoading || authLoading) {
     return (
-      <div className="min-h-screen bg-[#102219] text-white">
-        <Header />
+      <StudentLayout>
         <main className="grow py-8 px-4 md:px-10 lg:px-20">
           <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh]">
             <div className="flex flex-col items-center gap-4">
               <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
-              <p className="text-gray-400">加载中...</p>
+              <p className="text-[var(--text-secondary)]">加载中...</p>
             </div>
           </div>
         </main>
-        <Footer />
-      </div>
+      </StudentLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#102219] text-white">
-      <Header />
-
+    <StudentLayout>
       <main className="grow py-8 px-4 md:px-10 lg:px-20">
         <div className="max-w-7xl mx-auto">
           {/* 页面头部 */}
@@ -300,8 +295,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </StudentLayout>
   );
 }

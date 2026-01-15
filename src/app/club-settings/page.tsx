@@ -21,6 +21,9 @@ interface ClubSettings {
   twitter: string;
   instagram: string;
   discord: string;
+  // 网站外观设置
+  logoUrl: string;
+  faviconUrl: string;
 }
 
 const defaultSettings: ClubSettings = {
@@ -35,6 +38,9 @@ const defaultSettings: ClubSettings = {
   twitter: 'https://twitter.com/computerclub',
   instagram: 'https://instagram.com/computerclub',
   discord: 'https://discord.gg/computerclub',
+  // 网站外观设置
+  logoUrl: '',
+  faviconUrl: '',
 };
 
 export default function ClubSettings() {
@@ -44,7 +50,7 @@ export default function ClubSettings() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'social' | 'advanced'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'social' | 'appearance' | 'advanced'>('basic');
 
   // 权限检查
   useEffect(() => {
@@ -139,6 +145,17 @@ export default function ClubSettings() {
                   >
                     <span className="material-symbols-outlined">share</span>
                     社交媒体
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('appearance')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
+                      activeTab === 'appearance'
+                        ? 'bg-primary/20 text-primary'
+                        : 'text-gray-400 hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">palette</span>
+                    网站外观
                   </button>
                   <button
                     onClick={() => setActiveTab('advanced')}
@@ -376,6 +393,144 @@ export default function ClubSettings() {
                           leftIcon="forum"
                           placeholder="https://discord.gg/..."
                         />
+                      </div>
+                    </div>
+
+                    {/* 保存/取消按钮 */}
+                    {isEditing && (
+                      <div className="flex gap-3 pt-4 border-t border-white/10">
+                        <Button
+                          variant="secondary"
+                          onClick={handleCancel}
+                          className="flex-1"
+                        >
+                          取消
+                        </Button>
+                        <Button
+                          variant="primary"
+                          onClick={handleSave}
+                          isLoading={isSaving}
+                          rightIcon="check"
+                          className="flex-1"
+                        >
+                          保存更改
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 网站外观选项卡 */}
+                {activeTab === 'appearance' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold">网站外观</h3>
+                        <p className="text-sm text-gray-400 mt-1">自定义网站图标和外观</p>
+                      </div>
+                      <Button
+                        variant={isEditing ? 'secondary' : 'primary'}
+                        size="sm"
+                        rightIcon={isEditing ? 'close' : 'edit'}
+                        onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
+                      >
+                        {isEditing ? '取消' : '编辑'}
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Logo URL */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          网站 Logo 链接
+                        </label>
+                        <Input
+                          type="url"
+                          value={settings.logoUrl}
+                          onChange={(e) => handleInputChange('logoUrl', e.target.value)}
+                          disabled={!isEditing}
+                          leftIcon="image"
+                          placeholder="https://example.com/logo.png"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          建议尺寸：200x200 像素，支持 PNG、SVG、JPG 格式
+                        </p>
+                      </div>
+
+                      {/* Logo 预览 */}
+                      {settings.logoUrl && (
+                        <div className="p-4 bg-[#102219] rounded-lg border border-white/10">
+                          <p className="text-sm text-gray-400 mb-2">Logo 预览</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
+                              <img 
+                                src={settings.logoUrl} 
+                                alt="Logo 预览" 
+                                className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              <p>在导航栏和页脚显示</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Favicon URL */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          网站图标 (Favicon) 链接
+                        </label>
+                        <Input
+                          type="url"
+                          value={settings.faviconUrl}
+                          onChange={(e) => handleInputChange('faviconUrl', e.target.value)}
+                          disabled={!isEditing}
+                          leftIcon="tab"
+                          placeholder="https://example.com/favicon.ico"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          浏览器标签页显示的小图标，建议使用 .ico 或 .png 格式
+                        </p>
+                      </div>
+
+                      {/* Favicon 预览 */}
+                      {settings.faviconUrl && (
+                        <div className="p-4 bg-[#102219] rounded-lg border border-white/10">
+                          <p className="text-sm text-gray-400 mb-2">Favicon 预览</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center overflow-hidden">
+                              <img 
+                                src={settings.faviconUrl} 
+                                alt="Favicon 预览" 
+                                className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              <p>在浏览器标签页显示</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 提示 */}
+                      <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <div className="flex items-start gap-3">
+                          <span className="material-symbols-outlined text-blue-400">info</span>
+                          <div className="text-sm text-blue-300">
+                            <p className="font-medium mb-1">提示</p>
+                            <p className="text-blue-400/80">
+                              如果没有设置图标，网站将显示默认的文字标识 "KC"。
+                              建议使用可公开访问的图片链接。
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

@@ -148,8 +148,8 @@ export function Footer({ className }: FooterProps) {
           {/* 社团信息 - 占 5 列 */}
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
-                <span className="material-symbols-outlined">terminal</span>
+              <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20">
+                <span className="text-primary font-black text-lg">KC</span>
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">

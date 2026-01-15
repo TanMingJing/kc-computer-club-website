@@ -56,20 +56,20 @@ export function NoticesSection({ notices, className }: NoticesSectionProps) {
     <div className={cn('md:col-span-2 flex flex-col gap-4', className)}>
       {/* 标题栏 */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">campaign</span>
           最新公告
         </h2>
         <Link 
           href="/notices" 
-          className="text-sm text-gray-400 hover:text-white transition-colors"
+          className="text-sm text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors"
         >
           查看全部
         </Link>
       </div>
       
       {/* 公告列表 */}
-      <div className="bg-[#162a21] rounded-3xl p-1 border border-white/5">
+      <div className="bg-[var(--surface)] rounded-3xl p-1 border border-[var(--border)]">
         <div className="flex flex-col gap-2">
           {notices.map((notice) => {
             const date = typeof notice.publishedAt === 'string' 
@@ -80,7 +80,7 @@ export function NoticesSection({ notices, className }: NoticesSectionProps) {
             
             return (
               <Link key={notice.id} href={`/notices/${notice.id}`}>
-                <div className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5">
+                <div className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border)]">
                   {/* 图标 */}
                   <div className={cn(
                     'shrink-0 flex items-center justify-center size-12 rounded-xl',
@@ -93,7 +93,7 @@ export function NoticesSection({ notices, className }: NoticesSectionProps) {
                   {/* 内容 */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-bold text-white truncate group-hover:text-primary transition-colors">
+                      <h4 className="font-bold text-[var(--foreground)] truncate group-hover:text-primary transition-colors">
                         {notice.title}
                       </h4>
                       <span className={cn(
@@ -105,16 +105,16 @@ export function NoticesSection({ notices, className }: NoticesSectionProps) {
                         {notice.category}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-400 truncate">{notice.summary}</p>
+                    <p className="text-sm text-[var(--text-secondary)] truncate">{notice.summary}</p>
                   </div>
                   
                   {/* 时间 */}
-                  <span className="hidden sm:block text-xs text-gray-500 font-mono">
+                  <span className="hidden sm:block text-xs text-[var(--text-secondary)] font-mono">
                     {formatRelativeTime(date)}
                   </span>
                   
                   {/* 箭头 */}
-                  <span className="material-symbols-outlined text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all">
+                  <span className="material-symbols-outlined text-[var(--text-secondary)] group-hover:text-[var(--foreground)] group-hover:translate-x-1 transition-all">
                     chevron_right
                   </span>
                 </div>
@@ -164,7 +164,7 @@ export function EventsSection({ activities, className }: EventsSectionProps) {
     <div className={cn('flex flex-col gap-4', className)}>
       {/* 标题栏 */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">calendar_month</span>
           即将到来
         </h2>
@@ -180,7 +180,7 @@ export function EventsSection({ activities, className }: EventsSectionProps) {
           
           return (
             <Link key={activity.id} href={`/activities/${activity.id}`}>
-              <div className="flex flex-col bg-[#162a21] rounded-3xl p-5 border border-white/5 hover:border-primary/30 transition-all group">
+              <div className="flex flex-col bg-[var(--surface)] rounded-3xl p-5 border border-[var(--border)] hover:border-primary/30 transition-all group">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex flex-col">
                     <span className={cn(
@@ -189,21 +189,21 @@ export function EventsSection({ activities, className }: EventsSectionProps) {
                     )}>
                       {activity.category}
                     </span>
-                    <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">
+                    <h3 className="text-lg font-bold text-[var(--foreground)] group-hover:text-primary transition-colors">
                       {activity.title}
                     </h3>
                   </div>
-                  <div className="bg-white/5 rounded-lg px-3 py-1 text-center min-w-15">
-                    <span className="block text-xs text-gray-400 uppercase">
+                  <div className="bg-[var(--surface-hover)] rounded-lg px-3 py-1 text-center min-w-15">
+                    <span className="block text-xs text-[var(--text-secondary)] uppercase">
                       {date.toLocaleDateString('zh-CN', { month: 'short' })}
                     </span>
-                    <span className="block text-xl font-bold text-white">
+                    <span className="block text-xl font-bold text-[var(--foreground)]">
                       {date.getDate()}
                     </span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
+                <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)] mb-6">
                   <div className="flex items-center gap-1">
                     <span className="material-symbols-outlined text-[16px]">schedule</span>
                     {activity.time}
@@ -214,7 +214,7 @@ export function EventsSection({ activities, className }: EventsSectionProps) {
                   </div>
                 </div>
                 
-                <button className="mt-auto w-full py-2.5 rounded-xl bg-white/5 text-white text-sm font-bold hover:bg-primary hover:text-black transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_15px_rgba(19,236,128,0.2)]">
+                <button className="mt-auto w-full py-2.5 rounded-xl bg-[var(--surface-hover)] text-[var(--foreground)] text-sm font-bold hover:bg-primary hover:text-black transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_15px_var(--primary-glow)]">
                   立即报名
                 </button>
               </div>
