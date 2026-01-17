@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BreathingToggleCompact } from '@/components/ui/BreathingToggle';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -152,6 +153,9 @@ export function Header({
         <div className="flex items-center gap-3">
           {/* Theme Toggle */}
           <ThemeToggle compact className="hidden md:flex" />
+          
+          {/* Breathing Effect Toggle */}
+          <BreathingToggleCompact />
           
           {isStudent && user ? (
             // Student logged in

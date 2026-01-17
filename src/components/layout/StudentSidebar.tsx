@@ -224,30 +224,32 @@ export function StudentSidebar({ isOpen, onClose, onCollapsedChange }: StudentSi
             </Link>
           )}
 
-          {/* 退出按钮 */}
-          <button
-            onClick={handleLogout}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
-              'text-red-400 hover:bg-red-500/10 hover:text-red-300',
-              'transition-colors group',
-              sidebarCollapsed && 'justify-center'
-            )}
-            title={sidebarCollapsed ? '退出登录' : undefined}
-          >
-            <span className="material-symbols-outlined text-lg flex-shrink-0">
-              logout
-            </span>
-            {!sidebarCollapsed && <span>退出登录</span>}
+          {/* 退出按钮 - 仅在用户登录时显示 */}
+          {user && (
+            <button
+              onClick={handleLogout}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
+                'text-red-400 hover:bg-red-500/10 hover:text-red-300',
+                'transition-colors group',
+                sidebarCollapsed && 'justify-center'
+              )}
+              title={sidebarCollapsed ? '退出登录' : undefined}
+            >
+              <span className="material-symbols-outlined text-lg flex-shrink-0">
+                logout
+              </span>
+              {!sidebarCollapsed && <span>退出登录</span>}
 
-            {sidebarCollapsed && (
-              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 z-50">
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2 whitespace-nowrap text-red-300 text-sm font-medium shadow-lg">
-                  退出登录
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 z-50">
+                  <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2 whitespace-nowrap text-red-300 text-sm font-medium shadow-lg">
+                    退出登录
+                  </div>
                 </div>
-              </div>
-            )}
-          </button>
+              )}
+            </button>
+          )}
         </div>
       </aside>
     </>

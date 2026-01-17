@@ -79,8 +79,8 @@ export function ThemeToggle({
         }}
         className={cn(
           'p-2 rounded-lg transition-colors',
-          'bg-gray-200 dark:bg-[#283930] hover:bg-gray-300 dark:hover:bg-[#344b3f]',
-          'text-gray-700 dark:text-white',
+          'bg-gray-100 hover:bg-gray-200 text-gray-800',
+          'dark:bg-[#283930] dark:hover:bg-[#344b3f] dark:text-gray-100',
           className
         )}
         title={`当前: ${modeOptions.find(m => m.value === mode)?.label}`}
@@ -99,8 +99,9 @@ export function ThemeToggle({
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-xl transition-all',
-          'bg-gray-200 dark:bg-[#283930] hover:bg-gray-300 dark:hover:bg-[#344b3f]',
-          'text-gray-700 dark:text-white text-sm font-medium',
+          'bg-gray-100 hover:bg-gray-200 text-gray-800',
+          'dark:bg-[#283930] dark:hover:bg-[#344b3f] dark:text-gray-100',
+          'text-sm font-medium',
           isOpen && 'ring-2 ring-primary/50'
         )}
       >

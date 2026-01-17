@@ -35,25 +35,50 @@ const DEFAULT_CONFIG: Required<CacheConfig> = {
 
 /**
  * 简单的 XOR 加密（安全级别低，用于基础混淆）
+ * 使用 UTF-8 编码和 base64 确保兼容性
  * 生产环境应使用更强的加密方案
  */
 function simpleXOREncrypt(text: string, key: string): string {
-  let result = '';
-  for (let i = 0; i < text.length; i++) {
-    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  try {
+    // 将字符串转换为 UTF-8 字节
+    const utf8Bytes = new TextEncoder().encode(text);
+    const keyBytes = new TextEncoder().encode(key);
+    
+    // XOR 操作
+    const xorBytes = new Uint8Array(utf8Bytes.length);
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      xorBytes[i] = utf8Bytes[i] ^ keyBytes[i % keyBytes.length];
+    }
+    
+    // 转换为 base64
+    const binaryString = String.fromCharCode.apply(null, Array.from(xorBytes));
+    return btoa(binaryString);
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    return '';
   }
-  return btoa(result);
 }
 
 function simpleXORDecrypt(encrypted: string, key: string): string {
   try {
-    const text = atob(encrypted);
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    // 从 base64 解码
+    const binaryString = atob(encrypted);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
     }
-    return result;
-  } catch {
+    
+    // XOR 解密
+    const keyBytes = new TextEncoder().encode(key);
+    const xorBytes = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+      xorBytes[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+    }
+    
+    // 转换回 UTF-8 字符串
+    return new TextDecoder().decode(xorBytes);
+  } catch (error) {
+    console.error('Decryption failed:', error);
     return '';
   }
 }

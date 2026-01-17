@@ -3,6 +3,7 @@
 
 import { forwardRef, ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // ========================================
 // Button 组件
@@ -42,7 +43,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // 基础样式
+    const { breathingEffectEnabled } = useTheme();
+    
+    // 基础样式 - 移动端隐藏文本，只显示图标
     const baseStyles = `
       inline-flex items-center justify-center gap-2
       font-bold leading-normal tracking-[0.015em]
@@ -50,6 +53,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       focus:outline-none focus:ring-2 focus:ring-offset-2
       disabled:opacity-50 disabled:cursor-not-allowed
       active:scale-[0.98]
+      [&>span:not(.material-symbols-outlined)]:hidden md:[&>span:not(.material-symbols-outlined)]:inline
     `;
 
     // 变体样式
@@ -58,7 +62,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         bg-primary hover:bg-primary/90 
         text-[#111814] 
         focus:ring-primary
-        ${glow ? 'shadow-[0_0_20px_rgba(19,236,128,0.3)] hover:shadow-[0_0_30px_rgba(19,236,128,0.5)]' : ''}
+        ${glow && breathingEffectEnabled ? 'animate-rgb-breathing shadow-[0_0_20px_var(--primary-glow)] hover:animate-none hover:shadow-[0_0_30px_var(--primary-glow)]' : 'hover:shadow-[0_0_30px_var(--primary-glow)]'}
       `,
       secondary: `
         bg-[#283930] hover:bg-[#344b3f] 
@@ -83,11 +87,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       `,
     };
 
-    // 尺寸样式
+    // 尺寸样式 - md 中等按钮优化为默认尺寸
     const sizeStyles = {
-      sm: 'h-8 px-3 text-xs',
-      md: 'h-10 px-4 text-sm',
-      lg: 'h-12 px-6 text-base',
+      sm: 'h-8 px-3 text-xs sm:h-8 sm:px-2 md:px-2',
+      md: 'h-10 px-4 text-sm sm:h-9 sm:px-3 md:h-10 md:px-4',
+      lg: 'h-12 px-6 text-base sm:h-10 sm:px-4 md:h-12 md:px-6',
     };
 
     return (

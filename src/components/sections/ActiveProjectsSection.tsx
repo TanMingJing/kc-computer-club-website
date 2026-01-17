@@ -11,15 +11,14 @@ import { SecureCache } from '@/lib/cache';
 // ========================================
 
 interface Project {
-  $id: string;
+  projectId: string;
   title: string;
   description: string;
-  status: 'planning' | 'active' | 'completed' | 'on_hold';
-  startDate: string;
-  endDate?: string;
-  lead: string;
-  participantCount?: number;
-  progress?: number;
+  status: 'pending' | 'approved' | 'rejected' | 'revision';
+  createdAt: string;
+  updatedAt?: string;
+  leadName: string;
+  members: any[];
   image?: string;
 }
 
@@ -48,24 +47,33 @@ export function ActiveProjectsSection() {
         return;
       }
 
-      // 从 API 获取
-      const response = await fetch('/api/projects?status=active');
+      // 从 API 获取所有项目（不过滤状态，显示所有项目）
+      const response = await fetch('/api/projects');
+      
+      if (!response.ok) {
+        throw new Error(`API 返回状态码 ${response.status}`);
+      }
+      
       const data = await response.json();
 
       if (data.success && Array.isArray(data.projects)) {
+        // 显示前 6 个项目（不过滤状态，显示所有项目）
         const activeProjects = data.projects
-          .filter((p: Record<string, unknown>) => p.status === 'active' || p.status === 'planning')
+          .filter((p: Record<string, unknown>) => {
+            // 过滤出有效的项目（必须有 projectId）
+            const projectId = p.projectId as string;
+            return projectId && projectId !== 'undefined';
+          })
           .slice(0, 6)
           .map((p: Record<string, unknown>) => ({
-            $id: p.$id as string,
+            projectId: p.projectId as string,
             title: p.title as string,
-            description: p.description as string,
-            status: (p.status as 'planning' | 'active' | 'completed' | 'on_hold') || 'planning',
-            startDate: new Date(p.startDate as string).toLocaleDateString('zh-CN'),
-            endDate: p.endDate ? new Date(p.endDate as string).toLocaleDateString('zh-CN') : undefined,
-            lead: (p.lead as string) || '待确定',
-            participantCount: (p.participantCount as number) || 0,
-            progress: (p.progress as number) || 0,
+            description: ((p.description as string) || '暂无描述').substring(0, 100) as string,
+            status: (p.status as 'pending' | 'approved' | 'rejected' | 'revision') || 'pending',
+            createdAt: p.createdAt ? new Date(p.createdAt as string).toLocaleDateString('zh-CN') : '待定',
+            updatedAt: p.updatedAt ? new Date(p.updatedAt as string).toLocaleDateString('zh-CN') : undefined,
+            leadName: (p.leaderEmail || p.leadName || '待确定') as string,
+            members: (p.members as any[]) || [],
             image: p.image as string,
           }));
 
@@ -77,11 +85,13 @@ export function ActiveProjectsSection() {
           storage: 'localStorage',
         });
       } else {
+        console.warn('API 返回格式异常:', data);
         setProjects([]);
       }
     } catch (err) {
       console.error('加载活跃项目失败:', err);
       setError('加载项目失败，请稍后重试');
+      setProjects([]);
     } finally {
       setIsLoading(false);
     }
@@ -89,13 +99,13 @@ export function ActiveProjectsSection() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'approved':
         return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'planning':
+      case 'pending':
         return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'completed':
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-      case 'on_hold':
+      case 'rejected':
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'revision':
         return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       default:
         return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
@@ -104,14 +114,14 @@ export function ActiveProjectsSection() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'active':
-        return '进行中';
-      case 'planning':
-        return '计划中';
-      case 'completed':
-        return '已完成';
-      case 'on_hold':
-        return '暂停中';
+      case 'pending':
+        return '待审核';
+      case 'approved':
+        return '已批准';
+      case 'rejected':
+        return '已拒绝';
+      case 'revision':
+        return '需修改';
       default:
         return '未知';
     }
@@ -189,8 +199,8 @@ export function ActiveProjectsSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
             <Link
-              key={project.$id}
-              href={`/projects/${project.$id}`}
+              key={project.projectId}
+              href={`/projects/${project.projectId}`}
               className="group"
             >
               <div className="h-full rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300">
@@ -232,31 +242,13 @@ export function ActiveProjectsSection() {
                     {project.description}
                   </p>
 
-                  {/* 进度条 */}
-                  {typeof project.progress === 'number' && (
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-[var(--text-secondary)]">进度</span>
-                        <span className="text-xs font-medium text-[var(--foreground)]">
-                          {Math.round(project.progress)}%
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${project.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
                   {/* 底部信息 */}
                   <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                    <span>{project.lead}</span>
-                    {project.participantCount !== undefined && (
+                    <span>{project.leadName}</span>
+                    {project.members && (
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">group</span>
-                        {project.participantCount}
+                        {project.members.length}
                       </span>
                     )}
                   </div>

@@ -546,3 +546,90 @@ export async function checkSession(preferredType?: 'student' | 'admin'): Promise
     return { type: null, user: null };
   }
 }
+
+/**
+ * ========================================
+ * 密码重置（使用重置令牌）
+ * ========================================
+ */
+
+/**
+ * 验证重置密码令牌
+ * @param token 重置令牌
+ * @returns 令牌中的用户信息
+ */
+export function verifyResetToken(token: string): { userId: string; email: string; timestamp: number } | null {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const tokenData = JSON.parse(decoded);
+
+    const { userId, email, timestamp } = tokenData;
+
+    if (!userId || !email || !timestamp) {
+      return null;
+    }
+
+    // 检查令牌是否过期（24小时）
+    const RESET_TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
+    const currentTime = Date.now();
+    const tokenAge = currentTime - timestamp;
+
+    if (tokenAge > RESET_TOKEN_EXPIRY) {
+      return null;
+    }
+
+    return { userId, email, timestamp };
+  } catch (error) {
+    console.error('令牌验证失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 生成重置密码令牌
+ * @param userId 用户ID
+ * @param email 用户邮箱
+ * @returns 重置令牌
+ */
+export function generateResetToken(userId: string, email: string): string {
+  const tokenData = {
+    userId,
+    email: email.toLowerCase(),
+    timestamp: Date.now(),
+  };
+
+  return Buffer.from(JSON.stringify(tokenData)).toString('base64');
+}
+
+/**
+ * 使用重置令牌重置密码（客户端调用 API）
+ * @param token 重置令牌
+ * @param newPassword 新密码
+ * @returns 重置结果
+ */
+export async function resetPasswordWithToken(
+  token: string,
+  newPassword: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || '密码重置失败');
+    }
+
+    return {
+      success: true,
+      message: data.message || '密码重置成功',
+    };
+  } catch (error) {
+    console.error('重置密码失败:', error);
+    throw new Error(error instanceof Error ? error.message : '密码重置失败');
+  }
+}

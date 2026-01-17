@@ -1,8 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Button } from '@/components/ui/Button';
 import { ProjectChecklistComponent } from '@/components/projects/ProjectChecklist';
 import Link from 'next/link';
@@ -62,6 +61,14 @@ export default function ProjectDetailPage() {
     const fetchProject = async () => {
       try {
         setIsLoading(true);
+        
+        // 检查 projectId 是否有效
+        if (!projectId || projectId === 'undefined') {
+          setError('无效的项目 ID');
+          setIsLoading(false);
+          return;
+        }
+        
         const response = await fetch(`/api/projects/${projectId}`);
         const data = await response.json();
 
@@ -79,8 +86,11 @@ export default function ProjectDetailPage() {
       }
     };
 
-    if (projectId) {
+    if (projectId && projectId !== 'undefined') {
       fetchProject();
+    } else {
+      setError('无效的项目 ID');
+      setIsLoading(false);
     }
   }, [projectId]);
 
@@ -106,15 +116,15 @@ export default function ProjectDetailPage() {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'pending':
-        return 'bg-amber-500/10 text-amber-400';
+        return 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400';
       case 'approved':
-        return 'bg-[#13ec80]/10 text-[#13ec80]';
+        return 'bg-green-500/10 text-green-600 dark:bg-[#13ec80]/10 dark:text-[#13ec80]';
       case 'rejected':
-        return 'bg-red-500/10 text-red-400';
+        return 'bg-red-500/10 text-red-600 dark:bg-red-500/10 dark:text-red-400';
       case 'revision':
-        return 'bg-blue-500/10 text-blue-400';
+        return 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400';
       default:
-        return 'bg-gray-500/10 text-gray-400';
+        return 'bg-gray-500/10 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400';
     }
   };
 
@@ -160,55 +170,49 @@ export default function ProjectDetailPage() {
   // 加载中状态
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#102219] text-white">
-        <Header />
-        <main className="grow py-8 px-4 md:px-10 lg:px-20">
-          <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh]">
+      <StudentLayout>
+        <div className="bg-white dark:bg-[#102219] text-gray-900 dark:text-white">
+          <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh] px-4">
             <div className="flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-4xl text-[#13ec80] animate-spin">hourglass_empty</span>
-              <p className="text-gray-400">加载中...</p>
+              <span className="material-symbols-outlined text-4xl text-primary animate-spin">hourglass_empty</span>
+              <p className="text-gray-600 dark:text-gray-400">加载中...</p>
             </div>
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </StudentLayout>
     );
   }
 
   // 错误状态
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-[#102219] text-white">
-        <Header />
-        <main className="grow py-8 px-4 md:px-10 lg:px-20">
-          <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh]">
+      <StudentLayout>
+        <div className="bg-white dark:bg-[#102219] text-gray-900 dark:text-white">
+          <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[50vh] px-4">
             <div className="text-center">
               <span className="material-symbols-outlined text-5xl text-red-400 mb-4 block">error</span>
               <h2 className="text-xl font-bold mb-2">加载失败</h2>
-              <p className="text-gray-400 mb-4">{error || '项目不存在'}</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{error || '项目不存在'}</p>
               <Link href="/projects">
-                <button className="px-4 py-2 bg-[#13ec80] hover:bg-[#0fd673] text-[#102219] font-bold rounded-lg">
+                <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-black dark:text-black font-bold rounded-lg transition-colors">
                   返回项目列表
                 </button>
               </Link>
             </div>
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </StudentLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#102219] text-white">
-      <Header />
-
-      <main className="grow py-8 px-4 md:px-10 lg:px-20">
+    <StudentLayout>
+      <div className="bg-white dark:bg-[#102219] text-gray-900 dark:text-white py-8 px-4 md:px-10 lg:px-20">
         <div className="max-w-7xl mx-auto">
           {/* 页面头部 */}
           <div className="mb-8">
-            <div className="text-sm text-gray-400 mb-4 flex items-center gap-2">
-              <Link href="/projects" className="hover:text-white">项目</Link>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex items-center gap-2">
+              <Link href="/projects" className="hover:text-gray-900 dark:hover:text-white">项目</Link>
               <span className="material-symbols-outlined">chevron_right</span>
               <span>{project.title}</span>
             </div>
@@ -216,9 +220,9 @@ export default function ProjectDetailPage() {
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-black mb-2">{project.title}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-4">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                   <p>修改于 {formatDate(project.updatedAt)}</p>
-                  <span className="size-1 bg-gray-600 rounded-full"></span>
+                  <span className="size-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
                   <p>创建于 {formatDate(project.createdAt)}</p>
                 </div>
 
@@ -226,7 +230,7 @@ export default function ProjectDetailPage() {
                   <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(project.status)}`}>
                     {getStatusLabel(project.status)}
                   </span>
-                  <span className="inline-flex items-center px-3 py-1 rounded-lg bg-white/10 text-sm font-medium">
+                  <span className="inline-flex items-center px-3 py-1 rounded-lg bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white text-sm font-medium">
                     {getCategoryLabel(project.category)}
                   </span>
                 </div>
@@ -259,35 +263,35 @@ export default function ProjectDetailPage() {
             {/* 左列 - 内容 */}
             <div className="lg:col-span-2 space-y-8">
               {/* 概览卡片 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-white/10">
+              <div className="bg-gray-50 dark:bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-bold mb-3">项目描述</h3>
-                <p className="text-gray-400 leading-relaxed mb-6">{project.description}</p>
+                <p className="text-gray-700 dark:text-gray-400 leading-relaxed mb-6">{project.description}</p>
 
                 {project.objectives && (
                   <>
                     <h3 className="text-lg font-bold mb-3 mt-6">项目目标</h3>
-                    <p className="text-gray-400 leading-relaxed mb-6 whitespace-pre-wrap">{project.objectives}</p>
+                    <p className="text-gray-700 dark:text-gray-400 leading-relaxed mb-6 whitespace-pre-wrap">{project.objectives}</p>
                   </>
                 )}
 
                 {project.timeline && (
                   <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 mt-6">时间线</h3>
-                    <p className="text-gray-400">{project.timeline}</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 mt-6 text-gray-900 dark:text-white">时间线</h3>
+                    <p className="text-gray-700 dark:text-gray-400">{project.timeline}</p>
                   </>
                 )}
 
                 {project.resources && (
                   <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 mt-6">所需资源</h3>
-                    <p className="text-gray-400 whitespace-pre-wrap">{project.resources}</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 mt-6 text-gray-900 dark:text-white">所需资源</h3>
+                    <p className="text-gray-700 dark:text-gray-400 whitespace-pre-wrap">{project.resources}</p>
                   </>
                 )}
               </div>
 
               {/* 项目链接 */}
               {project.projectLink && (
-                <div className="bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-white/10">
+                <div className="bg-gray-50 dark:bg-[#1a2c24] rounded-2xl p-6 lg:p-8 border border-gray-200 dark:border-white/10">
                   <h3 className="text-lg font-bold mb-4">项目链接</h3>
                   <a
                     href={project.projectLink}
@@ -305,27 +309,27 @@ export default function ProjectDetailPage() {
               {project.adminFeedback && (
                 <div className={`rounded-2xl p-6 lg:p-8 border ${
                   project.status === 'revision' 
-                    ? 'bg-amber-900/20 border-amber-500/30' 
+                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-500/30' 
                     : project.status === 'rejected'
-                    ? 'bg-red-900/20 border-red-500/30'
-                    : 'bg-[#1a2c24] border-white/10'
+                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-500/30'
+                    : 'bg-white dark:bg-[#1a2c24] border-gray-200 dark:border-white/10'
                 }`}>
                   <div className="flex items-center gap-2 mb-4">
                     <span className={`material-symbols-outlined ${
                       project.status === 'revision' 
-                        ? 'text-amber-400' 
+                        ? 'text-amber-600 dark:text-amber-400' 
                         : project.status === 'rejected'
-                        ? 'text-red-400'
-                        : 'text-[#13ec80]'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-green-600 dark:text-green-400'
                     }`}>
                       {project.status === 'revision' ? 'edit_note' : project.status === 'rejected' ? 'cancel' : 'feedback'}
                     </span>
                     <h3 className={`text-lg font-bold ${
                       project.status === 'revision' 
-                        ? 'text-amber-400' 
+                        ? 'text-amber-700 dark:text-amber-400' 
                         : project.status === 'rejected'
-                        ? 'text-red-400'
-                        : 'text-white'
+                        ? 'text-red-700 dark:text-red-400'
+                        : 'text-green-700 dark:text-green-400'
                     }`}>
                       {project.status === 'revision' 
                         ? '需要修改 - 管理员反馈' 
@@ -336,15 +340,15 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className={`rounded-lg p-4 whitespace-pre-wrap ${
                     project.status === 'revision' 
-                      ? 'bg-amber-950/50 text-amber-100 border border-amber-500/20' 
+                      ? 'bg-amber-100/50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-500/20' 
                       : project.status === 'rejected'
-                      ? 'bg-red-950/50 text-red-100 border border-red-500/20'
-                      : 'bg-[#101922] text-gray-300'
+                      ? 'bg-red-100/50 dark:bg-red-950/50 text-red-900 dark:text-red-100 border border-red-200 dark:border-red-500/20'
+                      : 'bg-gray-50 dark:bg-[#101922] text-gray-900 dark:text-gray-300 border border-gray-200 dark:border-white/10'
                   }`}>
                     {project.adminFeedback}
                   </div>
                   {project.status === 'revision' && (
-                    <div className="mt-4 flex items-center gap-2 text-amber-400 text-sm">
+                    <div className="mt-4 flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm">
                       <span className="material-symbols-outlined text-lg">info</span>
                       <span>请根据反馈修改项目后重新提交</span>
                     </div>
@@ -367,37 +371,37 @@ export default function ProjectDetailPage() {
             {/* 右列 - 侧边栏 */}
             <div className="space-y-6">
               {/* 团队信息 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 border border-white/10">
+              <div className="bg-gray-50 dark:bg-[#1a2c24] rounded-2xl p-6 border border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-bold mb-4">团队信息</h3>
                 <div className="space-y-3 mb-4">
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">团队名称</p>
-                    <p className="font-bold">{project.teamName}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">团队名称</p>
+                    <p className="font-bold text-gray-900 dark:text-white">{project.teamName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">成员数</p>
-                    <p className="font-bold">{project.members.length} 人</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">成员数</p>
+                    <p className="font-bold text-gray-900 dark:text-white">{project.members.length} 人</p>
                   </div>
                 </div>
               </div>
 
               {/* 团队成员 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 border border-white/10">
+              <div className="bg-gray-50 dark:bg-[#1a2c24] rounded-2xl p-6 border border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-bold mb-4">团队成员（{project.members.length} 人）</h3>
                 <div className="space-y-3">
                   {project.members.map((member, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-[#101922] rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-[#13ec80]/20 flex items-center justify-center text-[#13ec80] font-bold text-sm">
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-[#101922] rounded-lg border border-gray-200 dark:border-white/10">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                         {member.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{member.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{member.email}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{member.name}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{member.email}</p>
                       </div>
                       <span className={`shrink-0 px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                         member.role === 'leader' 
-                          ? 'bg-[#13ec80]/20 text-[#13ec80]' 
-                          : 'bg-white/10 text-gray-300'
+                          ? 'bg-primary/20 text-primary' 
+                          : 'bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-gray-300'
                       }`}>
                         {getRoleLabel(member.role)}
                       </span>
@@ -407,7 +411,7 @@ export default function ProjectDetailPage() {
               </div>
 
               {/* 项目状态 */}
-              <div className="bg-[#1a2c24] rounded-2xl p-6 border border-white/10">
+              <div className="bg-gray-50 dark:bg-[#1a2c24] rounded-2xl p-6 border border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-bold mb-4">状态</h3>
                 <div className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold ${getStatusColor(project.status)}`}>
                   {getStatusLabel(project.status)}
@@ -416,9 +420,7 @@ export default function ProjectDetailPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </StudentLayout>
   );
 }

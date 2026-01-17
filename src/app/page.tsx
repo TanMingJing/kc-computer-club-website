@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { NoticesSection, EventsSection } from '@/components/sections/NoticesSection';
-import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ActiveProjectsSection } from '@/components/sections/ActiveProjectsSection';
 import AttendanceWidget from '@/components/attendance/AttendanceWidget';
 
@@ -259,9 +258,6 @@ export default function HomePage() {
           {/* 活动区域 - 占 1 列 */}
           <EventsSection activities={activities} />
         </section>
-
-        {/* 项目展示 */}
-        <ProjectsSection projects={projects} />
 
         {/* 活跃项目部分 */}
         <ActiveProjectsSection />

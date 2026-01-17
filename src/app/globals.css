@@ -154,6 +154,35 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* RGB 呼吸灯效果 - 主题色动态循环，跟随主题颜色变化 */
+@keyframes rgb-breathing {
+  0% {
+    box-shadow: 0 0 15px var(--primary-glow), 0 0 30px rgba(var(--primary-rgb), 0.15);
+  }
+  25% {
+    box-shadow: 0 0 20px var(--primary-glow), 0 0 40px rgba(var(--primary-rgb), 0.25);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--primary-glow), 0 0 50px rgba(var(--primary-rgb), 0.35);
+  }
+  75% {
+    box-shadow: 0 0 20px var(--primary-glow), 0 0 40px rgba(var(--primary-rgb), 0.25);
+  }
+  100% {
+    box-shadow: 0 0 15px var(--primary-glow), 0 0 30px rgba(var(--primary-rgb), 0.15);
+  }
+}
+
+/* RGB 呼吸灯启用 */
+.animate-rgb-breathing {
+  animation: rgb-breathing 2s ease-in-out infinite;
+}
+
+/* RGB 呼吸灯禁用 */
+.animate-rgb-breathing-disabled {
+  animation: none;
+}
+
 /* Fade in animation */
 @keyframes fade-in {
   from { opacity: 0; }
