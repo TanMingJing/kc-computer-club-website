@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { forwardRef, InputHTMLAttributes, ReactNode, useId } from 'react';
+import { forwardRef, InputHTMLAttributes, ReactNode, useId, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -46,8 +46,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const [mounted, setMounted] = useState(false);
     const generatedId = useId();
-    const inputId = id || generatedId;
+    const inputId = id || (mounted ? generatedId : '');
+
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
     // 渲染图标
     const renderIcon = (icon: string | ReactNode, position: 'left' | 'right') => {
@@ -85,7 +90,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {/* 标签 */}
         {label && (
           <label
-            htmlFor={inputId}
+            htmlFor={inputId || undefined}
             className="text-sm font-medium text-gray-700 dark:text-gray-200"
           >
             {label}
@@ -101,7 +106,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {/* 输入框 */}
           <input
             ref={ref}
-            id={inputId}
+            id={inputId || undefined}
             type={type}
             className={cn(
               // 基础样式

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ClubProvider } from "@/contexts/ClubContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { ReCaptchaProvider } from "@/contexts/ReCaptchaContext";
@@ -66,13 +67,15 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} font-sans antialiased bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}
       >
         <ThemeProvider>
-          <ReCaptchaProvider>
-            <AuthProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
-            </AuthProvider>
-          </ReCaptchaProvider>
+          <ClubProvider>
+            <ReCaptchaProvider>
+              <AuthProvider>
+                <NotificationProvider>
+                  {children}
+                </NotificationProvider>
+              </AuthProvider>
+            </ReCaptchaProvider>
+          </ClubProvider>
         </ThemeProvider>
         <SpeedInsights />
         <Analytics />

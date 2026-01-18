@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { StudentSidebar } from '@/components/layout/StudentSidebar';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useClub } from '@/contexts/ClubContext';
+import { ClubLogo } from '@/components/ui/ClubLogo';
 import Link from 'next/link';
 
 // ========================================
@@ -23,6 +25,7 @@ export function StudentLayout({
 }: StudentLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { clubInfo } = useClub();
 
   return (
     <div className={cn('min-h-screen bg-[var(--background)]', className)}>
@@ -62,9 +65,7 @@ export function StudentLayout({
 
             {/* 品牌 - 移动端显示 */}
             <Link href="/" className="md:hidden flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-black text-sm">KC</span>
-              </div>
+              <ClubLogo />
               <span className="text-sm font-bold text-[var(--foreground)]">
                 电脑学会
               </span>

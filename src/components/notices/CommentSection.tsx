@@ -222,10 +222,10 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
         className="flex items-center justify-between w-full mb-6 group"
       >
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-white group-hover:text-[#13ec80] transition-colors">
+          <h2 className="text-2xl font-bold text-black dark:text-white group-hover:text-[#13ec80] transition-colors">
             评论区
           </h2>
-          <span className="text-sm text-[#9db9ab] bg-[#1a2c23] px-2 py-1 rounded-full">
+          <span className="text-sm text-gray-600 dark:text-[#9db9ab] bg-white dark:bg-[#1a2c23] px-2 py-1 rounded-full">
             {comments.length}
           </span>
         </div>
@@ -239,8 +239,8 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
       {/* 评论表单 */}
       {isExpanded && (
         <>
-          <div className="bg-[#1A2C23] rounded-xl border border-[#283930] p-6 mb-8 animate-in">
-            <h3 className="text-lg font-bold text-white mb-4">发表评论</h3>
+          <div className="bg-white dark:bg-[#1A2C23] rounded-xl border border-gray-200 dark:border-[#283930] p-6 mb-8 animate-in">
+            <h3 className="text-lg font-bold text-black dark:text-white mb-4">发表评论</h3>
 
             {submitSuccess && (
               <div className="bg-[#13ec80]/10 border border-[#13ec80] text-[#13ec80] px-4 py-3 rounded-lg mb-4">
@@ -281,7 +281,7 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
                   disabled={isSubmitting || !isStudent || !user}
                   maxLength={500}
                   rows={4}
-                  className="w-full bg-[#162a21] text-white rounded-lg border border-[#283930] px-4 py-3 placeholder-[#9db9ab]/50 focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80]/20 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white dark:bg-[#162a21] text-black dark:text-white rounded-lg border border-gray-300 dark:border-[#283930] px-4 py-3 placeholder-gray-500 dark:placeholder-[#9db9ab]/50 focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80]/20 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-[#9db9ab] mt-2 text-right">
                   {content.length}/500
@@ -313,10 +313,10 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
                 return (
                   <div
                     key={comment.$id}
-                    className="bg-[#1A2C23] rounded-lg border border-[#283930] p-4"
+                    className="bg-white dark:bg-[#1A2C23] rounded-lg border border-gray-200 dark:border-[#283930] p-4"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <p className="font-bold text-white">{comment.authorName}</p>
+                      <p className="font-bold text-black dark:text-white">{comment.authorName}</p>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-[#9db9ab]">
                           {new Date(comment.createdAt).toLocaleDateString('zh-CN')}
@@ -349,7 +349,7 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
                           onChange={(e) => setEditContent(e.target.value)}
                           maxLength={500}
                           rows={3}
-                          className="w-full bg-[#162a21] text-white rounded-lg border border-[#283930] px-3 py-2 placeholder-[#9db9ab]/50 focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80]/20 resize-none"
+                          className="w-full bg-white dark:bg-[#162a21] text-black dark:text-white rounded-lg border border-gray-300 dark:border-[#283930] px-3 py-2 placeholder-gray-500 dark:placeholder-[#9db9ab]/50 focus:outline-none focus:border-[#13ec80] focus:ring-1 focus:ring-[#13ec80]/20 resize-none"
                         />
                         <div className="flex gap-2 justify-end">
                           <button
@@ -371,7 +371,7 @@ export const CommentSection = ({ targetType, targetId, targetTitle }: CommentSec
                         </div>
                       </div>
                     ) : (
-                      <p className="text-[#E0E0E0] leading-relaxed">
+                      <p className="text-gray-800 dark:text-[#E0E0E0] leading-relaxed">
                         {comment.content}
                       </p>
                     )}

@@ -31,7 +31,7 @@ export const ImageCarousel = ({ images, title, showThumbnails = true }: ImageCar
   return (
     <div className="space-y-3">
       {/* 主图显示 */}
-      <div className="relative bg-[#1a2632] rounded-xl overflow-hidden">
+      <div className="relative bg-gray-200 dark:bg-[#1a2632] rounded-xl overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={images[currentIndex]}

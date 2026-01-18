@@ -54,7 +54,7 @@ export function Header({
       className={cn(
         'sticky top-0 z-50 w-full',
         'border-b border-gray-200 dark:border-[#283930]',
-        'bg-white/95 dark:bg-[#111814]/80',
+        'bg-white dark:bg-[#111814]/80',
         'backdrop-blur-md',
         className
       )}
@@ -65,7 +65,7 @@ export function Header({
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20">
             <span className="text-primary font-black text-lg">KC</span>
           </div>
-          <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block">
+          <h2 className="text-lg font-bold tracking-tight text-black dark:text-white hidden sm:block">
             电脑学会
           </h2>
         </Link>

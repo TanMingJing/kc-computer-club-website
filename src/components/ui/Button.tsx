@@ -65,9 +65,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ${glow && breathingEffectEnabled ? 'animate-rgb-breathing shadow-[0_0_20px_var(--primary-glow)] hover:animate-none hover:shadow-[0_0_30px_var(--primary-glow)]' : 'hover:shadow-[0_0_30px_var(--primary-glow)]'}
       `,
       secondary: `
-        bg-[#283930] hover:bg-[#344b3f] 
-        text-white 
-        focus:ring-[#283930]
+        bg-[var(--btn-bg)] dark:bg-[var(--btn-bg)] 
+        hover:bg-[var(--btn-bg-hover)] dark:hover:bg-[var(--btn-bg-hover)]
+        text-[var(--btn-text)] dark:text-[var(--btn-text)]
+        focus:ring-[var(--primary)]
       `,
       ghost: `
         bg-white/5 hover:bg-primary hover:text-[#111814]
@@ -76,13 +77,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         focus:ring-primary
       `,
       danger: `
-        bg-red-500 hover:bg-red-600 
+        bg-[var(--error)] hover:bg-[#dc2626]
         text-white 
-        focus:ring-red-500
+        focus:ring-[var(--error)]
       `,
       outline: `
         bg-transparent hover:bg-primary/10
-        text-primary border border-primary/30
+        text-[var(--primary)] border border-primary/30
         focus:ring-primary
       `,
     };

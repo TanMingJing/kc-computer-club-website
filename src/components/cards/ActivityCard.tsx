@@ -67,10 +67,9 @@ export function ActivityCard({
   return (
     <article
       className={cn(
-        'rounded-xl overflow-hidden',
-        'bg-gray-50 dark:bg-[#1c3128]',
-        'border border-gray-200 dark:border-transparent',
-        'hover:shadow-lg hover:shadow-primary/5',
+        'rounded-lg overflow-hidden',
+        'border border-[var(--border)] bg-[var(--surface)]',
+        'hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5',
         'transition-all duration-300',
         'group',
         className
@@ -109,17 +108,17 @@ export function ActivityCard({
       {/* 内容区域 */}
       <div className="p-4">
         <Link href={`/activities/${id}`}>
-          <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-1 mb-2">
+          <h3 className="font-bold text-lg text-[var(--foreground)] group-hover:text-primary transition-colors line-clamp-1 mb-2">
             {title}
           </h3>
         </Link>
 
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
+        <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-4">
           {description}
         </p>
 
         {/* 信息区域 */}
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="space-y-2 text-sm text-[var(--text-secondary)] mb-4">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-base text-primary">
               location_on
@@ -193,8 +192,8 @@ export function ActivityCardCompact({
       <div
         className={cn(
           'flex gap-4 p-4 rounded-xl',
-          'bg-gray-50 dark:bg-[#1c3128]',
-          'hover:bg-gray-100 dark:hover:bg-[#283930]',
+          'bg-[var(--surface)] border border-[var(--border)]',
+          'hover:border-primary/50 hover:shadow-lg',
           'transition-all duration-300',
           'cursor-pointer group',
           className
@@ -213,7 +212,7 @@ export function ActivityCardCompact({
         {/* 内容 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-medium text-gray-900 dark:text-white group-hover:text-primary transition-colors truncate">
+            <h4 className="font-medium text-[var(--foreground)] group-hover:text-primary transition-colors truncate">
               {title}
             </h4>
             <StatusBadge 
@@ -221,7 +220,7 @@ export function ActivityCardCompact({
               size="sm"
             />
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
             <span className="flex items-center gap-1">
               <span className="material-symbols-outlined text-sm">location_on</span>
               {location}
@@ -234,7 +233,7 @@ export function ActivityCardCompact({
         </div>
 
         {/* 箭头 */}
-        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors self-center">
+        <span className="material-symbols-outlined text-[var(--text-secondary)] group-hover:text-primary transition-colors self-center">
           chevron_right
         </span>
       </div>

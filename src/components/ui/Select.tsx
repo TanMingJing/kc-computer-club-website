@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { forwardRef, SelectHTMLAttributes, useId } from 'react';
+import { forwardRef, SelectHTMLAttributes, useId, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -48,15 +48,20 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     },
     ref
   ) => {
+    const [mounted, setMounted] = useState(false);
     const generatedId = useId();
-    const selectId = id || generatedId;
+    const selectId = id || (mounted ? generatedId : '');
+
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
     return (
       <div className={cn('flex flex-col gap-1.5', containerClassName)}>
         {/* 标签 */}
         {label && (
           <label
-            htmlFor={selectId}
+            htmlFor={selectId || undefined}
             className="text-sm font-medium text-gray-700 dark:text-gray-200"
           >
             {label}
@@ -68,7 +73,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           <select
             ref={ref}
-            id={selectId}
+            id={selectId || undefined}
             className={cn(
               // 基础样式
               'w-full bg-gray-50 dark:bg-[#102219]',

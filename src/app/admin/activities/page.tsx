@@ -55,6 +55,7 @@ export default function AdminActivities() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // 权限检查
   useEffect(() => {
@@ -124,220 +125,227 @@ export default function AdminActivities() {
 
   return (
     <AdminLayout adminName="管理员">
-      {/* 页面头部 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-black text-white mb-2">活动管理</h1>
-        <p className="text-gray-400">管理社团的所有活动，支持创建、编辑和取消活动。</p>
-      </div>
+      <div style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', minHeight: '100vh' }} className="p-6">
+        {/* 页面头部 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--foreground)' }}>活动管理</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>管理社团的所有活动，支持创建、编辑和取消活动。</p>
+        </div>
 
-      {/* 操作栏 */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-        <div className="flex-1">
-          <Input
-            placeholder="搜索活动名称或地点..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon="search"
-          />
-        </div>
-        <Link href="/admin/activities/create">
-          <Button 
-            variant="primary" 
-            leftIcon="add"
-            className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
-          >
-            创建活动
-          </Button>
-        </Link>
-      </div>
-
-      {/* 状态过滤 */}
-      <div className="mb-6 flex gap-2 flex-wrap">
-        {statuses.map((status) => (
-          <button
-            key={status}
-            onClick={() => setSelectedStatus(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              selectedStatus === status
-                ? 'bg-[#137fec] text-white'
-                : 'bg-[#1a2632] text-gray-400 hover:text-white border border-[#283946]'
-            }`}
-          >
-            {status === '全部' ? '全部' : statusLabels[status]}
-          </button>
-        ))}
-      </div>
-
-      {/* 统计信息 */}
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">活动总数</p>
-          <p className="text-2xl font-bold text-white">{activities.length}</p>
-        </div>
-        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">已发布</p>
-          <p className="text-2xl font-bold text-green-400">
-            {activities.filter((a) => a.status === 'published').length}
-          </p>
-        </div>
-        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">草稿中</p>
-          <p className="text-2xl font-bold text-amber-400">
-            {activities.filter((a) => a.status === 'draft').length}
-          </p>
-        </div>
-        <div className="bg-[#1a2632] border border-[#283946] rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">参与人数</p>
-          <p className="text-2xl font-bold text-blue-400">
-            {activities.reduce((sum, a) => sum + (a.currentParticipants || 0), 0)}
-          </p>
-        </div>
-      </div>
-
-      {/* 活动列表 */}
-      <div className="bg-[#1a2632] border border-[#283946] rounded-2xl overflow-hidden">
-        {isLoading ? (
-          <div className="px-6 py-12 flex justify-center">
-            <Loading size="sm" text="加载活动中..." />
+        {/* 操作栏 */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+          <div className="flex-1">
+            <Input
+              placeholder="搜索活动名称或地点..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon="search"
+            />
           </div>
-        ) : filteredActivities.length > 0 ? (
-          <div className="divide-y divide-[#283946]">
-            {filteredActivities.map((activity) => {
-              let statusBg = '';
-              let statusText = '';
-              let statusLabel = '';
+          <Link href="/admin/activities/create">
+            <Button 
+              variant="primary" 
+              leftIcon="add"
+              style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+            >
+              创建活动
+            </Button>
+          </Link>
+        </div>
 
-              if (activity.status === 'published') {
-                statusBg = 'bg-green-500/10';
-                statusText = 'text-green-400';
-                statusLabel = '已发布';
-              } else if (activity.status === 'draft') {
-                statusBg = 'bg-amber-500/10';
-                statusText = 'text-amber-400';
-                statusLabel = '草稿';
-              } else {
-                statusBg = 'bg-red-500/10';
-                statusText = 'text-red-400';
-                statusLabel = '已取消';
-              }
+        {/* 状态过滤 */}
+        <div className="mb-6 flex gap-2 flex-wrap">
+          {statuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setSelectedStatus(status)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all`}
+              style={{
+                backgroundColor: selectedStatus === status ? 'var(--primary)' : 'var(--card-bg)',
+                color: selectedStatus === status ? 'var(--primary-foreground)' : 'var(--foreground)',
+                borderColor: selectedStatus === status ? 'var(--primary)' : 'var(--card-border)',
+                border: `1px solid ${selectedStatus === status ? 'var(--primary)' : 'var(--card-border)'}`,
+              }}
+            >
+              {status === '全部' ? '全部' : statusLabels[status]}
+            </button>
+          ))}
+        </div>
 
-              return (
-                <div
-                  key={activity.id}
-                  className="px-6 py-4 hover:bg-[#1f2d39] transition-colors flex items-center justify-between"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-white font-semibold truncate flex-1">
-                        {activity.title}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium shrink-0 ${statusBg} ${statusText}`}
-                      >
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">
-                          calendar_today
+        {/* 统计信息 */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>活动总数</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>{activities.length}</p>
+          </div>
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>已发布</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+              {activities.filter((a) => a.status === 'published').length}
+            </p>
+          </div>
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>草稿中</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+              {activities.filter((a) => a.status === 'draft').length}
+            </p>
+          </div>
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>参与人数</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+              {activities.reduce((sum, a) => sum + (a.currentParticipants || 0), 0)}
+            </p>
+          </div>
+        </div>
+
+        {/* 活动列表 */}
+        <div className="rounded-2xl overflow-hidden border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+          {isLoading ? (
+            <div className="px-6 py-12 flex justify-center">
+              <Loading size="sm" text="加载活动中..." />
+            </div>
+          ) : filteredActivities.length > 0 ? (
+            <div className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
+              {filteredActivities.map((activity) => {
+                let statusBg = '';
+                let statusText = '';
+                let statusLabel = '';
+
+                if (activity.status === 'published') {
+                  statusBg = 'bg-green-50 dark:bg-green-900/30';
+                  statusText = 'text-green-700 dark:text-green-400';
+                  statusLabel = '已发布';
+                } else if (activity.status === 'draft') {
+                  statusBg = 'bg-amber-50 dark:bg-amber-900/30';
+                  statusText = 'text-amber-700 dark:text-amber-400';
+                  statusLabel = '草稿';
+                } else {
+                  statusBg = 'bg-red-50 dark:bg-red-900/30';
+                  statusText = 'text-red-700 dark:text-red-400';
+                  statusLabel = '已取消';
+                }
+
+                return (
+                  <div
+                    key={activity.id}
+                    className="px-6 py-4 transition-colors flex items-center justify-between"
+                    style={{ backgroundColor: 'var(--card-bg)', color: 'var(--foreground)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--card-hover-bg)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--card-bg)'}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold truncate flex-1" style={{ color: 'var(--foreground)' }}>
+                          {activity.title}
+                        </h3>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium shrink-0 ${statusBg} ${statusText}`}
+                        >
+                          {statusLabel}
                         </span>
-                        {new Date(activity.startTime).toLocaleDateString('zh-CN')} {new Date(activity.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">location_on</span>
-                        {activity.location}
-                      </span>
-                      {activity.status === 'published' && (
-                        <>
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">group</span>
-                            {activity.currentParticipants}/{activity.maxParticipants || '无限'} 人已报名
+                      </div>
+                      <div className="flex items-center gap-4 text-sm flex-wrap" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">
+                            calendar_today
                           </span>
-                          {activity.maxParticipants && (
-                            <span className="text-blue-400 font-medium">
-                              {Math.round((activity.currentParticipants / activity.maxParticipants) * 100)}%
+                          {new Date(activity.startTime).toLocaleDateString('zh-CN')} {new Date(activity.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">location_on</span>
+                          {activity.location}
+                        </span>
+                        {activity.status === 'published' && (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">group</span>
+                              {activity.currentParticipants}/{activity.maxParticipants || '无限'} 人已报名
                             </span>
-                          )}
-                        </>
-                      )}
+                            {activity.maxParticipants && (
+                              <span className="text-blue-600 font-medium">
+                                {Math.round((activity.currentParticipants / activity.maxParticipants) * 100)}%
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 操作按钮 */}
+                    <div className="ml-4 flex gap-2 shrink-0">
+                      <Link href={`/admin/activities/${activity.id}/edit`}>
+                        <button className="p-2 hover:bg-gray-200 rounded-lg text-gray-700 hover:text-[#137fec] transition-colors" title="编辑">
+                          <span className="material-symbols-outlined">edit</span>
+                        </button>
+                      </Link>
+                      <Link href={`/admin/activities/${activity.id}/signups`}>
+                        <button className="p-2 hover:bg-gray-200 rounded-lg text-gray-700 hover:text-[#137fec] transition-colors" title="查看报名">
+                          <span className="material-symbols-outlined">group</span>
+                        </button>
+                      </Link>
+                      <button 
+                        onClick={() => setDeleteId(activity.$id)}
+                        className="p-2 hover:bg-gray-200 rounded-lg text-gray-700 hover:text-red-600 transition-colors" 
+                        title="删除"
+                      >
+                        <span className="material-symbols-outlined">delete</span>
+                      </button>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-6 py-12 text-center">
+              <span className="material-symbols-outlined text-6xl text-gray-400 block mb-3">
+                event
+              </span>
+              <p className="text-gray-600 mb-4">没有找到活动</p>
+              <Link href="/admin/activities/create">
+                <Button 
+                  variant="primary"
+                  className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
+                >
+                  创建第一个活动
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
 
-                  {/* 操作按钮 */}
-                  <div className="ml-4 flex gap-2 shrink-0">
-                    <Link href={`/admin/activities/${activity.id}/edit`}>
-                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors" title="编辑">
-                        <span className="material-symbols-outlined">edit</span>
-                      </button>
-                    </Link>
-                    <Link href={`/admin/activities/${activity.id}/signups`}>
-                      <button className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-[#137fec] transition-colors" title="查看报名">
-                        <span className="material-symbols-outlined">group</span>
-                      </button>
-                    </Link>
-                    <button 
-                      onClick={() => setDeleteId(activity.$id)}
-                      className="p-2 hover:bg-[#283946] rounded-lg text-gray-400 hover:text-red-400 transition-colors" 
-                      title="删除"
-                    >
-                      <span className="material-symbols-outlined">delete</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="px-6 py-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-gray-600 block mb-3">
-              event
-            </span>
-            <p className="text-gray-400 mb-4">没有找到活动</p>
-            <Link href="/admin/activities/create">
-              <Button 
-                variant="primary"
-                className="bg-[#137fec]! hover:bg-[#0f5fcc]!"
-              >
-                创建第一个活动
-              </Button>
-            </Link>
+        {/* 删除确认对话框 */}
+        {deleteId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 max-w-sm w-full mx-4">
+              <h3 className="text-black font-bold text-lg mb-2">确定删除此活动？</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                删除后将无法恢复，该活动的所有报名数据也将被清除。
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteId(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteId)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting && (
+                    <span className="material-symbols-outlined animate-spin text-sm">
+                      hourglass_bottom
+                    </span>
+                  )}
+                  {isDeleting ? '删除中...' : '确认删除'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* 删除确认对话框 */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a2632] border border-[#283946] rounded-2xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-white font-bold text-lg mb-2">确定删除此活动？</h3>
-            <p className="text-gray-400 text-sm mb-6">
-              删除后将无法恢复，该活动的所有报名数据也将被清除。
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-[#283946] text-white rounded-lg hover:bg-[#2f3d47] transition-colors disabled:opacity-50"
-              >
-                取消
-              </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isDeleting && (
-                  <span className="material-symbols-outlined animate-spin text-sm">
-                    hourglass_bottom
-                  </span>
-                )}
-                {isDeleting ? '删除中...' : '确认删除'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </AdminLayout>
   );
 }

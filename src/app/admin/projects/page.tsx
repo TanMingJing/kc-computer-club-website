@@ -272,78 +272,78 @@ export default function AdminProjectsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6 lg:p-8">
+      <div className="p-6 lg:p-8" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', minHeight: '100vh' }}>
         {/* 页面标题 */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">项目计划审核</h1>
-            <p className="text-[#8ba396] mt-1">审核学生提交的项目计划提案</p>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>项目计划审核</h1>
+            <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>审核学生提交的项目计划提案</p>
           </div>
         </div>
 
-        {/* 统计卡片 - 蓝色主题 */}
+        {/* 统计卡片 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#1a2632] rounded-xl p-6 border border-[#2a3c4a]">
+          <div className="rounded-xl p-6 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#137fec]/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl text-[#137fec]">folder</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
+                <span className="material-symbols-outlined text-2xl">folder</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-[#8ba3a6]">总提案数</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{stats.total}</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>总提案数</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#1a2632] rounded-xl p-6 border border-[#2a3c4a]">
+          <div className="rounded-xl p-6 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl text-amber-400">pending</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-amber-500/20" style={{ color: 'var(--primary)' }}>
+                <span className="material-symbols-outlined text-2xl">pending</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                <p className="text-sm text-[#8ba3a6]">待审核</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{stats.pending}</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>待审核</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#1a2632] rounded-xl p-6 border border-[#2a3c4a]">
+          <div className="rounded-xl p-6 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl text-green-400">check_circle</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-500/20" style={{ color: 'var(--primary)' }}>
+                <span className="material-symbols-outlined text-2xl">check_circle</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.approved}</p>
-                <p className="text-sm text-[#8ba3a6]">已批准</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{stats.approved}</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>已批准</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#1a2632] rounded-xl p-6 border border-[#2a3c4a]">
+          <div className="rounded-xl p-6 border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl text-red-400">cancel</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-500/20" style={{ color: 'var(--primary)' }}>
+                <span className="material-symbols-outlined text-2xl">cancel</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.rejected}</p>
-                <p className="text-sm text-[#8ba3a6]">已拒绝</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{stats.rejected}</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>已拒绝</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 筛选和搜索 - 蓝色主题 */}
+        {/* 筛选和搜索 */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="flex items-center gap-2 p-1 bg-[#1a2632] rounded-xl border border-[#2a3c4a]">
+          <div className="flex items-center gap-2 p-1 rounded-xl border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             {(['all', 'pending', 'approved', 'rejected', 'revision'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === status
-                    ? 'bg-[#137fec] text-white'
-                    : 'text-[#8ba3a6] hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                style={{
+                  backgroundColor: filter === status ? 'var(--primary)' : 'transparent',
+                  color: filter === status ? 'var(--primary-foreground)' : 'var(--text-secondary)',
+                }}
               >
                 {status === 'all' ? '全部' : statusLabels[status]}
               </button>
@@ -352,35 +352,50 @@ export default function AdminProjectsPage() {
 
           <div className="flex-1 min-w-50 max-w-md">
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6189a5]">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>search</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索项目或团队名称..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#1a2632] border border-[#2a3c4a] text-sm text-white placeholder:text-[#6189a5] focus:outline-none focus:ring-2 focus:ring-[#137fec]"
+                className="w-full h-10 pl-10 pr-4 rounded-xl text-sm focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: 'var(--card-bg)',
+                  borderColor: 'var(--card-border)',
+                  color: 'var(--foreground)',
+                  '--tw-ring-color': 'var(--primary)',
+                } as React.CSSProperties}
               />
             </div>
           </div>
         </div>
 
-        {/* 项目列表 - 蓝色主题 */}
+        {/* 项目列表 */}
         <div className="grid gap-4">
           {filteredProjects.map((project) => (
             <div
               key={project.projectId}
-              className="bg-[#1a2632] rounded-xl border border-[#2a3c4a] p-6 hover:border-[#137fec]/50 transition-colors"
+              className="rounded-xl border p-6 transition-colors"
+              style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--primary)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(19, 236, 128, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--card-border)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-white">{project.title}</h3>
+                    <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{project.title}</h3>
                     <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusColors[project.status]}`}>
                       {statusLabels[project.status]}
                     </span>
                   </div>
-                  <p className="text-sm text-[#8ba396] mb-4 line-clamp-2">{project.description}</p>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-[#618975]">
+                  <p className="text-sm mb-4 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{project.description}</p>
+                  <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-lg">groups</span>
                       <span>{project.teamName}</span>

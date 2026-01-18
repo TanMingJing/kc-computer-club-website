@@ -182,13 +182,13 @@ export default function ActivitiesPage() {
 
   return (
     <StudentLayout>
-      <main className="flex-1 w-full max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 w-full max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
         {/* 页面标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--foreground)' }}>
             近期活动
           </h1>
-          <p className="text-[#9db9ab]">
+          <p style={{ color: 'var(--text-secondary)' }}>
             浏览并报名参加俱乐部的工作坊、黑客马拉松和社交活动
           </p>
         </div>
@@ -234,8 +234,8 @@ export default function ActivitiesPage() {
             {/* 左侧：活动列表 */}
             <div className="lg:col-span-4 flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white">活动列表</h3>
-                <span className="text-xs font-medium bg-[#13ec80]/20 text-[#13ec80] px-2 py-1 rounded-full">
+                <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>活动列表</h3>
+                <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
                   {filteredActivities.filter((a) => a.status === 'open').length} 个开放
                 </span>
               </div>
@@ -248,11 +248,17 @@ export default function ActivitiesPage() {
                   <div
                     key={activity.id}
                     onClick={() => setSelectedActivity(activity)}
-                    className={`group cursor-pointer rounded-xl bg-[#1A2C23] p-4 transition-all hover:shadow-lg ${
+                    className={`group cursor-pointer rounded-xl p-4 transition-all ${
                       isSelected
-                        ? 'border-l-4 border-[#13ec80] shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
-                        : 'border border-transparent hover:border-[#283930]'
+                        ? 'shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                        : ''
                     }`}
+                    style={{
+                      backgroundColor: isSelected ? 'var(--card-hover-bg)' : 'var(--card-bg)',
+                      borderLeft: isSelected ? '4px solid var(--primary)' : 'none',
+                      borderColor: 'var(--card-border)',
+                      border: isSelected ? '4px solid var(--primary)' : `1px solid var(--card-border)`,
+                    }}
                   >
                     <div className="flex gap-4">
                       <div
@@ -261,13 +267,12 @@ export default function ActivitiesPage() {
                       />
                       <div className="flex flex-col justify-center min-w-0">
                         <p
-                          className={`text-base font-bold leading-tight truncate ${
-                            isSelected ? 'text-white' : 'text-gray-200'
-                          }`}
+                          className={`text-base font-bold leading-tight truncate`}
+                          style={{ color: isSelected ? 'var(--foreground)' : 'var(--foreground)' }}
                         >
                           {activity.title}
                         </p>
-                        <p className="text-[#9db9ab] text-sm font-normal mt-1 flex items-center gap-1">
+                        <p className="text-sm font-normal mt-1 flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                           <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                           {new Date(activity.startTime).toLocaleDateString('zh-CN')}
                         </p>
@@ -295,11 +300,11 @@ export default function ActivitiesPage() {
               {selectedActivity ? (
                 <ActivityDetail activity={selectedActivity} />
               ) : (
-                <div className="bg-[#1A2C23] rounded-xl border border-[#283930] p-12 text-center">
-                  <span className="material-symbols-outlined text-5xl text-[#9db9ab] mb-4">
+                <div className="bg-white dark:bg-[#1A2C23] rounded-xl border border-gray-200 dark:border-[#283930] p-12 text-center">
+                  <span className="material-symbols-outlined text-5xl text-gray-500 dark:text-[#9db9ab] mb-4">
                     touch_app
                   </span>
-                  <p className="text-[#9db9ab]">选择左侧的活动查看详情</p>
+                  <p className="text-gray-700 dark:text-[#9db9ab]">选择左侧的活动查看详情</p>
                 </div>
               )}
             </div>
@@ -354,7 +359,7 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
   return (
     <>
       {/* 详情卡片 */}
-      <div className="bg-[#1A2C23] rounded-xl shadow-sm overflow-hidden border border-[#283930]">
+      <div className="bg-white dark:bg-[#1A2C23] rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-[#283930]">
         {/* Hero 图片 */}
         <div
           className="h-48 md:h-64 w-full bg-cover bg-center relative"
@@ -366,7 +371,7 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                     activity.status === 'open'
-                      ? 'bg-[#13ec80] text-[#102219]'
+                      ? 'bg-[#13ec80] text-white dark:text-[#102219]'
                       : 'bg-red-500 text-white'
                   }`}
                 >
@@ -381,7 +386,7 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
                   </span>
                 )}
               </div>
-              <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight">
+              <h2 className="text-black dark:text-white text-2xl md:text-3xl font-bold tracking-tight">
                 {activity.title}
               </h2>
             </div>
@@ -390,14 +395,14 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
 
         <div className="p-6 md:p-8">
           {/* 元信息栏 */}
-          <div className="flex flex-wrap gap-y-4 gap-x-8 pb-6 border-b border-[#283930] mb-6">
+          <div className="flex flex-wrap gap-y-4 gap-x-8 pb-6 border-b border-gray-200 dark:border-[#283930] mb-6">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-[#13ec80]/10 flex items-center justify-center text-[#13ec80]">
                 <span className="material-symbols-outlined">schedule</span>
               </div>
               <div>
-                <p className="text-xs text-[#9db9ab] font-medium uppercase">日期时间</p>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-xs text-gray-700 dark:text-[#9db9ab] font-medium uppercase">日期时间</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
                   {formatDateTime(activity.startTime)}
                 </p>
               </div>
@@ -407,8 +412,8 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
                 <span className="material-symbols-outlined">location_on</span>
               </div>
               <div>
-                <p className="text-xs text-[#9db9ab] font-medium uppercase">地点</p>
-                <p className="text-sm font-semibold text-white">{activity.location}</p>
+                <p className="text-xs text-gray-700 dark:text-[#9db9ab] font-medium uppercase">地点</p>
+                <p className="text-sm font-semibold text-black dark:text-white">{activity.location}</p>
               </div>
             </div>
             {activity.organizer && (
@@ -417,8 +422,8 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
                   <span className="material-symbols-outlined">person</span>
                 </div>
                 <div>
-                  <p className="text-xs text-[#9db9ab] font-medium uppercase">组织者</p>
-                  <p className="text-sm font-semibold text-white">{activity.organizer}</p>
+                  <p className="text-xs text-gray-700 dark:text-[#9db9ab] font-medium uppercase">组织者</p>
+                  <p className="text-sm font-semibold text-black dark:text-white">{activity.organizer}</p>
                 </div>
               </div>
             )}
@@ -427,7 +432,7 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
                 <span className="material-symbols-outlined">event</span>
               </div>
               <div>
-                <p className="text-xs text-[#9db9ab] font-medium uppercase">报名截止</p>
+                <p className="text-xs text-gray-700 dark:text-[#9db9ab] font-medium uppercase">报名截止</p>
                 <p className={`text-sm font-semibold ${deadlineStatus.color}`}>{deadlineStatus.text}</p>
               </div>
             </div>
@@ -437,12 +442,12 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
           {activity.maxParticipants > 0 && (
             <div className="mb-6">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-[#9db9ab]">报名进度</span>
-                <span className="text-white font-medium">
+                <span className="text-gray-700 dark:text-[#9db9ab]">报名进度</span>
+                <span className="text-black dark:text-white font-medium">
                   {activity.currentParticipants}/{activity.maxParticipants} ({capacityPercent}%)
                 </span>
               </div>
-              <div className="w-full h-2 bg-[#283930] rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-gray-300 dark:bg-[#283930] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
                     capacityPercent >= 100 ? 'bg-red-500' : 'bg-[#13ec80]'
@@ -454,10 +459,10 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
           )}
 
           {/* 描述内容 */}
-          <div className="prose prose-sm prose-invert max-w-none text-gray-300">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-300">
             <p>{activity.description}</p>
             
-            <h4 className="text-white font-bold mt-4 mb-2">活动须知：</h4>
+            <h4 className="text-black dark:text-white font-bold mt-4 mb-2">活动须知：</h4>
             <ul className="list-disc pl-5 space-y-1 marker:text-[#13ec80]">
               <li>请准时到达活动地点</li>
               <li>携带必要的设备（如工作坊需要笔记本电脑）</li>
@@ -478,19 +483,19 @@ function ActivityDetail({ activity }: ActivityDetailProps) {
       {activity.status === 'open' && (
         <Link
           href={`/activities/${activity.id}`}
-          className="block bg-[#1A2C23] rounded-xl shadow-sm border border-[#283930] p-6 md:p-8 relative overflow-hidden group hover:border-[#13ec80]/50 transition-colors"
+          className="block bg-white dark:bg-[#1A2C23] rounded-xl shadow-sm border border-gray-200 dark:border-[#283930] p-6 md:p-8 relative overflow-hidden group hover:border-[#13ec80]/50 transition-colors"
         >
           {/* 装饰线条 */}
           <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[#13ec80] to-emerald-600"></div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded bg-[#13ec80] flex items-center justify-center text-[#102219]">
+              <div className="size-10 rounded bg-[#13ec80] flex items-center justify-center text-white dark:text-[#102219]">
                 <span className="material-symbols-outlined">edit_square</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">立即报名</h3>
-                <p className="text-sm text-[#9db9ab]">点击进入报名页面填写信息</p>
+                <h3 className="text-xl font-bold text-black dark:text-white">立即报名</h3>
+                <p className="text-sm text-gray-700 dark:text-[#9db9ab]">点击进入报名页面填写信息</p>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#13ec80] text-3xl group-hover:translate-x-1 transition-transform">

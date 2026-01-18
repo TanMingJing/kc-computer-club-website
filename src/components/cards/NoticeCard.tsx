@@ -46,65 +46,75 @@ export function NoticeCard({
     <Link href={`/notices/${id}`} className="block group">
       <article
         className={cn(
-          'rounded-xl p-4',
-          'bg-gray-50 dark:bg-[#1c3128]',
-          'border border-gray-200 dark:border-transparent',
-          'hover:bg-gray-100 dark:hover:bg-[#283930]',
+          'rounded-lg border border-[var(--border)] bg-[var(--surface)]',
+          'overflow-hidden',
+          'hover:border-primary/50 hover:shadow-lg',
           'transition-all duration-300',
           'cursor-pointer',
+          'h-full flex flex-col',
           className
         )}
       >
-        {/* 标签区域 */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <CategoryBadge category={category} />
-          {isPinned && (
-            <Badge variant="warning" size="sm">
-              <span className="material-symbols-outlined text-xs mr-1">push_pin</span>
-              置顶
-            </Badge>
-          )}
-          {isImportant && (
-            <Badge variant="danger" size="sm">
-              <span className="material-symbols-outlined text-xs mr-1">priority_high</span>
-              重要
-            </Badge>
-          )}
+        {/* 彩色头部区域 */}
+        <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center overflow-hidden">
+          <span className="material-symbols-outlined text-5xl text-primary/40">
+            article
+          </span>
         </div>
 
-        {/* 标题 */}
-        <h3
-          className={cn(
-            'font-bold text-gray-900 dark:text-white',
-            'group-hover:text-primary',
-            'transition-colors duration-200',
-            'line-clamp-2 mb-2'
-          )}
-        >
-          {title}
-        </h3>
+        {/* 内容区域 */}
+        <div className="p-4 flex-1 flex flex-col">
+          {/* 标签区域 */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <CategoryBadge category={category} />
+            {isPinned && (
+              <Badge variant="warning" size="sm">
+                <span className="material-symbols-outlined text-xs mr-1">push_pin</span>
+                置顶
+              </Badge>
+            )}
+            {isImportant && (
+              <Badge variant="danger" size="sm">
+                <span className="material-symbols-outlined text-xs mr-1">priority_high</span>
+                重要
+              </Badge>
+            )}
+          </div>
 
-        {/* 摘要 */}
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-          {truncate(summary, 100)}
-        </p>
-
-        {/* 底部信息 */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-gray-500">
-            {formatRelativeTime(date)}
-          </span>
-          <span
+          {/* 标题 */}
+          <h3
             className={cn(
-              'text-xs text-primary',
-              'flex items-center gap-1',
-              'opacity-0 group-hover:opacity-100',
-              'transition-opacity duration-200'
+              'font-bold text-[var(--foreground)]',
+              'group-hover:text-primary',
+              'transition-colors duration-200',
+              'line-clamp-2 mb-2'
             )}
           >
-            阅读更多
-            <span className="material-symbols-outlined text-xs">arrow_forward</span>
-          </span>
+            {title}
+          </h3>
+
+          {/* 摘要 */}
+          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-3 flex-1">
+            {truncate(summary, 100)}
+          </p>
+
+          {/* 底部信息 */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[var(--text-secondary)]">
+              {formatRelativeTime(date)}
+            </span>
+            <span
+              className={cn(
+                'text-xs text-primary',
+                'flex items-center gap-1',
+                'opacity-0 group-hover:opacity-100',
+                'transition-opacity duration-200'
+              )}
+            >
+              阅读更多
+              <span className="material-symbols-outlined text-xs">arrow_forward</span>
+            </span>
+          </div>
         </div>
       </article>
     </Link>
@@ -140,8 +150,8 @@ export function NoticeCardCompact({
       <div
         className={cn(
           'flex items-center gap-4 p-4 rounded-lg',
-          'bg-gray-50 dark:bg-[#1c3128]',
-          'hover:bg-gray-100 dark:hover:bg-[#283930]',
+          'bg-[var(--surface)] border border-[var(--border)]',
+          'hover:bg-[var(--surface)] hover:border-primary/50',
           'transition-all duration-300',
           'cursor-pointer group',
           className
@@ -156,10 +166,10 @@ export function NoticeCardCompact({
 
         {/* 内容 */}
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-gray-900 dark:text-white group-hover:text-primary transition-colors truncate">
+          <h4 className="font-medium text-[var(--foreground)] group-hover:text-primary transition-colors truncate">
             {title}
           </h4>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-secondary)]">
             <span>{category}</span>
             <span>·</span>
             <span>{formatRelativeTime(date)}</span>
@@ -167,7 +177,7 @@ export function NoticeCardCompact({
         </div>
 
         {/* 箭头 */}
-        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">
+        <span className="material-symbols-outlined text-[var(--text-secondary)] group-hover:text-primary transition-colors">
           chevron_right
         </span>
       </div>

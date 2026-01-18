@@ -6,73 +6,110 @@
    ======================================== */
 
 :root {
-  /* 主色调 - 可通过 ThemeContext 动态修改 */
+  /* ===== 主色调 - 绿色系 ===== */
   --primary: #13ec80;
   --primary-hover: #0fd673;
   --primary-light: rgba(19, 236, 128, 0.1);
   --primary-glow: rgba(19, 236, 128, 0.3);
+  --primary-rgb: 19, 236, 128;
 
-  /* 管理后台配色（蓝色主题） */
+  /* ===== 管理后台配色（蓝色主题） ===== */
   --admin-primary: #137fec;
+  --admin-primary-hover: #0f5fcc;
   --admin-bg: #101922;
   --admin-surface: #1a2632;
-}
-
-/* ========================================
-   浅色主题
-   ======================================== */
-.light, :root:not(.dark) {
+  
+  /* ===== 语义色 ===== */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* ===== 浅色主题 - Light Mode (default) ===== */
   --background: #f8faf9;
+  --background-alt: #f1f5f3;
   --surface: #ffffff;
   --surface-hover: #f1f5f3;
+  --surface-alt: #f9fafb;
   --foreground: #111814;
+  --text-primary: #111814;
   --text-secondary: #618975;
+  --text-tertiary: #94a8a1;
   --border: #e2e8e5;
+  --border-light: #f1f5f3;
   
-  /* 卡片和组件 */
+  /* ===== 卡片和组件 ===== */
   --card-bg: #ffffff;
   --card-border: #e2e8e5;
   --card-hover: #f1f5f3;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
   
-  /* 输入框 */
+  /* ===== 输入框 ===== */
   --input-bg: #ffffff;
   --input-border: #d1d9d5;
   --input-focus: var(--primary);
+  --input-placeholder: #94a8a1;
   
-  /* 导航 */
+  /* ===== 导航 ===== */
   --nav-bg: rgba(255, 255, 255, 0.95);
   --nav-border: #e2e8e5;
+  --nav-text: #111814;
+  
+  /* ===== 按钮 ===== */
+  --btn-bg: #f3f4f6;
+  --btn-bg-hover: #e5e7eb;
+  --btn-text: #111814;
+  --btn-primary-bg: #13ec80;
+  --btn-primary-bg-hover: #0fd673;
+  --btn-primary-text: #ffffff;
 }
 
 /* ========================================
-   深色主题
+   深色主题 - Dark Mode
    ======================================== */
-.dark {
+:root.dark {
+  /* ===== 深色主题基础色 ===== */
   --background: #0d1812;
+  --background-alt: #162a21;
   --surface: #162a21;
   --surface-hover: #1c3328;
+  --surface-alt: #1a3a2f;
   --foreground: #ffffff;
+  --text-primary: #ffffff;
   --text-secondary: #9db9ab;
+  --text-tertiary: #7a9084;
   --border: #283930;
+  --border-light: #3a4a42;
   
-  /* 卡片和组件 */
+  /* ===== 卡片和组件 ===== */
   --card-bg: #162a21;
   --card-border: #283930;
   --card-hover: #1c3328;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
   
-  /* 输入框 */
+  /* ===== 输入框 ===== */
   --input-bg: #102219;
   --input-border: #283930;
   --input-focus: var(--primary);
+  --input-placeholder: #7a9084;
   
-  /* 导航 */
+  /* ===== 导航 ===== */
   --nav-bg: rgba(13, 24, 18, 0.95);
   --nav-border: #283930;
+  --nav-text: #ffffff;
   
-  /* 管理后台深色模式 */
-  --background-dark: #0a0f13;
-  --surface-dark: #111814;
-  --surface-darker: #0d1218;
+  /* ===== 按钮 ===== */
+  --btn-bg: #283930;
+  --btn-bg-hover: #3a4a42;
+  --btn-text: #ffffff;
+  --btn-primary-bg: #13ec80;
+  --btn-primary-bg-hover: #0fd673;
+  --btn-primary-text: #000000;
+  
+  /* ===== 管理后台深色模式 ===== */
+  --admin-bg: #0a0f13;
+  --admin-surface: #111814;
+  --admin-surface-hover: #1a1f24;
 }
 
 @theme {
@@ -80,6 +117,10 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-surface: var(--surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
 }
 
 /* 基础 Body 样式 */
@@ -303,4 +344,230 @@ body {
 .light select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.light input::placeholder,
+.light textarea::placeholder,
+.light select::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* ========================================
+   深色主题特定调整
+   ======================================== */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--foreground);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(19, 236, 128, 0.15);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+.dark select::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* ========================================
+   通用组件样式
+   ======================================== */
+
+/* 卡片通用样式 */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--card-shadow);
+}
+
+.card:hover {
+  background-color: var(--card-hover);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(19, 236, 128, 0.1);
+}
+
+.card-lg {
+  padding: 1.5rem;
+}
+
+.card-sm {
+  padding: 0.75rem;
+}
+
+/* 按钮通用样式 */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #000000;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--btn-bg-hover);
+}
+
+.btn-danger {
+  background-color: var(--error);
+  color: #ffffff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: #ffffff;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* 背景通用样式 */
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.bg-surface {
+  background-color: var(--surface) !important;
+}
+
+.bg-secondary {
+  background-color: var(--surface-alt) !important;
+}
+
+/* 文本通用样式 */
+.text-primary {
+  color: var(--foreground) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-tertiary {
+  color: var(--text-tertiary) !important;
+}
+
+.text-accent {
+  color: var(--primary) !important;
+}
+
+/* 边框通用样式 */
+.border-primary {
+  border-color: var(--primary) !important;
+}
+
+.border-secondary {
+  border-color: var(--border) !important;
+}
+
+.border-light {
+  border-color: var(--border-light) !important;
+}
+
+/* 响应式卡片网格 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 标签通用样式 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.dark .badge-success {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.dark .badge-warning {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+}
+
+.dark .badge-error {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.badge-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--info);
+}
+
+.dark .badge-info {
+  background-color: rgba(59, 130, 246, 0.2);
 }

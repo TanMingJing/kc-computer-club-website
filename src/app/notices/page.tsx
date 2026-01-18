@@ -196,22 +196,22 @@ export default function NoticesPage() {
 
   return (
     <StudentLayout>
-      <main className="flex-1 w-full max-w-300 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 w-full max-w-300 mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
         {/* 面包屑导航 */}
-        <nav className="flex items-center text-sm text-[#9db9ab] mb-6 font-medium">
-          <Link href="/" className="hover:text-[#13ec80] transition-colors">
+        <nav className="flex items-center text-sm mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>
+          <Link href="/" className="hover:text-primary transition-colors" style={{ color: 'var(--text-secondary)' }}>
             首页
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-white">公告</span>
+          <span style={{ color: 'var(--foreground)' }}>公告</span>
         </nav>
 
         {/* 页面标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--foreground)' }}>
             公告中心
           </h1>
-          <p className="text-[#9db9ab]">
+          <p style={{ color: 'var(--text-secondary)' }}>
             了解俱乐部最新动态、活动通知和重要公告
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function NoticesPage() {
             {/* 置顶公告 */}
             {pinnedNotices.length > 0 && (
               <div>
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-black dark:text-white mb-4 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#13ec80]">push_pin</span>
                   置顶公告
                 </h2>
@@ -266,7 +266,7 @@ export default function NoticesPage() {
             {regularNotices.length > 0 && (
               <div>
                 {pinnedNotices.length > 0 && (
-                  <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-black dark:text-white mb-4 flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#9db9ab]">article</span>
                     全部公告
                   </h2>
@@ -284,19 +284,19 @@ export default function NoticesPage() {
         {/* 分页（暂时静态） */}
         {filteredNotices.length > 0 && (
           <div className="flex items-center justify-center gap-2 mt-12">
-            <button className="px-4 py-2 rounded-lg bg-[#1A2C23] text-[#9db9ab] hover:bg-[#283930] transition-colors text-sm font-medium border border-[#283930]">
+            <button className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors" style={{ backgroundColor: 'var(--button-secondary-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-hover)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-bg)'}>
               上一页
             </button>
-            <button className="px-4 py-2 rounded-lg bg-[#13ec80] text-[#102219] font-bold text-sm">
+            <button className="px-4 py-2 rounded-lg font-bold text-sm" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
               1
             </button>
-            <button className="px-4 py-2 rounded-lg bg-[#1A2C23] text-white hover:bg-[#283930] transition-colors text-sm font-medium border border-[#283930]">
+            <button className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors" style={{ backgroundColor: 'var(--button-secondary-bg)', borderColor: 'var(--card-border)', color: 'var(--foreground)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-hover)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-bg)'}>
               2
             </button>
-            <button className="px-4 py-2 rounded-lg bg-[#1A2C23] text-white hover:bg-[#283930] transition-colors text-sm font-medium border border-[#283930]">
+            <button className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors" style={{ backgroundColor: 'var(--button-secondary-bg)', borderColor: 'var(--card-border)', color: 'var(--foreground)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-hover)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-bg)'}>
               3
             </button>
-            <button className="px-4 py-2 rounded-lg bg-[#1A2C23] text-[#9db9ab] hover:bg-[#283930] transition-colors text-sm font-medium border border-[#283930]">
+            <button className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors" style={{ backgroundColor: 'var(--button-secondary-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-hover)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--button-secondary-bg)'}>
               下一页
             </button>
           </div>
@@ -319,7 +319,16 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
     return (
       <Link
         href={`/notices/${notice.id}`}
-        className="group block rounded-xl overflow-hidden bg-[#1A2C23] border border-[#283930] hover:border-[#13ec80]/50 transition-all"
+        className="group block rounded-xl overflow-hidden border transition-all"
+        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'var(--primary)';
+          e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(19, 236, 128, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'var(--card-border)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       >
         <div className="flex flex-col md:flex-row">
           {/* 图片 */}
@@ -328,13 +337,13 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
               className="absolute inset-0 bg-cover bg-center transform transition-transform duration-500 group-hover:scale-105"
               style={{ backgroundImage: `url(${notice.imageUrl})` }}
             />
-            <div className="absolute inset-0 bg-linear-to-r from-[#1A2C23]/80 to-transparent" />
+            <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(to right, var(--card-bg) 0%, transparent 100%)' }} />
           </div>
 
           {/* 内容 */}
           <div className="flex-1 p-6">
             <div className="flex flex-wrap gap-2 mb-3">
-              <Badge variant="primary" className="bg-[#13ec80]/10! text-[#13ec80]! border border-[#13ec80]/20">
+              <Badge variant="primary" className="bg-primary/10 text-primary border border-primary/20">
                 置顶
               </Badge>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${categoryStyle.bg} ${categoryStyle.text} border border-current/20`}>
@@ -346,22 +355,22 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
             {notice.tags && notice.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {notice.tags.map((tag, idx) => (
-                  <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#283946] text-[#9db9ab] border border-[#3a4d5c]">
+                  <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border" style={{ backgroundColor: 'var(--tag-bg)', color: 'var(--text-secondary)', borderColor: 'var(--tag-border)' }}>
                     {tag}
                   </span>
                 ))}
               </div>
             )}
 
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#13ec80] transition-colors line-clamp-2">
+            <h3 className="text-xl font-bold mb-2 transition-colors line-clamp-2 group-hover:text-primary" style={{ color: 'var(--foreground)' }}>
               {notice.title}
             </h3>
 
-            <p className="text-[#9db9ab] text-sm mb-4 line-clamp-2">
+            <p className="text-sm mb-4 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
               {notice.excerpt}
             </p>
 
-            <div className="flex items-center gap-4 text-xs text-[#9db9ab]">
+            <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                 <span>{notice.date}</span>
@@ -370,7 +379,7 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
                 <span className="material-symbols-outlined text-[16px]">person</span>
                 <span>{notice.author}</span>
               </div>
-              <div className="flex items-center gap-1 text-[#13ec80]">
+              <div className="flex items-center gap-1" style={{ color: 'var(--primary)' }}>
                 <span className="material-symbols-outlined text-[16px]">schedule</span>
                 <span>{notice.readTime}</span>
               </div>
@@ -384,7 +393,16 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
   return (
     <Link
       href={`/notices/${notice.id}`}
-      className="group block rounded-xl overflow-hidden bg-[#1A2C23] border border-[#283930] hover:border-[#13ec80]/50 transition-all"
+      className="group block rounded-xl overflow-hidden border transition-all"
+      style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)';
+        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(19, 236, 128, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--card-border)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
       {/* 图片 */}
       <div className="aspect-video relative overflow-hidden">
@@ -392,7 +410,7 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
           className="absolute inset-0 bg-cover bg-center transform transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage: `url(${notice.imageUrl})` }}
         />
-        <div className="absolute inset-0 bg-linear-to-t from-[#1A2C23] to-transparent opacity-60" />
+        <div className="absolute inset-0 opacity-60" style={{ background: 'linear-gradient(to top, var(--card-bg) 0%, transparent 100%)' }} />
         
         {/* 分类标签 */}
         <div className="absolute top-3 left-3">
@@ -404,7 +422,7 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
 
       {/* 内容 */}
       <div className="p-5">
-        <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#13ec80] transition-colors line-clamp-2">
+        <h3 className="text-base font-bold mb-2 transition-colors line-clamp-2 group-hover:text-primary" style={{ color: 'var(--foreground)' }}>
           {notice.title}
         </h3>
 
@@ -412,28 +430,28 @@ function NoticeCard({ notice, featured = false }: NoticeCardProps) {
         {notice.tags && notice.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
             {notice.tags.slice(0, 2).map((tag, idx) => (
-              <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#283946] text-[#9db9ab] border border-[#3a4d5c]">
+              <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: 'var(--tag-bg)', color: 'var(--text-secondary)', borderColor: 'var(--tag-border)' }}>
                 {tag}
               </span>
             ))}
             {notice.tags.length > 2 && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#283946] text-[#9db9ab] border border-[#3a4d5c]">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: 'var(--tag-bg)', color: 'var(--text-secondary)', borderColor: 'var(--tag-border)' }}>
                 +{notice.tags.length - 2}
               </span>
             )}
           </div>
         )}
 
-        <p className="text-[#9db9ab] text-sm mb-4 line-clamp-2">
+        <p className="text-sm mb-4 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
           {notice.excerpt}
         </p>
 
-        <div className="flex items-center justify-between text-xs text-[#9db9ab]">
+        <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">calendar_today</span>
             <span>{notice.date}</span>
           </div>
-          <div className="flex items-center gap-1 text-[#13ec80]">
+          <div className="flex items-center gap-1" style={{ color: 'var(--primary)' }}>
             <span className="material-symbols-outlined text-[14px]">schedule</span>
             <span>{notice.readTime}</span>
           </div>
