@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverDatabases, Query } from '@/services/appwrite-server';
 import bcrypt from 'bcryptjs';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION || '';
 const ATTENDANCE_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ATTENDANCE_COLLECTION || '';
@@ -13,6 +14,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const doc = await serverDatabases.getDocument(
@@ -131,6 +135,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -181,6 +188,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     await serverDatabases.deleteDocument(

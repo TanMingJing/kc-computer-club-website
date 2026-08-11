@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadImage, deleteImage, getImageUrl } from '@/services/storage.service';
+import { requireAdminSession } from '@/lib/admin-session';
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -30,6 +34,9 @@ export async function POST(request: NextRequest) {
   }
 }
 export async function DELETE(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { fileId } = body;

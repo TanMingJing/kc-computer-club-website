@@ -4,11 +4,15 @@ import {
   createNotice,
   CreateNoticeInput,
 } from '@/services/notice.service';
+import { requireAdminSession } from '@/lib/admin-session';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const onlyPublished = searchParams.get('onlyPublished') === 'true';
-    const visibility = (searchParams.get('visibility') as 'public' | 'all') || 'all';
+    const isAdminRequest = !requireAdminSession(request);
+    const onlyPublished = isAdminRequest ? searchParams.get('onlyPublished') === 'true' : true;
+    const visibility = isAdminRequest
+      ? ((searchParams.get('visibility') as 'public' | 'all') || 'all')
+      : 'public';
     const notices = await getAllNotices(onlyPublished, visibility);
     return NextResponse.json({
       success: true,
@@ -25,6 +29,9 @@ export async function GET(request: NextRequest) {
   }
 }
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { title, content, category, authorId, author, status, images, tags, visibility } = body;

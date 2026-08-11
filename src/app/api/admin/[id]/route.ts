@@ -1,11 +1,15 @@
 import { databases } from '@/services/appwrite';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const ADMINS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ADMINS_COLLECTION || '';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id: adminId } = await params;
     const admin = await databases.getDocument(
@@ -36,6 +40,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id: adminId } = await params;
     const body = await request.json();
@@ -74,6 +81,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { id: adminId } = await params;
     const admin = await databases.getDocument(

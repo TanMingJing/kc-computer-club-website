@@ -27,6 +27,85 @@ function calculateReadingTime(content: string): number {
   const readingTime = Math.ceil((chineseChars / 300 + englishWords / 200) / 2);
   return Math.max(1, readingTime);
 }
+
+function sanitizeHtmlContent(html: string): string {
+  if (!html) return '';
+
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+    return html
+      .replace(/<\/?(?:script|style|iframe|object|embed|link|meta|form|input|button|textarea|select|option|svg|math)[^>]*>/gi, '')
+      .replace(/\son\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+      .replace(/\s(?:href|src)=("|')\s*javascript:[^"']*\1/gi, '')
+      .replace(/\s(?:href|src)=("|')\s*data:(?!image\/)[^"']*\1/gi, '');
+  }
+
+  const allowedTags = new Set([
+    'a', 'p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'span', 'div', 'section', 'article',
+    'blockquote', 'code', 'pre', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img'
+  ]);
+  const allowedAttributes: Record<string, Set<string>> = {
+    a: new Set(['href', 'title', 'target', 'rel']),
+    img: new Set(['src', 'alt', 'title', 'width', 'height', 'loading', 'decoding']),
+    th: new Set(['colspan', 'rowspan']),
+    td: new Set(['colspan', 'rowspan']),
+  };
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const cleanElement = (element: Element) => {
+    for (const child of Array.from(element.children)) {
+      cleanElement(child);
+    }
+
+    const tagName = element.tagName.toLowerCase();
+    if (!allowedTags.has(tagName)) {
+      const parent = element.parentElement;
+      if (parent) {
+        while (element.firstChild) {
+          parent.insertBefore(element.firstChild, element);
+        }
+        parent.removeChild(element);
+      }
+      return;
+    }
+
+    for (const attribute of Array.from(element.attributes)) {
+      const attributeName = attribute.name.toLowerCase();
+      const allowedForTag = allowedAttributes[tagName];
+      const isAllowed = allowedForTag?.has(attributeName) || false;
+
+      if (attributeName.startsWith('on') || attributeName === 'style' || !isAllowed) {
+        element.removeAttribute(attribute.name);
+      }
+    }
+
+    if (tagName === 'a') {
+      const href = element.getAttribute('href') || '';
+      if (!/^(https?:|mailto:|tel:|\/|#)/i.test(href)) {
+        element.removeAttribute('href');
+      } else {
+        element.setAttribute('rel', 'noreferrer noopener');
+      }
+    }
+
+    if (tagName === 'img') {
+      const src = element.getAttribute('src') || '';
+      if (!/^(https?:|\/|data:image\/)/i.test(src)) {
+        element.removeAttribute('src');
+      }
+      element.setAttribute('loading', 'lazy');
+      element.setAttribute('decoding', 'async');
+    }
+  };
+
+  for (const child of Array.from(doc.body.children)) {
+    cleanElement(child);
+  }
+
+  return doc.body.innerHTML;
+}
 export default function NoticeDetailPage() {
   const params = useParams();
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -270,7 +349,7 @@ export default function NoticeDetailPage() {
               <div
                 className="prose prose-lg max-w-none wrap-break-word whitespace-pre-wrap [&_a]:text-primary [&_a]:no-underline hover:[&_a]:underline [&_strong]:font-bold [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:text-primary [&_p]:mb-4 [&_p]:wrap-break-word [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:wrap-break-word [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:wrap-break-word [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_li]:wrap-break-word [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:p-4 [&_blockquote]:rounded-r-lg [&_blockquote]:my-8 [&_blockquote]:wrap-break-word"
                 style={{ color: 'var(--foreground)' }}
-                dangerouslySetInnerHTML={{ __html: notice.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtmlContent(notice.content) }}
               />
               <div
                 className="flex items-center justify-between pt-8 flex-wrap gap-4"

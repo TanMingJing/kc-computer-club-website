@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverDatabases, Query } from '@/services/appwrite-server';
 import bcrypt from 'bcryptjs';
+import { setAdminSessionCookie } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const ADMINS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ADMINS_COLLECTION || '';
 const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION || '';
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
         adminName = username;
       }
     }
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       admin: {
         id: adminRecord.$id,
@@ -77,6 +78,11 @@ export async function POST(request: NextRequest) {
         role: 'admin',
       },
     });
+
+    return setAdminSessionCookie(response, {
+      id: adminRecord.$id,
+      username: adminRecord.username,
+    });
   } catch (error: unknown) {
     const err = error as Error & { message?: string };
     console.error('管理员登录失败:', err);
@@ -85,4 +91,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { serverDatabases, Query } from '@/services/appwrite-server';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const ATTENDANCE_COLLECTION_ID = 'attendance';
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const attendanceResponse = await serverDatabases.listDocuments(
       APPWRITE_DATABASE_ID,

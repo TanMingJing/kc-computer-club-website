@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-session';
 
 const INSTAGRAM_POST_PATTERN = /^https:\/\/(www\.)?instagram\.com\/(p|reel)\/[A-Za-z0-9_-]+\/?(\?.*)?$/;
 
@@ -198,6 +199,9 @@ async function tryHtmlScrape(postUrl: string): Promise<{
 /* ─── main handler ─── */
 
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { url } = body as { url?: string };

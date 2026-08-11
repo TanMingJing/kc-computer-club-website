@@ -2,9 +2,13 @@ import { databases } from '@/services/appwrite';
 import { ID } from 'appwrite';
 import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const ADMINS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ADMINS_COLLECTION || '';
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { password } = body;
@@ -65,7 +69,10 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const { documents } = await databases.listDocuments(
       APPWRITE_DATABASE_ID,

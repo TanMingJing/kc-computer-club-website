@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverDatabases, ID, Query } from '@/services/appwrite-server';
 import bcrypt from 'bcryptjs';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION || '';
 const ATTENDANCE_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ATTENDANCE_COLLECTION || '';
 const PROJECTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECTION || '';
 const DEFAULT_STUDENT_PASSWORD = '11111111';
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const [studentsResult, attendanceResult, projectsResult] = await Promise.allSettled([
       serverDatabases.listDocuments(APPWRITE_DATABASE_ID, USERS_COLLECTION_ID, [
@@ -148,6 +152,9 @@ export async function GET() {
   }
 }
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { students, defaultPassword } = body;
@@ -244,7 +251,10 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const response = await serverDatabases.listDocuments(
       APPWRITE_DATABASE_ID,

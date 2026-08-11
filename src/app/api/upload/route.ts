@@ -1,6 +1,10 @@
 import { uploadImage } from '@/services/storage.service';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-session';
 export async function POST(request: NextRequest) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

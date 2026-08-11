@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { serverDatabases, Query } from '@/services/appwrite-server';
+import { requireAdminSession } from '@/lib/admin-session';
 const APPWRITE_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION || '';
 const ATTENDANCE_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ATTENDANCE_COLLECTION || '';
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = requireAdminSession(request);
+  if (authError) return authError;
+
   try {
     const studentsResponse = await serverDatabases.listDocuments(
       APPWRITE_DATABASE_ID,
