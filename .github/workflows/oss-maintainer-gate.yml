@@ -1,0 +1,45 @@
+name: OSS Maintainer Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  maintainer-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run evidence-first maintainer gate
+        env:
+          MAINTAINER_GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: node .agents/skills/oss-maintainer-gate/scripts/preflight.mjs --json-out maintainer-gate-report.json
+
+      - name: Upload maintainer gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-maintainer-gate-report
+          path: maintainer-gate-report.json
+          if-no-files-found: warn
+          retention-days: 30
