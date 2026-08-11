@@ -1,0 +1,4 @@
+interface:
+  display_name: "OSS Maintainer Gate"
+  short_description: "Evidence-first release and security readiness gate"
+  default_prompt: "Use $oss-maintainer-gate to review this change and produce a fail-closed release-readiness decision with reproducible evidence."
