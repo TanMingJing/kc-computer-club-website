@@ -158,6 +158,22 @@ There is currently no dedicated `npm test` script in this repository.
 
 ---
 
+## Maintainer Workflow
+
+The repository includes a repo-local Codex skill at `.agents/skills/oss-maintainer-gate/` for evidence-first change review and release readiness.
+
+Run the deterministic preflight from the repository root:
+
+```bash
+node .agents/skills/oss-maintainer-gate/scripts/preflight.mjs --json-out maintainer-gate-report.json
+```
+
+The gate discovers available checks from `package.json`, records command exit status, identifies security-sensitive changed areas, and returns `READY`, `READY_WITH_WARNINGS`, or `BLOCKED`. Missing automated test coverage is reported explicitly rather than treated as a passing test signal.
+
+GitHub Actions runs the same gate for pull requests and pushes to `main` and uploads the JSON report as maintenance evidence.
+
+---
+
 ## Documentation
 
 - [Database schema fix guide](./docs/FIX_DATABASE_SCHEMA.md)
